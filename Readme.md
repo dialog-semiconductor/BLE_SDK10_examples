@@ -1,6 +1,6 @@
 # Smartbond SDK10 Application Examples
 
-This is the repository storing example for the DA1469x family.
+This is the repository storing example for the [DA1469x family](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x).
 
 For information about the DA1469x platform and how to bring up your development kit, please refer to the [Getting started User Manual](http://lpccs-docs.dialog-semiconductor.com/um-b-090-da1469x_getting_started/index.html)
 
