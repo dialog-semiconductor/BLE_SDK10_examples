@@ -20,4 +20,4 @@ You can now navigate and build the imported examples.
 
 ## Example compatibility
 
-Not all the examples will run on the latest version of the SDK10, the tested version is indicated in the Readme. If you find and example that needs porting to the latest version please report it in the issues.
+Not all the examples will run on the latest version of the SDK10, the tested version is indicated in the Readme. If you find an example that needs porting to the latest version please report it in the issues.
