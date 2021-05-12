@@ -2,6 +2,13 @@
 
 This is the repository storing example for the [DA1469x family](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x).
 
+The availble devices in the DA1469x family are:
+- [DA14691](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
+- [DA14695](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
+- [DA14697](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
+- [DA14699](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
+- [AW-CU429](https://www.dialog-semiconductor.com/products/azurewave-aw-cu429)
+
 For information about the DA1469x platform and how to bring up your development kit, please refer to the [Getting started User Manual](http://lpccs-docs.dialog-semiconductor.com/um-b-090-da1469x_getting_started/index.html)
 
 ## Example usage
