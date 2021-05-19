@@ -1,8 +1,9 @@
-# Example demonstrating the use of UART Adapter abstraction layer
+# Example demonstrating the GPADC adapter
 
 ## Overview
 
 This application demonstrates the use of all the ADC adapter using the GPADC.
+
 ## HW and SW configuration
 
 - **Hardware configuration**
@@ -28,8 +29,6 @@ This application demonstrates the use of all the ADC adapter using the GPADC.
 
 Open your serial terminal ( 115200/8-N-1 ). The device will report the ADC reading every second.
 
-
-
-
 ## Known Limitations
+
 There are no known limitations for this application.
