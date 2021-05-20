@@ -357,7 +357,7 @@ static void prvSPI_Task(void *pvParameters)
 
 #if (USER_SNC_TRIGGER_ON_WKUP_EVENT)
 
-        /* Enable the WAKUP controller for handling external events */
+        /* Enable the WAKEUP controller for handling external events */
         hw_wkup_init(NULL);
 
         hw_wkup_configure_port(WKUP_TRIGGER_PORT,        /*  Declare a PORT (PORT0 or PORT1) that will trigger

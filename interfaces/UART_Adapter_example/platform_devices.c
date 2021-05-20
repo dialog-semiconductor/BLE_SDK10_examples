@@ -84,7 +84,7 @@ const ad_uart_driver_conf_t uart1_uart_driver_conf = {
                 .use_dma = 1,                           /* Enable/Disable the use of DMA for UART transfers. */
                 .tx_dma_channel = HW_DMA_CHANNEL_1,     /* If DMA is used, select the DMA channels to use for RX/TX */
                 .rx_dma_channel = HW_DMA_CHANNEL_0,     /* The DMA is activated only for transfers >=2 bytes */
-                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the THRE interrupts */
+                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the threshold interrupts */
                 .rx_fifo_tr_lvl = 0,                    /* Select the FIFO threshold trigger level in the RX FIFO at which the Received Data Available
                                                          * Interrupt is generated.
                                                          * It also determines when the dma_rx_req_n signal is asserted when DMA Mode (FCR[3]) = 1.
@@ -198,7 +198,7 @@ const ad_uart_driver_conf_t uart2_uart_driver_conf = {
                 .use_dma = 1,                           /* Enable/Disable the use of DMA for UART transfers. */
                 .tx_dma_channel = HW_DMA_CHANNEL_3,     /* If DMA is used, select the DMA channels to use for RX/TX */
                 .rx_dma_channel = HW_DMA_CHANNEL_2,     /* The DMA is activated only for transfers >=2 bytes */
-                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the THRE interrupts */
+                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the threshold interrupts */
                 .rx_fifo_tr_lvl = 0,                    /* Select the FIFO threshold trigger level in the RX FIFO at which the Received Data Available
                                                          * Interrupt is generated.
                                                          * It also determines when the dma_rx_req_n signal is asserted when DMA Mode (FCR[3]) = 1.
@@ -310,7 +310,7 @@ const ad_uart_driver_conf_t uart3_uart_driver_conf = {
                 .use_dma = 1,                           /* Enable/Disable the use of DMA for UART transfers. */
                 .tx_dma_channel = HW_DMA_CHANNEL_5,     /* If DMA is used, select the DMA channels to use for RX/TX */
                 .rx_dma_channel = HW_DMA_CHANNEL_4,     /* The DMA is activated only for transfers >=2 bytes */
-                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the THRE interrupts */
+                .tx_fifo_tr_lvl = 0,                    /* Set the TX FIFO threshold level for generating the threshold interrupts */
                 .rx_fifo_tr_lvl = 0,                    /* Select the FIFO threshold trigger level in the RX FIFO at which the Received Data Available
                                                          * Interrupt is generated.
                                                          * It also determines when the dma_rx_req_n signal is asserted when DMA Mode (FCR[3]) = 1.

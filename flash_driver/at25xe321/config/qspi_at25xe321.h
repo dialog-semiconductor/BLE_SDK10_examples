@@ -230,7 +230,7 @@ __RETAINED_CODE void flash_at25xe321_set_power_down_mode(HW_QSPIC_ID id, flash_a
 
         status = flash_at25e321_read_status_reg_4(id);
 
-        //Check if bit 7 is set or cleared accordign to pwr_down, if not toggle the bit
+        //Check if bit 7 is set or cleared according to pwr_down, if not toggle the bit
         if(((status & AT_STATUS4_POWER_DOWN_MODE_MASK) >> AT_STATUS4_POWER_DOWN_MODE_BIT)  ^ pwr_down )
         {
                 flash_write_enable(id);
@@ -265,7 +265,7 @@ __RETAINED_CODE static uint8_t flash_at25xe321_set_dummy_clocks(HW_QSPIC_ID id, 
         uint8_t volatile read_cmd[3];
         uint8_t volatile write_cmd[3];
 
-        //Need to do these commands programatically here, when in command mode, need the constants in RAM not in flash for access
+        //Need to do these commands programmatically here, when in command mode, need the constants in RAM not in flash for access
         write_cmd[0] = AT_INDIRECT_STATUS_ADDR_WRITE;
         write_cmd[1] = STATUS_REG5_IND_ADDR;
         write_cmd[2] = clocks;

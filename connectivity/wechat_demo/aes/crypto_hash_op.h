@@ -85,7 +85,7 @@ typedef struct {
         CRYPTO_HASH_MODE mode;           /**< HASH mode. */
         size_t plaintext_size;           /**< Total size in bytes of plaintext. */
         size_t bytes_left;               /**< Size in bytes left for aes operation. */
-        uint8_t* hash_plaintext_adress;  /**< Hash operation plaintext adress. */
+        uint8_t* hash_plaintext_adress;  /**< Hash operation plaintext address. */
         uint8_t* hash_ciphertext_adress; /**< Hash operation ciphertext address. */
 } crypto_hash_context_t;
 
@@ -120,8 +120,8 @@ CRYPTO_HASH_RET crypto_hash_compute(crypto_hash_context_t *ctx, size_t packet_si
  *
  * \param [in,out] ctx                     The hash context where the result will be stored.
  * \param [in]     hash_mode               Hash mode to be used with the created hash context.
- * \param [in]     plaintext_adress        Hash operation plaintext adress.
- * \param [in]     ciphertext_adress       Hash operation ciphertext adress.
+ * \param [in]     plaintext_adress        Hash operation plaintext address.
+ * \param [in]     ciphertext_adress       Hash operation ciphertext address.
  * \param [in]     plaintext_size_in_bytes Total size in bytes of hash plaintext.
  *
  * \returns The function returns one of the return codes defined in ::CRYPTO_HASH_RET.

@@ -98,7 +98,7 @@ void app_gpio_pin_set_inactive(gpio_config gpio_cfg)
 
 /*
  * This function activates and then de-activates a single GPIO pin. It should be used
- * when PD_COM is handled dynamically to change the status of an GPIO OUPUT pin.
+ * when PD_COM is handled dynamically to change the status of an GPIO OUTPUT pin.
  */
 void app_gpio_pin_set(gpio_config gpio_cfg, HW_GPIO_POWER pin_power)
 {

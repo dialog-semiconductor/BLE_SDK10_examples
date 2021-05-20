@@ -41,7 +41,7 @@ created automatically by the Bluetooth stack):
 
 Explore the second Bluetooth Service and verify that contains three uninitialized Characteristic Attributes:
 
-![Unitialized BLE Service](assets/ble_service_uninitialized.png)
+![Uninitialized BLE Service](assets/ble_service_uninitialized.png)
 
 Explore the first Bluetooth Service and verify that contains one initialized Characteristic Attribute. You can
 verify its 128-bit UUID as well as its descriptors. Depending on the permission settings, the scanner App will draw the corresponding symbols. For instance, **R** for reading the Characteristic Attribute value, **W** for writing, and **N** or **I** for enabling/disabling notifications/indications respectively:

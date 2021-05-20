@@ -29,7 +29,7 @@ This application demonstrates a DA1469x devices operating as an iBeacon, adverti
 - Compile and launch RAM or QSPI target
 - Run from RAM or load in the flash
 
-- Use an iOS device or download a BLE scanner application (eg. LightBlue) to see the example runs succesfully.
+- Use an iOS device or download a BLE scanner application (eg. LightBlue) to see the example runs successfully.
 
 ## Known Limitations
 

@@ -48,7 +48,7 @@ typedef struct
 } Epb;
 
 /*
- * embeded protobuf unpack functions
+ * embedded protobuf unpack functions
  */
 
 void epb_unpack_init(Epb *e, const uint8_t *buf, int len);
@@ -75,7 +75,7 @@ int32_t epb_get_sfixed32(Epb *e, uint16_t tag);
 float epb_get_float(Epb *e, uint16_t tag);
 
 /*
- * embeded protobuf pack functions
+ * embedded protobuf pack functions
  */
 
 void epb_pack_init(Epb *e, uint8_t *buf, int len);

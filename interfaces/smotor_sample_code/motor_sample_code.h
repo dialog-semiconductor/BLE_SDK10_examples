@@ -87,7 +87,7 @@ void _rtc_init(uint16_t period);
 
 
 /*
- * This function performs the followings operations:
+ * This function performs the following operations:
  *
  * 1) Initializes the motor controller
  * 2) Loads the configurations of all five Pattern Generators (PG)

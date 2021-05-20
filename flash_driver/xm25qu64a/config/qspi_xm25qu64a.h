@@ -145,7 +145,7 @@ const uint32_t xm25qu64a_ucode_wakeup_32bit_addressing[] = {
 
 /********************************************** FUNCTION PROTOTYPES **********************************************/
 /**
- * \brief Set up the device to be able to accept Quad Page Programm requests.
+ * \brief Set up the device to be able to accept Quad Page Program requests.
  *
  * \param[in] id        QSPI controller id
  *
