@@ -83,7 +83,7 @@ typedef struct {
         uint8_t* aes_key_adress;        /**< AES private key. */
         uint8_t* aes_iv_adress;         /**< AES initialization vector (CBC mode only). */
         uint8_t* aes_ic_adress;         /**< AES initialization counter (CTR mode only). */
-        uint8_t* aes_plaintext_adress;  /**< AES operation plaintext adress. */
+        uint8_t* aes_plaintext_adress;  /**< AES operation plaintext address. */
         uint8_t* aes_ciphertext_adress; /**< AES operation ciphertext address. */
         hw_aes_key_size key_size;        /**< AES key size to use. */
 } crypto_aes_context_t;
@@ -95,7 +95,7 @@ typedef struct {
  * algorithm. Mode (ECB, CBC, CTR) and key length (128, 192, 256) are specified
  * during operation context initialization. Depending on selected mode, an
  * initialization vector(CBC mode) or an initialization counter(CTR mode)
- * should be provided. If a certain operation needs no intialization vector or
+ * should be provided. If a certain operation needs no initialization vector or
  * initialization counter, then the function should be called with NULL arguments.
  * Since the function needs to acquire a hardware resource for aes/hash hw module,
  * it also takes as input a timeout value used when waiting to acquire the resource.
@@ -119,8 +119,8 @@ typedef struct {
  * \endcode
  *
  * It is possible to call this function even if the complete message is partially available. packet size
- * is then the length of plaintext that is currently availiable, and input plaintext chunck should either be
- * copied to the original context plaintext address, or the pointer of the context plaintext adress should
+ * is then the length of plaintext that is currently available, and input plaintext chunk should either be
+ * copied to the original context plaintext address, or the pointer of the context plaintext address should
  * be overwritten.
  * \code{c}
  * uint8_t plaintext[] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do"
@@ -155,8 +155,8 @@ CRYPTO_AES_RET crypto_aes_encrypt(crypto_aes_context_t *ctx, size_t packet_size,
  * \param [in]     aes_key                 AES operations key.
  * \param [in]     aes_iv                  AES initialization vector (CBC mode only).
  * \param [in]     aes_ic                  AES initialization counter (CTR mode only).
- * \param [in]     plaintext_adress        AES operation plaintext adress.
- * \param [in]     ciphertext_adress       AES operation ciphertext adress.
+ * \param [in]     plaintext_adress        AES operation plaintext address.
+ * \param [in]     ciphertext_adress       AES operation ciphertext address.
  * \param [in]     plaintext_size_in_bytes Total size in bytes of aes plaintext.
  *
  * \returns The function returns one of the return codes defined in ::CRYPTO_AES_RET.

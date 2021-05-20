@@ -43,7 +43,7 @@
 
 #if (dg_configAES_USE_OTP_KEYS == 1)
 uint8_t * const key_otp = (uint8_t *) OTP_KEY;		  // Key in OTP
-void static aes_construct_words(uint32_t *out_data, const uint8_t *in_data, uint8_t lenght);
+void static aes_construct_words(uint32_t *out_data, const uint8_t *in_data, uint8_t length);
 void aes_check_otp_keys(void);
 #else
 uint8_t * const key_otp = (uint8_t *) key_256b;			// Key in RAM
@@ -205,10 +205,10 @@ static void system_init(void *pvParameters)
 }
 
 #if (dg_configAES_USE_OTP_KEYS == 1)
-void static aes_construct_words(uint32_t *out_data, const uint8_t *in_data, uint8_t lenght)
+void static aes_construct_words(uint32_t *out_data, const uint8_t *in_data, uint8_t length)
 {
         uint8_t i;
-        for (i = 0; i < lenght; i += 4) {
+        for (i = 0; i < length; i += 4) {
                 out_data[i / 4] = ((in_data[i + 3] & 0xff) | (in_data[i + 2] << 8 & 0xff00) |
                         (in_data[i + 1] << 16 & 0xff0000) | (in_data[i] << 24 & 0xff000000));
         }
@@ -294,7 +294,7 @@ static void prvHASH_SHA_256( void *pvParameters )
                 /* The task is blocked for 2 seconds */
                 OS_DELAY(OS_MS_2_TICKS(2000));
 
-                /* Wait until the CRYPTO engine is aquired */
+                /* Wait until the CRYPTO engine is acquired */
                 status = ad_crypto_acquire_aes_hash(OS_EVENT_FOREVER);
                 OS_ASSERT(status == OS_MUTEX_TAKEN);
 
@@ -321,17 +321,17 @@ static void prvHASH_SHA_256( void *pvParameters )
 
                 /*
                  * Wait until operation is finished. A callback is triggered, indicating that the AES/HASH engine has finished
-                 * with the currect operation.
+                 * with the correct operation.
                  */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_OK);
 
-                /* Compare results with the alredy precalculated ones -They should match */
+                /* Compare results with the already precalculated ones -They should match */
                 if ( !memcmp(hash_data_rd, sha_256_hash, NUM_OF_HASH_DATA) ) {
 
                         printf("\n\rHashing SHA-256 operation has been executed successfully!\n\r");
                 } else {
-                        printf("Unsuccesful Hashing SHA-256 operation!\n\r");
+                        printf("Unsuccessful Hashing SHA-256 operation!\n\r");
                 }
 
                 /* Disable event signaling and the AES/HASH engine clock, as well */
@@ -377,7 +377,7 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 /* The task is blocked for 2.5 seconds */
                 OS_DELAY(OS_MS_2_TICKS(2500));
 
-                /* Wait until the CRYPTO engine is aquired */
+                /* Wait until the CRYPTO engine is acquired */
                 status = ad_crypto_acquire_aes_hash(OS_EVENT_FOREVER);
                 OS_ASSERT(status == OS_MUTEX_TAKEN);
 
@@ -419,7 +419,7 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 /* Start a AES encryption operation */
                 hw_aes_hash_encrypt();
 
-                /* Wait for the cryto IRQ  indicating that the task has been executed */
+                /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_EVENT_SIGNALED);
 
@@ -442,11 +442,11 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 /* Start a AES decryption operation */
                 hw_aes_hash_decrypt();
 
-                /* Wait for the cryto IRQ  indicating that the task has been executed */
+                /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_EVENT_SIGNALED);
 
-                /* Compare results with the alredy precalculated ones - They should match */
+                /* Compare results with the already precalculated ones - They should match */
                 if ( !memcmp(non_frag_decr_data, vector, NUMBER_OF_DATA) ) {
 
                         printf("Successful 128-bit AES CBC decryption! AES STATUS: %d\n\r", aes_hash_status);
@@ -493,7 +493,7 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                 /* The task is blocked for 2.5 seconds */
                 OS_DELAY(OS_MS_2_TICKS(2500));
 
-                /* Wait until the CRYPTO engine is aquired */
+                /* Wait until the CRYPTO engine is acquired */
                 status = ad_crypto_acquire_aes_hash(OS_EVENT_FOREVER);
                 OS_ASSERT(status == OS_MUTEX_TAKEN);
 
@@ -528,7 +528,7 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                 /* Start a AES encryption operation */
                 hw_aes_hash_encrypt();
 
-                /* Wait for the cryto IRQ  indicating that the task has been executed */
+                /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_EVENT_SIGNALED);
 
@@ -553,11 +553,11 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                 /* Start a AES decryption operation */
                 hw_aes_hash_decrypt();
 
-                /* Wait for the cryto IRQ  indicating that the task has been executed */
+                /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_EVENT_SIGNALED);
 
-                /* Compare results with the alredy precalculated ones - They should match */
+                /* Compare results with the already precalculated ones - They should match */
                 if (!memcmp(non_frag_decr_data, vector, NUMBER_OF_DATA)) {
 
                         printf("Successful 256-bit AES CBC decryption! AES STATUS: %d\n\r",
@@ -602,7 +602,7 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                 /* The task is blocked for 2.5 seconds */
                 OS_DELAY(OS_MS_2_TICKS(2500));
 
-                /* Wait until the CRYPTO engine is aquired */
+                /* Wait until the CRYPTO engine is acquired */
                 status = ad_crypto_acquire_aes_hash(OS_EVENT_FOREVER);
                 OS_ASSERT(status == OS_MUTEX_TAKEN);
 
@@ -649,7 +649,7 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
 
                 /*
                  * Wait until operation is finished. A callback is triggered, indicating that the AES/HASH engine has finished
-                 * with the currect operation.
+                 * with the correct operation.
                  */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_OK);
@@ -706,7 +706,7 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
                 OS_ASSERT(status == OS_OK);
 
-                /* Check wether the decryption has been executed successfully */
+                /* Check whether the decryption has been executed successfully */
                 if (!memcmp(frag_decr_data, vector, NUMBER_OF_DATA)) {
 
                         printf("Successful 192-bit AES CTR decryption! AES STATUS: %d\n\r", aes_hash_status);

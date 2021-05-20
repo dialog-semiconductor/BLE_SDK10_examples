@@ -2,7 +2,7 @@
 
 This is the repository storing example for the [DA1469x family](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x).
 
-The availble devices in the DA1469x family are:
+The available devices in the DA1469x family are:
 - [DA14691](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
 - [DA14695](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)
 - [DA14697](https://www.dialog-semiconductor.com/products/bluetooth-low-energy/da1469x)

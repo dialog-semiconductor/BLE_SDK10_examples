@@ -158,7 +158,7 @@ CRYPTO_AES_RET crypto_aes_encrypt(crypto_aes_context_t *ctx, size_t packet_size,
                 ctx->bytes_left = ctx->plaintext_size;
         }
         else{
-                //update source and dest adress???
+                //update source and dest address???
                 ctx->aes_ciphertext_adress = ctx->aes_ciphertext_adress + packet_size;
                 ctx->aes_plaintext_adress = ctx->aes_plaintext_adress + packet_size;
         }
@@ -247,7 +247,7 @@ CRYPTO_AES_RET crypto_aes_decrypt(crypto_aes_context_t *ctx, size_t packet_size,
                 ctx->bytes_left = ctx->plaintext_size;
         }
         else{
-                //update source and dest adress???
+                //update source and dest address???
                 ctx->aes_ciphertext_adress = ctx->aes_ciphertext_adress + packet_size;
                 ctx->aes_plaintext_adress = ctx->aes_plaintext_adress + packet_size;
         }

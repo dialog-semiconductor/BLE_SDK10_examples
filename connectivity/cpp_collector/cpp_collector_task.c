@@ -129,7 +129,7 @@ typedef struct {
         OS_TIMER cps_tmo_timer;
 } peer_info_t;
 
-/* Current peers informations */
+/* Current peers information */
 __RETAINED static queue_t peer_info_queue;
 
 /* Queue of connection indexes of peer where CPS timeout was triggered */
@@ -242,7 +242,7 @@ static void clear_pending_action(peer_info_t *peer_info, pending_action_t action
                 return;
         }
 
-        /* Try to authenticate if action failed due to unsufficient authentication/ecnryption */
+        /* Try to authenticate if action failed due to insufficient authentication/encryption */
         if ((error == ATT_ERROR_INSUFFICIENT_AUTHENTICATION) ||
                                                 (error == ATT_ERROR_INSUFFICIENT_ENCRYPTION)) {
                 peer_info->busy_init = false;
