@@ -19,7 +19,9 @@ There are five demos supplied as examples:
 
 - This example runs on the DA1469x Bluetooth Smart SoC devices.
 - The DA1469x Pro Development kit is needed for this example.
+- The DA7212-EVAL Development kit is needed for this example.
 - Connect the Development kit to the host computer.
+- Connect the DA7212-EVAL to the DA1469x Pro Development kit.
 
 ### Software configuration
 
@@ -45,8 +47,7 @@ using a headset, hooked in a DA7218 module's jack. The PDM input is re-sampled t
 
 **Hardware Setup**:
 
-- Dialog DA7218 Mikrobus module
-- SPK0838HT4H-B digital microphone
+- Digital microphone
 - S1 dip switch (CTS) set to off.
 
 PDM settings: 2MHz bit clock, stereo.
@@ -66,8 +67,7 @@ When this demo is run, the user is prompted to press the K1 button to record the
 
 **Hardware Setup**:
 
-- Dialog DA7218 Mikrobus module
-- SPK0838HT4H-B digital microphone
+- Digital microphone
 - S1 dip switch (CTS) set to off.
 
 To enable the demo go to the `includes/audio_task.h` file and set:
@@ -88,8 +88,6 @@ The demo allows the user to loopback their voice from the PCM mic input, to the 
 
 **Hardware Setup**:
 
-- Dialog DA7218 mikrobus module
-
 To enable the demo go to the `includes/audio_task.h` file and set:
 
 ```c
@@ -105,8 +103,6 @@ CODEC settings: 16bit @ 16kHz, I2S stereo.
 When this demo is run, the user is prompted to press the K1 button to record their voice over the CODEC analog microphone to QSPI flash Log partition, resampled to 8kHz PCM. When the recording is finished the recording is played back to the CODEC resampled back to the CODEC's sampling rate. The recording time is configurable and set to 2 sec by default.
 
 **Hardware Setup**:
-
-- Dialog DA7218 mikrobus module
 
 To enable the demo go to the `includes/audio_task.h` file and set:
 
