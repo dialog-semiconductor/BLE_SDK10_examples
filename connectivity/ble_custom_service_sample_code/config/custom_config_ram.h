@@ -5,7 +5,7 @@
  *
  * @brief Board Support Package. User Configuration file for RAM mode.
  *
- * Copyright (C) 2019 Dialog Semiconductor.
+ * Copyright (C) 2021 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
  * of Dialog Semiconductor. All Rights Reserved.
  *
@@ -17,21 +17,10 @@
 #include "bsp_definitions.h"
 
 #define CONFIG_USE_BLE
-
-
-/* Enable retarget functionality */
 #define CONFIG_RETARGET
 
-/*
- * UART2 (HW_UART2) is the default selected UART block. If needed, use the
- * following macro to change to UART1 (HW_UART1) serial block:
- *
- * #define CONFIG_RETARGET_UART  HW_UART1
- */
-
-/* Change the static BLE address of the device */
+/* Static public BLE device address */
 #define defaultBLE_STATIC_ADDRESS   { 0x01, 0x01, 0x01, 0x06, 0x06, 0x06 }
-
 
 /*************************************************************************************************\
  * System configuration
@@ -40,7 +29,7 @@
 #define dg_configCODE_LOCATION                  ( NON_VOLATILE_IS_NONE )
 #define dg_configEMULATE_OTP_COPY               ( 0 )
 
-#define dg_configUSE_WDOG                       ( 0 )
+#define dg_configUSE_WDOG                       ( 1 )
 
 #define dg_configFLASH_CONNECTED_TO             ( FLASH_IS_NOT_CONNECTED )
 #define dg_configFLASH_POWER_DOWN               ( 0 )
@@ -84,6 +73,8 @@
 #define dg_configBLE_OBSERVER                   ( 0 )
 #define dg_configBLE_BROADCASTER                ( 0 )
 #define dg_configBLE_L2CAP_COC                  ( 0 )
+
+#define DBG_PRINT_ENABLE                        ( 1 )
 
 /* Include bsp default values */
 #include "bsp_defaults.h"
