@@ -61,64 +61,9 @@ static const USB_MSD_LUN_INFO _Lun0Info = {
         "134657890"                     // MSD SerialNo
         };
 
-__RETAINED OS_TIMER medium_refresh_tmr_h;
-__RETAINED OS_TASK medium_refresh_task_h;
 #define MEDIUM_REFRESH_NOTIFY                   (1<<0)
 #define EXIT_MEDIUM_REFRESH_NOTIFY              (1<<1)
 #define MEDIUM_REFRESH_TIMEOUT                  (100) //in ms
-
-/*********************************************************************
- *
- *  medium_refresh_timer
- *
- *  Function description
- *    triggers the function to indicate the medium content change
- *    if there is no write for MEDIUM_REFRESH_TIMEOUT
- */
-static void medium_refresh_tmr(OS_TIMER refresh_tmr)
-{
-        if (medium_refresh_task_h != NULL) {
-                OS_TASK_NOTIFY(medium_refresh_task_h, MEDIUM_REFRESH_NOTIFY, OS_NOTIFY_SET_BITS);
-        }
-}
-
-/*********************************************************************
- *
- *  medium_refresh_task
- *
- *  Function description
- *    indicates medium disconnect/connect to indicate to Host that
- *    the contents of the medium changed and need to refresh
- */
-static void medium_refresh_task(void* lun_val)
-{
-        U8 Lun = 0;
-
-        OS_BASE_TYPE res;
-        uint32_t notif;
-
-        while(run_usb_task == 1) {
-                res = OS_TASK_NOTIFY_WAIT(0x0, OS_TASK_NOTIFY_ALL_BITS, &notif, OS_TASK_NOTIFY_FOREVER);
-                OS_ASSERT(res == OS_TASK_NOTIFY_SUCCESS);
-
-                if (notif & MEDIUM_REFRESH_NOTIFY) {
-                        USBD_MSD_RequestDisconnect(Lun);
-
-                        if (USBD_MSD_WaitForDisconnection(Lun, 1000) == 0) {
-                                USBD_MSD_Disconnect(Lun);
-                        }
-
-                        USBD_MSD_Connect(Lun);
-                }
-
-                if (notif & EXIT_MEDIUM_REFRESH_NOTIFY) {
-                        break;
-                }
-        }
-
-        medium_refresh_task_h = NULL;
-        OS_TASK_DELETE(NULL);
-}
 
 /*********************************************************************
  *
@@ -168,7 +113,7 @@ static void msd_storage_GetInfo(U8 Lun, USB_MSD_INFO * pInfo)
                 if (part_info.type == NVMS_FATFS_PART)  break;
         }
 
-        pInfo->NumSectors = part_info.sector_count;;
+        pInfo->NumSectors = part_info.sector_count;
         pInfo->SectorSize = FLASH_SECTOR_SIZE;
 }
 
@@ -238,11 +183,11 @@ static char msd_storage_Read(U8 Lun, U32 SectorIndex, void * pData, U32 NumSecto
 static U32 msd_storage_GetWriteBuffer(U8 Lun, U32 SectorIndex, void ** ppData, U32 NumSectors)
 {
         ASSERT_WARNING(Lun==0);
-
+        printf("Request write buffer for %ld sectors\n",NumSectors);
+        fflush(stdout);
         /* We can reuse the buffer declared in the MSD driver
          * It can be a separate buffer but this saves RAM space */
         *ppData = (void*)OS_MALLOC(NumSectors * FLASH_SECTOR_SIZE);
-
         return 1;
 }
 
@@ -367,24 +312,6 @@ static void _AddMSD(void)
         USBD_MSD_AddUnit(&InstanceData);
 }
 
-void _pfOnReadWrite(U8 Lun, U8 IsRead, U8 OnOff, U32 StartLBA, U32 NumBlocks)
-{
-        ASSERT_WARNING(Lun==0);
-
-        if (IsRead == 0 && OnOff == 0) {
-                /* start write operation */
-        }
-
-        if (IsRead == 0 && OnOff == 1) {
-                /* complete write operation
-                 * Reset the medium refresh timer
-                 * This will help the safe removal in windows
-                 * and minimize the sudden removal chance for corruption */
-                OS_TIMER_RESET(medium_refresh_tmr_h, 0);
-        }
-}
-
-
 /*********************************************************************
  * usb_msd_task
  *
@@ -394,33 +321,12 @@ void _pfOnReadWrite(U8 Lun, U8 IsRead, U8 OnOff, U32 StartLBA, U32 NumBlocks)
  */
 void usb_msd_task(void *params)
 {
-        OS_BASE_TYPE status;
 
         run_usb_task = 1;
-
-        medium_refresh_tmr_h = OS_TIMER_CREATE("MDM_RFSH",
-                        OS_MS_2_TICKS(MEDIUM_REFRESH_TIMEOUT),
-                        pdFALSE,
-                        (void*)NULL,
-                        medium_refresh_tmr);
-        OS_ASSERT(medium_refresh_tmr_h != NULL);
-
-        /* Start the MSD medium refresh application task. */
-        status = OS_TASK_CREATE("mediumTask",     /* The text name assigned to the task, for
-                                                     debug only; not used by the kernel. */
-                        medium_refresh_task,      /* The function that implements the task. */
-                        NULL,                     /* The parameter passed to the task. */
-                        1024,                     /* The number of bytes to allocate to the
-                                                     stack of the task. */
-                        usb_main_TASK_PRIORITY,   /* The priority assigned to the task. */
-                        medium_refresh_task_h);   /* The task handle. */
-
-        OS_ASSERT(status == OS_TASK_CREATE_SUCCESS);
 
         USBD_Init();
         _AddMSD();
         USBD_SetDeviceInfo(&_DeviceInfo);
-        USBD_MSD_SetReadWriteHook(0, _pfOnReadWrite);
         USBD_Start();
 
 #if ( dg_configUSE_SYS_CHARGER == 1 )
@@ -443,9 +349,6 @@ void usb_msd_task(void *params)
 
         run_usb_task = 0;
 
-        OS_TIMER_DELETE(medium_refresh_tmr_h, 0);
-        medium_refresh_tmr_h = NULL;
-        OS_TASK_NOTIFY(medium_refresh_task_h, EXIT_MEDIUM_REFRESH_NOTIFY, OS_NOTIFY_SET_BITS);
 
         OS_TASK_DELETE(NULL);
 }

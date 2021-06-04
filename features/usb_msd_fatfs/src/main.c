@@ -116,6 +116,15 @@ static void system_init(void *pvParameters)
         /* Prepare the hardware to run this demo. */
         prvSetupHardware();
 
+
+#if defined CONFIG_RETARGET
+        retarget_init();
+#endif
+
+        /* Set the desired sleep mode. */
+        pm_set_wakeup_mode(true);
+        pm_sleep_mode_set(pm_mode_extended_sleep);
+
         /*
          * Function used to mount and format (if needed) an external medium.
          *
@@ -126,11 +135,6 @@ static void system_init(void *pvParameters)
         ASSERT_WARNING(f_res == FR_OK);
 
         internal_FS_test();
-
-#if defined CONFIG_RETARGET
-        retarget_init();
-#endif
-
         /* Set the desired sleep mode. */
         pm_set_wakeup_mode(true);
         pm_sleep_mode_set(pm_mode_extended_sleep);

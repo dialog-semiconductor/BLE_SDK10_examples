@@ -67,7 +67,7 @@
  * FreeRTOS specific config
  */
 #define OS_FREERTOS                                        /* Define this to use FreeRTOS       */
-#define configTOTAL_HEAP_SIZE                   ( 64000 )  /* This is the FreeRTOS Heap Size    */
+#define configTOTAL_HEAP_SIZE                   ( 256000 )  /* This is the FreeRTOS Heap Size    */
 
 /*************************************************************************************************
  * Peripheral specific config
