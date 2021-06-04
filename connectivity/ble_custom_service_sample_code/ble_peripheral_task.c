@@ -1,13 +1,29 @@
+
 /**
  ****************************************************************************************
  *
  * @file ble_peripheral_task.c
  *
- * @brief BLE peripheral task
+ * @brief The BLE peripheral task
  *
- * Copyright (C) 2019 Dialog Semiconductor.
- * This computer program includes Confidential, Proprietary Information
- * of Dialog Semiconductor. All Rights Reserved.
+ * Copyright (c) 2021 Dialog Semiconductor. All rights reserved.
+ *
+ * This software ("Software") is owned by Dialog Semiconductor. By using this Software
+ * you agree that Dialog Semiconductor retains all intellectual property and proprietary
+ * rights in and to this Software and any use, reproduction, disclosure or distribution
+ * of the Software without express written permission or a license agreement from Dialog
+ * Semiconductor is strictly prohibited. This Software is solely for use on or in
+ * conjunction with Dialog Semiconductor products.
+ *
+ * EXCEPT AS OTHERWISE PROVIDED IN A LICENSE AGREEMENT BETWEEN THE PARTIES OR AS
+ * REQUIRED BY LAW, THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. EXCEPT AS OTHERWISE PROVIDED
+ * IN A LICENSE AGREEMENT BETWEEN THE PARTIES OR BY LAW, IN NO EVENT SHALL DIALOG
+ * SEMICONDUCTOR BE LIABLE FOR ANY DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR
+ * CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE SOFTWARE.
  *
  ****************************************************************************************
  */
@@ -26,46 +42,57 @@
 #include "ble_gatts.h"
 #include "ble_service.h"
 #include "ble_uuid.h"
-
-
-/* Required libraries for the target application */
+#include "ble_gattc.h"
+#include "misc.h"
 #include "ble_custom_service.h"
 
+/* MTU value to be negotiated upon connection */
+#define MTU_CHANGED_SIZE                        ( 125 )
 
-/* Enable/disable changing the default Maximum Protocol Unit (MTU). */
-#define CHANGE_MTU_SIZE_ENABLE        (0)
-
-
-/* Enable/disable debugging aid. Valid values */
-#define DBG_SERIAL_CONSOLE_ENABLE      (1)
-
-
-/*
- * Macro used for setting the maximum length, expressed in bytes,
- * of Characteristic Attributes.
+/**
+ * Max. attribute value size, expressed in bytes (for the custom characteristic attributes defined)
  *
- * \warning The remote device must not exceed the max value when updating the
- *          Characteristic Attribute value. Otherwise, the system might crash.
+ * \warning The remote device must not exceed the max. value defined. Otherwise, the system will crash!!!
  *
- **/
-#define CHARACTERISTIC_ATTR_VALUE_MAX_BYTES       (50)
-
-
-/*
- * Array used for holding the value of the Characteristic Attribute registered
- * in Dialog BLE database.
  */
-__RETAINED_RW uint8_t _characteristic_attr_val[CHARACTERISTIC_ATTR_VALUE_MAX_BYTES] = { 0 };
+#define CHARACTERISTIC_ATTR_VALUE_MAX_BYTES      ( 50 )
 
-
+/* Notification characteristic OS timer timeout */
+#define CHAR_NOTIF_TIMER_TIMEOUT_MS              ( 1000 )
 
 /*
  * Notification bits reservation
  * bit #0 is always assigned to BLE event queue notification
  */
+#define NOTIF_CHAR_NOTIF                ( 1 << 1 )
+
+/* Dummy 128-bit UUIDs (used for the custom characteristics defined) */
+#define CUSTOM_CHARACTERISTIC_1_UUID     NUM_TO_STRING(11111111-0000-0000-0000-000000000001)
+#define CUSTOM_CHARACTERISTIC_2_UUID     NUM_TO_STRING(22222222-0000-0000-0000-000000000001)
+#define CUSTOM_CHARACTERISTIC_3_UUID     NUM_TO_STRING(22222222-0000-0000-0000-000000000002)
+#define CUSTOM_CHARACTERISTIC_4_UUID     NUM_TO_STRING(22222222-0000-0000-0000-000000000003)
+
+/* Dummy 128-bit UUIDs (used for the custom services defined) */
+#define CUSTOM_SERVICE_1_UUID            NUM_TO_STRING(11111111-0000-0000-0000-111111111111)
+#define CUSTOM_SERVICE_2_UUID            NUM_TO_STRING(22222222-0000-0000-0000-222222222222)
+
+/**
+ * Attribute value of the first custom characteristic defined.
+ *
+ * \note Characteristic attribute values should be handled on application level by users.
+ *
+ * \note Similarly user can defined attribute values for the rest of characteristics defined.
+ */
+__RETAINED_RW uint8_t char_1_attr_val[CHARACTERISTIC_ATTR_VALUE_MAX_BYTES] = { 0 };
+
+/* Notification characteristic OS timer handle */
+__RETAINED static OS_TIMER char_notif_timer_h;
+
+/* Task handle */
+__RETAINED_RW static OS_TASK ble_task_handle = NULL;
 
 
-/*
+/**
  * BLE peripheral advertising data
  */
 static const uint8_t adv_data[] = {
@@ -73,129 +100,131 @@ static const uint8_t adv_data[] = {
         'M', 'y', ' ', 'C', 'u', 's', 't', 'o', 'm', ' ', 'S', 'e', 'r', 'v', 'i', 'c', 'e'
 };
 
+/**
+ *  Dummy notification messages sent to peer device after a specified time interval
+ */
+static const char *char_notif_msg_array[] = {
+        "Char. notification round #1 !!!",
+        "Char. notification round #2 !!!",
+        "Char. notification round #3 !!!",
+};
 
-/* Task handle */
-__RETAINED_RW static OS_TASK ble_task_handle = NULL;
+static const char *notif_type_array[] = {
+        [GATT_EVENT_NOTIFICATION] = "NOTIFICATION",
+        [GATT_EVENT_INDICATION] = "INDICATION"
+};
 
-
-
-/*
- * @brief Read request callback
- *
- * This callback is fired when a peer device issues a read request. This implies that
- * that the peer device wants to read the Characteristic Attribute value. User should
- * provide the requested data.
+/**
+ * ATT read request user callback function This callback is fired when a peer device
+ * issues a read request.
  *
  * \param [in] value: The value returned back to the peer device
  *
- * \param [in] length: The number of bytes/octets returned
- *
+ * \param [in] length: The number of bytes to be read from \p value
  *
  * \warning: The callback function should have that specific prototype
  *
  * \warning: The BLE stack will not proceed with the next BLE event until the
- *        callback returns.
+ *           callback returns.
  */
-void get_var_value_cb(uint8_t **value, uint16_t *length)
+static void get_char_value_cb(uint8_t **value, uint16_t *length)
 {
 
         /* Return the requested data back to the peer device */
-        *value  = _characteristic_attr_val;       // A pointer that points to the returned data
-        *length = sizeof(CHARACTERISTIC_ATTR_VALUE_MAX_BYTES);  // The size of the returned data, expressed in bytes.
+        *value  = char_1_attr_val;
+        *length = sizeof(char_1_attr_val);
 
         /*
-         * This is just for debugging/demonstration purposes. UART is a slow interface
-         * and will add significant delays compared to BLE speeds.
+         * This is just for debugging purposes. UART is a slow interface
+         * and will add significant delays to the BLE functionality.
          */
-#if (DBG_SERIAL_CONSOLE_ENABLE == 1)
-        printf("\nRead callback function hit! - Returned value: %s\n\r", (char *)_characteristic_attr_val);
-#endif
+        DBG_PRINTF("\nRead callback function hit! - Returned value: %s\n\r", (char *)char_1_attr_val);
 }
 
-
-/*
- *
- * @brief Write request callback
- *
- * This callback is fired when a peer device issues a write request. This implies that
- * the peer device requested to modify the Characteristic Attribute value.
+/**
+ * ATT write request user callback function. This callback is fired when a peer device
+ * issues a write request.
  *
  * \param [out] value:  The value written by the peer device.
  *
- * \param [out] length: The length of the written value, expressed in bytes/octets.
- *
+ * \param [out] length: Number of bytes written by the peer device
  *
  * \warning: The callback function should have that specific prototype
  *
  * \warning: The BLE stack will not proceed with the next BLE event until the
- *        callback returns.
+ *           callback returns.
  *
  */
-void set_var_value_cb(const uint8_t *value, uint16_t length)
+static void set_char_value_cb(const uint8_t *value, uint16_t length)
 {
-        /* Clear the current Characteristic Attribute value */
-        memset((void *)_characteristic_attr_val, 0x20, sizeof(_characteristic_attr_val));
+        /* Clear the variable */
+        memset((void *)char_1_attr_val, 0x20, sizeof(char_1_attr_val));
 
-        /* Update the Characteristic Attribute value as requested by the peer device */
-        memcpy((void *)_characteristic_attr_val, (void *)value, length);
+        /* Get the value written by the peer device */
+        memcpy((void *)char_1_attr_val, (void *)value, length);
 
         /*
-         * This is just for debugging/demonstration purposes. UART is a slow interface
-         * and will add significant delays compared to BLE speeds.
+         * This is just for debugging purposes. UART is a slow interface
+         * and will add significant delays to the BLE functionality.
          */
-#if (DBG_SERIAL_CONSOLE_ENABLE == 1)
-        printf("\nWrite callback function hit! - Written value: %s, length: %d\n\r",
-                                                        _characteristic_attr_val, length);
-#endif
+        DBG_PRINTF("\nWrite callback function hit! - Written value: %s, length: %d\n\r",
+                                                                        char_1_attr_val, length);
 }
 
-
-/*
- * @brief Notification event callback
+/**
+ * Notification event user callback function
  *
- *  A notification callback function is fired for each connected device.
- *  It's a prerequisite that peer devices will have their notifications/
- *  indications enabled.
+ * This callback function will be fired for each peer device that has explicitly
+ * enabled notifications/indications (for the target characteristic attribute).
  *
  * \param [in] conn_idx: Connection index
  *
- * \param [in] status: The status of the aforementioned operation:
+ * \param [in] status: The status of the aforementioned operation. 'True' when
+ *                     notifications are executed successfully by CMAC,
+ *                     otherwise 'false'.
  *
- *                     0 --> notification/indication wasn't sent successfully
- *                     1 --> notification/indication was sent successfully
- *
- * \param [in] type: Signifies whether a notification or indication has been sent
- *                   to the peer device:
- *
- *                   0 --> when a notification is sent
- *                   1 --> when an indications is sent
- *
+ * \param [in] type: Signifies whether a notification or indication operations
+ *                   has been initiated.
  *
  * \warning: The BLE stack will not proceed with the next BLE event until the
- *        callback returns.
+ *           callback returns.
  */
-void event_sent_cb(uint16_t conn_idx, bool status, gatt_event_t type)
+static void event_sent_char_1_cb(uint16_t conn_idx, bool status, gatt_event_t type)
 {
         /*
-         * This is just for debugging/demonstration purposes. UART is a slow interface
-         * and will add significant delay compared to the BLE speeds.
+         * This is just for debugging purposes. UART is a slow interface
+         * and will add significant delays to the BLE functionality.
          */
-#if (DBG_SERIAL_CONSOLE_ENABLE == 1)
-        printf("\nNotify callback - Connection idx: %d, Status: %d, Type: %d\n\r",
-                                                                conn_idx, status, type);
-#endif
+        DBG_PRINTF("\nNotify callback - Connection IDX: %d, Status: %d, Type: %s\n\r",
+                                                                conn_idx, status, notif_type_array[type]);
 }
 
+static void event_sent_char_4_cb(uint16_t conn_idx, bool status, gatt_event_t type)
+{
+        /*
+         * This is just for debugging purposes. UART is a slow interface
+         * and will add significant delays to the BLE functionality.
+         */
+        DBG_PRINTF("\nNotify callback - Connection IDX: %d, Status: %d, Type: %s\n\r",
+                                                                conn_idx, status, notif_type_array[type]);
+}
 
+/***************************** BLE event handlers *******************************/
+static void handle_evt_gattc_mtu_changed(ble_evt_gattc_mtu_changed_t *evt)
+{
+        /*
+         * This is just for debugging purposes. UART is a slow interface
+         * and will add significant delays to the BLE functionality.
+         */
+        DBG_PRINTF("\n\rMTU CHANGED - CON IDX[%d] - MTU: %d\n\r", evt->conn_idx, evt->mtu);
+}
 
-/*
- * Main code
- */
 static void handle_evt_gap_connected(ble_evt_gap_connected_t *evt)
 {
         /*
          * Manage connection information
          */
+        ble_gattc_exchange_mtu(evt->conn_idx);
 }
 
 static void handle_evt_gap_disconnected(ble_evt_gap_disconnected_t *evt)
@@ -207,21 +236,32 @@ static void handle_evt_gap_disconnected(ble_evt_gap_disconnected_t *evt)
 
 static void handle_evt_gap_adv_completed(ble_evt_gap_adv_completed_t *evt)
 {
-        // restart advertising so we can connect again
+        /* restart advertising so we can connect again */
         ble_gap_adv_start(GAP_CONN_MODE_UNDIRECTED);
 }
 
+/**
+ *  Notification OS timer callback function.
+ *
+ *  \note Used to notify the peripheral task that the OS timer has been expired so,
+ *        notifications are sent to the peer devices connected.
+ *
+ */
+static void char_notif_timer_cb(OS_TIMER timer)
+{
+        OS_TASK task = (OS_TASK) OS_TIMER_GET_TIMER_ID(timer);
 
+        if (task) {
+                OS_TASK_NOTIFY(task, NOTIF_CHAR_NOTIF, OS_NOTIFY_SET_BITS);
+        }
+}
 
+/* Peripheral OS task */
 void ble_peripheral_task(void *params)
 {
         int8_t wdog_id;
-        ble_service_t *svc;
 
-        printf("\n*** Custom BLE Service Demonstration ***\n\n\r");
-
-        // in case services which do not use svc are all disabled, just suppress -Wunused-variable
-        (void) svc;
+        DBG_PRINTF("\n\n\r*** Custom BLE Service Framework Demonstration ***\n\n\r");
 
         /* register ble_peripheral task to be monitored by watchdog */
         wdog_id = sys_watchdog_register(false);
@@ -235,45 +275,17 @@ void ble_peripheral_task(void *params)
         ble_register_app();
 
         ble_gap_device_name_set("Custom BLE Service", ATT_PERM_READ);
-
-
-#if (CHANGE_MTU_SIZE_ENABLE == 1)
-        uint16_t mtu_size;
-        ble_error_t mtu_err;
-
-        /*
-         * Get the old MTU size and print it on the serial console.
-         */
-        mtu_err = ble_gap_mtu_size_get(&mtu_size);
-        printf("Old MTU size: %d, Status: %d\n\r", mtu_size, mtu_err);
-
-        /*
-         * @brief Change the MTU size.
-         *
-         * \note: The maximum supported MTU size is 512 octets.  The minimum supported MTU size,
-         *        as defined by Bluetooth SIG, is 65 octets when LE secure connections are used,
-         *        23 otherwise.
-         *
-         * \warning: The MTU size change should take place prior to creating the BLE attribute database.
-         *           Otherwise, any already defined attribute database will be deleted!!!
-         */
-        mtu_err = ble_gap_mtu_size_set(125);
-
-        /*
-         * Get the updated MTU size and print it on the serial console.
-         */
-        mtu_err = ble_gap_mtu_size_get(&mtu_size);
-        printf("New MTU size: %d, Status: %d\n\r", mtu_size, mtu_err);
-#endif
+        ble_gap_mtu_size_set(MTU_CHANGED_SIZE);
 
 
         //************ Characteristic declarations for the 1st custom BLE Service  *************
         const mcs_characteristic_config_t custom_service_1[] = {
 
                 /* Initialized Characteristic Attribute */
-                CHARACTERISTIC_DECLARATION(11111111-0000-0000-0000-000000000001, CHARACTERISTIC_ATTR_VALUE_MAX_BYTES,
-                        CHAR_WRITE_PROP_EN, CHAR_READ_PROP_EN, CHAR_NOTIF_INDIC_EN, ATT_PERM_RW, Initialized Characteristic,
-                                                        get_var_value_cb, set_var_value_cb, event_sent_cb),
+                CHARACTERISTIC_DECLARATION(CUSTOM_CHARACTERISTIC_1_UUID, CHARACTERISTIC_ATTR_VALUE_MAX_BYTES,
+                                          GATT_PROP_WRITE | GATT_PROP_READ | GATT_PROP_NOTIFY, ATT_PERM_RW,
+                                                               NUM_TO_STRING(Service #1 Characteristic #1),
+                                                        get_char_value_cb, set_char_value_cb, event_sent_char_1_cb),
 
 
                  // -----------------------------------------------------------------
@@ -283,45 +295,46 @@ void ble_peripheral_task(void *params)
 
         };
         // ***************** Register the Bluetooth Service in Dialog BLE framework *****************
-        SERVICE_DECLARATION(custom_service_1, 11111111-0000-0000-0000-111111111111)
-
+        SERVICE_DECLARATION(custom_service_1, CUSTOM_SERVICE_1_UUID)
 
 
         //************ Characteristic declarations for the 2nd BLE Service *************
         const mcs_characteristic_config_t custom_service_2[] = {
 
                 /* Uninitialized Characteristic Attribute. You can defined your preferred settings */
-                CHARACTERISTIC_DECLARATION(22222222-0000-0000-0000-000000000001, 0,
-                          CHAR_WRITE_PROP_DIS, CHAR_READ_PROP_EN, CHAR_NOTIF_NONE, ATT_PERM_READ, NULL,
-                                                                                   NULL, NULL,NULL),
+                CHARACTERISTIC_DECLARATION(CUSTOM_CHARACTERISTIC_2_UUID, 0, GATT_PROP_NONE, ATT_PERM_NONE,
+                                                                       NUM_TO_STRING(NULL), NULL, NULL, NULL),
 
 
                 /* Uninitialized Characteristic Attribute. You can defined your preferred settings */
-                CHARACTERISTIC_DECLARATION(22222222-0000-0000-0000-000000000002, 0,
-                          CHAR_WRITE_PROP_DIS, CHAR_READ_PROP_DIS, CHAR_NOTIF_NONE, ATT_PERM_NONE, NULL,
-                                                                                     NULL, NULL, NULL),
+                CHARACTERISTIC_DECLARATION(CUSTOM_CHARACTERISTIC_3_UUID, 0, GATT_PROP_NONE, ATT_PERM_NONE,
+                                                                       NUM_TO_STRING(NULL), NULL, NULL, NULL),
 
 
                /* Uninitialized Characteristic Attribute. You can defined your preferred settings */
-               CHARACTERISTIC_DECLARATION(22222222-0000-0000-0000-000000000003, 0,
-                       CHAR_WRITE_PROP_EN, CHAR_READ_PROP_DIS, CHAR_NOTIF_NONE, ATT_PERM_WRITE, NULL,
-                                                                                    NULL, NULL, NULL),
+                CHARACTERISTIC_DECLARATION(CUSTOM_CHARACTERISTIC_4_UUID, CHARACTERISTIC_ATTR_VALUE_MAX_BYTES,
+                                                                           GATT_PROP_INDICATE, ATT_PERM_NONE,
+                                                                 NUM_TO_STRING(Service #2 Characteristic #4),
+                                                                                           NULL, NULL, event_sent_char_4_cb),
 
 
                 // -----------------------------------------------------------------
                 // -- Here you can continue adding more Characteristic attributes --
                 // -----------------------------------------------------------------
 
-       };
-       // ****************** Register the Bluetooth Service in Dialog BLE framework *****************
-       SERVICE_DECLARATION(custom_service_2, 22222222-0000-0000-0000-222222222222)
-
+        };
+        // ****************** Register the Bluetooth Service in Dialog BLE framework *****************
+        SERVICE_DECLARATION(custom_service_2, CUSTOM_SERVICE_2_UUID)
 
         ble_gap_tx_power_set(GAP_AIR_OP_ADV, GAP_TX_POWER_MAX);
         ble_gap_adv_data_set(sizeof(adv_data), adv_data, 0, NULL);
         ble_gap_adv_start(GAP_CONN_MODE_UNDIRECTED);
 
-
+        /* Create timer to notify peer devices at specified time intervals */
+        char_notif_timer_h = OS_TIMER_CREATE("CHAR NOTIF", OS_MS_2_TICKS(CHAR_NOTIF_TIMER_TIMEOUT_MS), true,
+                                                        (void *) OS_GET_CURRENT_TASK(), char_notif_timer_cb);
+        ASSERT_WARNING(char_notif_timer_h);
+        OS_TIMER_START(char_notif_timer_h, OS_TIMER_FOREVER);
 
         for (;;) {
                 OS_BASE_TYPE ret;
@@ -372,6 +385,9 @@ void ble_peripheral_task(void *params)
                                 ble_gap_pair_reply(evt->conn_idx, true, evt->bond);
                                 break;
                         }
+                        case BLE_EVT_GATTC_MTU_CHANGED:
+                                handle_evt_gattc_mtu_changed((ble_evt_gattc_mtu_changed_t *) hdr);
+                                break;
                         default:
                                 ble_handle_event_default(hdr);
                                 break;
@@ -388,5 +404,17 @@ no_event:
 
                 }
 
+                if (notif & NOTIF_CHAR_NOTIF) {
+                        static int idx = 0;
+                        mcs_send_notifications(CUSTOM_CHARACTERISTIC_1_UUID,
+                             (const uint8_t *)char_notif_msg_array[idx], strlen(char_notif_msg_array[idx]));
+
+                        mcs_send_notifications(CUSTOM_CHARACTERISTIC_4_UUID,
+                             (const uint8_t *)char_notif_msg_array[idx], strlen(char_notif_msg_array[idx]));
+
+                        if (++idx >= ARRAY_LENGTH(char_notif_msg_array)) {
+                                idx = 0;
+                        }
+                }
         }
 }
