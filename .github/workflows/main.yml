@@ -38,5 +38,5 @@ jobs:
          
       - name: Unzip SDK
         run: |
-          unzip -r SDK_10.0.10.118.zip
+          unzip SDK_10.0.10.118.zip
           
