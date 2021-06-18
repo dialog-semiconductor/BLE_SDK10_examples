@@ -19,7 +19,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    container: benlauret/smartsnippetsstudio:ubuntu-latest
+    container: benlauret/smartsnippetsstudio:latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
