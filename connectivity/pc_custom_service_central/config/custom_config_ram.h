@@ -35,10 +35,8 @@
 
 #define dg_configFLASH_CONNECTED_TO             ( FLASH_IS_NOT_CONNECTED )
 #define dg_configFLASH_POWER_DOWN               ( 0 )
-#define dg_configPOWER_1V8P_ACTIVE              ( 0 )
-#define dg_configPOWER_1V8P_SLEEP               ( 0 )
-#define dg_configPOWER_1V8_ACTIVE               ( 0 )
-#define dg_configPOWER_1V8_SLEEP                ( 0 )
+#define dg_configPOWER_1V8P_ACTIVE              ( 1 )
+#define dg_configPOWER_1V8P_SLEEP               ( 1 )
 
 #define dg_configBATTERY_TYPE                   ( BATTERY_TYPE_LIMN2O4 )
 #define dg_configBATTERY_CHARGE_CURRENT         ( 2 )    // 30mA
