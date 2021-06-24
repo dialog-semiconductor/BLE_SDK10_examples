@@ -1,0 +1,62 @@
+﻿emWin OBJECT CODE License terms
+
+SEGGER emWin LIBRARY FOR the DA1469x series of devices
+SOFTWARE LICENSE AGREEMENT
+
+
+IMPORTANT: PLEASE READ THE FOLLOWING LICENSE AGREEMENT CAREFULLY.  BY USING THIS LICENSED SOFTWARE, YOU (EITHER AN INDIVIDUAL OR LEGAL ENTITY) ARE AGREEING THAT YOU HAVE ACCEPTED ALL OF THE TERMS AND CONDITIONS CONTAINED IN THIS AGREEMENT AND ARE LEGALLY BOUND THEREBY.
+
+This Software License Agreement is a binding, legal agreement between 
+Dialog Semiconductor B.V., Het Zuiderkruis 53,5215 MV  ‘s-Hertogenbosch, The Netherlands hereinafter referred to as Dialog Semiconductor and you (either an individual or legal entity) hereinafter referred to as LICENSEE.
+
+This Agreement applies to the SEGGER emWin SOFTWARE, licensed to Dialog Semiconductor in SOURCE CODE form including the right for to create, generate, distribute and make available the SOFTWARE in OBJECT CODE form to YOU (the LICENSED SOFTWARE as defined below). 
+  
+By using this LICENSED SOFTWARE, you accept and agree to all of the terms and conditions contained in this Agreement on behalf of yourself and your company.  This Agreement is the sole and exclusive terms and conditions for the LICENSED SOFTWARE, and nothing else gives you or any other person or entity any right to use, copy, modify or distribute the LICENSED SOFTWARE in whole or in part. 
+
+If you do not accept and agree to this Agreement, do not use any of the LICENSED SOFTWARE.  By installing, using or copying any part of the LICENSED SOFTWARE, you indicate that you accept this Agreement. 
+
+1.         DEFINITIONS  
+
+“EXECUTABLE CODE” means computer programs that have been fully assembled or compiled (into OBJECT CODE) and linked into machine-readable and executable binary form, which can be executed by a computer, but is not generally readable by humans without reverse assembly, reverse compiling or reverse engineering.
+
+“LICENSED SOFTWARE” means the SEGGER emWin software in OBJECT CODE form for use with the specified DA1469x series of devices only.
+
+
+“MCU” means the  DA1469x series of devices, designed manufactured, branded and marketed by Dialog Semiconductor. 
+
+2.         LIMITED LICENSE 
+
+Subject to the terms and conditions of this Agreement, Dialog Semiconductor hereby grants to LICENSEE, and LICENSEE hereby accepts, a limited, non-exclusive, worldwide, personal, non-transferable, revocable license, without the right to sublicense to: 
+
+
+(a)	use and execute the LICENSED SOFTWARE to develop customized application programs to operate with the specified family of MCUs and distribute, directly and indirectly, such LICENSED SOFTWARE in such application programs, in EXECUTABLE Code form only, in LICENSEEs products incorporating and using a device of the specified family of MCUs.
+
+3.         LICENSE RESTRICTIONS
+
+3.1                   LICENSEE is expressly prohibited from using the LICENSED SOFTWARE on a stand-alone basis, or for any purpose other than to operate with the specified MCU.
+
+3.2                   LICENSEE shall not, and shall not permit any third party to, reverse engineer, decompile or disassemble the LICENSED SOFTWARE.  
+
+3.3                   The LICENSED SOFTWARE is licensed and not sold to you and no ownership or assignment of any intellectual property rights is intended nor shall be implied thereby.   
+
+3.4                   LICENSEE shall not remove or alter any copyright notices, proprietary information notices or restricted rights notices as provided by Dialog Semiconductor and shall affix to any media containing a copy of any LICENSED SOFTWARE all such notices as were affixed to the original of the LICENSED SOFTWARE. 
+
+4.         WARRANTY AND INDEMNIFICATION
+
+4.1                   the licensed software is provided to LICENSEE “as is” without any warranties or indemnification of any kind, including without limitation, Dialog Semiconductor and its licensor SEGGER do not warrant to LICENSEE that the licensed SOFTWARE will operate error free or uninterrupted, nor that it will meet your requirements. Dialog Semiconductor and its licensor SEGGER shall not have any duty or obligation to defend or indemnify LICENSEE or to hold it harmless for any reason related to the licensed SOFTWARE, or otherwise be liable to LICENSEE or any third party with respect to the subject matter of this agreement.  LICENSEE acknowledges and agrees that the licensed SOFTWARE is provided as-is and accepts all risks of utilizing the licensed SOFTWARE under the conditions set forth in this agreement. 
+
+4.2                   Dialog Semiconductor and its licensor SEGGER expressly disclaim all warranties, express or implied, including, but not limited to, any implied warranties of merchantability, fitness for a particular purpose, and non-infringement of intellectual property rights. Dialog Semiconductor and its licensor SEGGER shall have no liability to licensee, or its subsidiaries, affiliates, or any other third party for any damages, including without limitation, damages resulting or alleged to have resulted from any defect, error or omission in the licensed SOFTWARE, or as a result of any infringement of any intellectual property right of any third party.  In no event shall Dialog Semiconductor and/or its licensor SEGGER be liable for any incidental, indirect, special, exemplary, punitive, or consequential damages (including lost profits) suffered by LICENSEE or its subsidiaries, affiliates, or any third party arising out of or related to this agreement, including without limitation the use or non-use of the licensed SOFTWARE, even if Dialog Semiconductor has been advised of the possibility of such damages.  In no event shall Dialog Semiconductor or its licensor SEGGER total aggregate liability for damages arising out of this agreement exceed the amount of US$ 10.00 (in words: ten US dollars). 
+
+
+5.         TERMS AND TERMINATION 
+
+5.1       Dialog Semiconductor may terminate this Agreement at anytime if a) LICENSEE breaches or violates any terms or conditions of this Agreement.
+5.2       The License granted to LICENSEE under this Agreement shall immediately end upon the termination of this Agreement.    
+5.3       Upon termination of this Agreement, LICENSEE shall within a period of 4 weeks destroy all LICENSED SOFTWARE in its possession or control, provided however, LICENSEE may keep one copy of the LICENSED SOFTWARE for archival and support purposes only. 
+
+6.         GENERAL
+
+6.1	This Agreement shall be governed by and construed in accordance with the laws of England and Wales, without reference to conflict of laws principles.
+
+6.2	Any dispute or claim arising out of or relating to this Agreement (including any matters regarding its existence, scope, validity, breach or termination, or any non-contractual obligations arising out of or related to it) that is not able to be resolved through negotiations shall be submitted to arbitration in London, England, administered by the International Chamber of Commerce under its Rules of Arbitration. There shall be one arbitrator and the language of the arbitration shall be English. The award shall be in writing, state the reasons for the award and be final and binding. Judgment on the award may be enforced in any court of competent jurisdiction. To the extent permitted by law, the parties shall preserve the confidentiality of all aspects of the arbitration and dispute. The arbitration shall be the sole and exclusive forum for the final resolution of any such dispute or claim. Notwithstanding the foregoing, Dialog may seek interim or injunctive relief in any court of competent jurisdiction to protect its intellectual property rights.
+

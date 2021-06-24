@@ -1,0 +1,12 @@
+Make sure the selected Windows SDK is installed:
+Properties -> Configuration Properties -> General -> Windows SDK Version.
+
+1. Right-Click on the Project (e.g. SimulationTrial) -> Properties
+2  Set Configuration to "All Configurations"
+3. Goto Configuration Properties -> Linker -> Input.
+4. Add under Additional Dependencies: "legacy_stdio_definitions.lib"
+5. Set Ignore All Default Libraries: "No"
+6. Set Ignore Specific Default Libraries: "LIBC.lib;LIBCMTD.lib"
+7. Goto Configuration Properties -> Linker -> Advanced
+8. Set Image Has Safe Exception Handlers:"No (/SAFESEH:NO)"
+9. Click "OK"-Button.
