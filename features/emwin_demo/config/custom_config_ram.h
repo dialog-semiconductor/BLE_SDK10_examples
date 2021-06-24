@@ -28,8 +28,8 @@
 #define dg_configUSE_WDOG                       ( 0 )
 
 #define dg_configFLASH_CONNECTED_TO             ( FLASH_IS_NOT_CONNECTED )
-#define dg_configPOWER_1V8P_ACTIVE              ( 0 )
-#define dg_configPOWER_1V8P_SLEEP               ( 0 )
+#define dg_configPOWER_1V8P_ACTIVE              ( 1 )
+#define dg_configPOWER_1V8P_SLEEP               ( 1 )
 
 #define dg_configUSE_SW_CURSOR                  ( 1 )
 #define dg_configENABLE_CMAC_DEBUGGER           ( 0 )

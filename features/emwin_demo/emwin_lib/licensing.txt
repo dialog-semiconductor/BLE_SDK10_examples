@@ -1,0 +1,23 @@
+LICENSES
+
+NAME                    LICENSE FILE PATH                       LICENSE TYPE    COPYRIGHT                       COMMENTS
+-------------------------------------------------------------------------------------------------------------------------------------------
+SDK core and                                                    Dialog          Dialog Semiconductor            Licensed under the relevant
+applications                                                    proprietary                                     Dialog SLA
+-------------------------------------------------------------------------------------------------------------------------------------------
+SEGGER software         segger\segger_license.txt               Proprietary     SEGGER Microcontroller          Contained in file headers
+                                                                                GmbH & Co. KG                   where applicable
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+This software includes both proprietary and open source components. The proprietary components may only be used after execution of the
+relevant Dialog Semiconductor Licensing Agreement. If you have not executed such an agreement you are not authorised to use this software.
+All open source components constitute a separate delivery and are licensed according to the applicable terms of their respective open source
+licenses. All open source software is delivered "AS IS" with no warranties. While Dialog Semiconductor seeks to provide complete and
+accurate licensing information with regard to each open source package, Dialog Semiconductor does not warrant or represent that the
+licensing information is complete or error-free. Certain open source licenses require that source code is made available under certain 
+conditions. Please contact bluetooth.support@diasemi.com for any source code requests, as well as for any
+licensing inquiries with respect to the proprietary components.
+
+Release Version:	10.480.4
+
+Approved by Legal: 	Yes
