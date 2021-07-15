@@ -4,7 +4,7 @@
  *
  * @brief SPI master and slave tasks
  *
- * Copyright (C) 2020 Dialog Semiconductor.
+ * Copyright (C) 2021 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
  * of Dialog Semiconductor. All Rights Reserved.
  *
