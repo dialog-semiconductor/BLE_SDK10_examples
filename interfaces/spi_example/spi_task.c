@@ -29,7 +29,6 @@
 #define consumer_DATA_ARRAY_BYTES               200
 #define consumer_THRESHOLD                      100
 #define consumer_SPI_RCV_CB                     (5 * producer_SPI_TX_DATA_LENGTH)       // Should be multiple of the TX side or 1
-#define SPI_DATA_RECEIVE                        (1 << 0)
 
 #define MUTEXED_PRINTF(f, args...)              {                                       \
                                                 OS_MUTEX_GET(prt_m, OS_MUTEX_FOREVER);  \
@@ -92,22 +91,20 @@ void spi_consumer_task( void *pvParameters )
 
         ad_spi_handle_t spi_slave_dev = ad_spi_open(SPI_SLAVE_DEVICE);
 
-        for (;;)
-        {
+        for (;;) {
                 ad_spi_read_async(spi_slave_dev, &data_received[data_rcv_cnt], consumer_SPI_RCV_CB, consumer_rcv_cb, NULL);
                 OS_EVENT_WAIT(spi_rcv, consumer_FREQUENCY_MS);
 
-                if(data_rcv_cnt >= consumer_THRESHOLD)
-                {
+                if(data_rcv_cnt >= consumer_THRESHOLD) {
                         MUTEXED_PRINTF("Successfully read SPI by consumer: %lu bytes \n\rData received ", data_rcv_cnt);
                         for(int i = 0; i < data_rcv_cnt; i++)
                                 MUTEXED_PRINTF("%d ", data_received[i]);
                         MUTEXED_PRINTF("\n\r");
                         memset(data_received, 0x00, sizeof(data_received));
                         data_rcv_cnt = 0;
-                }
-                else
+                } else {
                         MUTEXED_PRINTF("Consumer Task run, Threshold not reached yet \n\r");
+                }
 
                 fflush(stdout);
         }
