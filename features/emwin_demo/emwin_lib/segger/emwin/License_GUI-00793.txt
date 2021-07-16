@@ -1,0 +1,8 @@
+Licensor:                 SEGGER Software GmbH
+Licensed to:              Dialog Semiconductor BV, Het Zuiderkruis 53, 5215 MV S-Hertogenbosch, The Netherlands
+Licensed SEGGER software: emWin
+License number:           GUI-00793
+License model:            Buyout SRC [Buyout Source Code License], according to Amendment No. 3 [signed June 3rd 2019 by both parties] to emUSB Buyout License Agreement, signed August 6th 2016
+Licensed product:         Any
+Licensed platform:        DA1469x
+Licensed number of seats: -
