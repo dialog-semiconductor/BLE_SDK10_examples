@@ -1,4 +1,4 @@
-# Template for I2C operations via Sensor Node Controller (SNC) 
+# Template for I2C operations via Sensor Node Controller (SNC)
 
 ## Example description
 
@@ -14,19 +14,21 @@ The application provides all the functionality required for initializing the SNC
 
 4. In `snc_i2c_demo\snc_i2c_ucodes.c` file, declare the SNC code that should be executed in case the SNC-to-CM33 queue is full. See TAG `SNC_QUEUE_IS_FULL`. This section is optional and depends on the I2C device/module used. In this file, the developer should also declare the SENIs code that performs the actual I2C transactions. See TAG `SNC_I2C_OPERATIONS`. A possible implementation is provided and can be used as a reference.
 
-5. In `config\custom_macros.h` file, use the provided macros to tailor the application according to your needs. 
+5. In `config\custom_macros.h` file, use the provided macros to tailor the application according to your needs.
 
 **Note:** A special mechanism for producing data has been implemented and can be used for verifying the correct behavior of the code (by default enabled). What this mechanism does is to produce fake data just like they would be read from an external I2C devices.
 
 ### HW & SW Configurations
 
 - **Hardware Configurations**
-    - This example runs on a DA1469x Bluetooth Smart SoC.
-    - A DA1469x Pro Development Kit is needed for this example.
-- **Software Configurations**
-    - Download the latest SDK version for the DA1469x family of devices (10.0.4.x)
-    - **SEGGER's J-Link** tools should be downloaded and installed.
 
+  - This example runs on a DA1469x Bluetooth Smart SoC.
+  - A DA1469x Pro Development Kit is needed for this example.
+
+- **Software Configurations**
+
+  - Download the latest SDK version for the DA1469x family of devices (10.0.4.x)
+  - **SEGGER's J-Link** tools should be downloaded and installed.
 
 ## How to run the example
 
@@ -45,46 +47,19 @@ Here is the default setup of the target application: the SNC is triggered follow
 
 &nbsp;
 
- - In `config\custom_macros.h` file, perform the following modifications: 
-  `#define USER_SNC_TRIGGER_ON_RTC_EVENT             (0)` 
+- In `config\custom_macros.h` file, perform the following modifications:
+  `#define USER_SNC_TRIGGER_ON_RTC_EVENT             (0)`
   `#define USER_SNC_TRIGGER_ON_WKUP_EVENT            (1)`
 
- - Build the code again, download the firmware in the chip and press the reset button on DevKit.
- - Press the **KEY1** button on Pro DevKit three times. You should expect to get the following output on the serial console:
+- Build the code again, download the firmware in the chip and press the reset button on DevKit.
+- Press the **KEY1** button on Pro DevKit three times. You should expect to get the following output on the serial console:
 
  &nbsp;
 
-![I2C Data Serial Console](assets/i2c_snc_external_serial_console.png) 
- 
- 
+![I2C Data Serial Console](assets/i2c_snc_external_serial_console.png)
+
 The data packets can be distinguished using the timestamp functionality. When the selected PDC trigger source is the RTC, the timestamp value is acquired by the RTC counter (default values are set to zero). When the PDC is triggered by external events then the timestamp value is acquired by the TIMER1 capture counter.
 
-
 ## Known Limitations
+
 There are no known limitations for this application.
-
-
-## License
-**************************************************************************************
-
- Copyright (c) 2019 Dialog Semiconductor. All rights reserved.
-
- This software ("Software") is owned by Dialog Semiconductor. By using this Software
- you agree that Dialog Semiconductor retains all intellectual property and proprietary
- rights in and to this Software and any use, reproduction, disclosure or distribution
- of the Software without express written permission or a license agreement from Dialog
- Semiconductor is strictly prohibited. This Software is solely for use on or in
- conjunction with Dialog Semiconductor products.
-
- EXCEPT AS OTHERWISE PROVIDED IN A LICENSE AGREEMENT BETWEEN THE PARTIES OR AS
- REQUIRED BY LAW, THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. EXCEPT AS OTHERWISE PROVIDED
- IN A LICENSE AGREEMENT BETWEEN THE PARTIES OR BY LAW, IN NO EVENT SHALL DIALOG
- SEMICONDUCTOR BE LIABLE FOR ANY DIRECT, SPECIAL, INDIRECT, INCIDENTAL, OR
- CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
- PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
- ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE SOFTWARE.
-
-**************************************************************************************
-
