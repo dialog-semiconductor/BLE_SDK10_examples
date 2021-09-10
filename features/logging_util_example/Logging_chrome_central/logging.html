@@ -1,0 +1,97 @@
+<html>
+<head>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body style="background-color:powderblue;" onload="on_html_loaded()">
+
+<script src="logging.js"></script>
+
+<div id="card">
+  <table style="width:100%"><tr><td>
+  <h1 >SmartBond&trade; Logging</h1></td>
+  <td>
+  </td>
+  </tr>
+  </table>
+</div><br>
+
+<div id="settings" style="display:inline">
+  <div id="card" style="font-family: courier;">
+  
+    <table style="width:100%">
+    <tr>
+    <td>
+    <div id="settings_view">
+        <b>
+        Dialog SoC: <span id="sw_soc">DA1469x</span>
+        <br>
+        Web BLE version: <span id="version">0.0.1</span>
+      </b>
+    </div>
+    </td>
+    </tr>
+    </table>
+  </div>
+</div><br>
+
+<div id="debugcard" style="display:inline">
+  <div id="debug">
+    <b>Debug:</b>
+    <textarea id="debug_txt"></textarea>
+  </div>
+</div><br>
+
+<div id="logcard" style="display:inline">
+  <div id="cardi">
+    <b>Log:</b>
+    <textarea id="log"></textarea>
+  </div>
+</div><br>
+
+<div id="connect_card">
+  <div id="card">
+    <div id="my">
+	
+	  <button type="button" onclick="connect_to_peer()">
+        Scan for devices
+      </button>
+    
+	  <button type="button" onclick="clear_logs()">
+        Clear Logs
+      </button>
+	
+	</div>
+  </div>
+  <br> 
+</div>
+
+<div id="disconnect_card" style="display:none;">
+  <div id="card">
+    <div id="my">
+	
+	  <button type="button" onclick="disconnect_from_peer()">
+        Disconnect
+      </button>
+	  
+	  <select id="severity_select" onchange="set_severity()">
+		<option value=0>Debug</option>
+		<option value=1>Notice</option>
+		<option value=2>Warning</option>
+		<option value=3>Error</option>
+		<option value=4>Critical</option>
+	  </select>
+	  
+	  
+	  
+	  <button type="button" onclick="clear_logs()">
+        Clear Logs
+      </button>
+	  
+    </div>
+  </div>
+  <br> 
+</div>
+
+</body>
+</html>
