@@ -1,0 +1,4 @@
+build*
+BSP/
+.vscode/.cortex-debug*
+jlink.log
