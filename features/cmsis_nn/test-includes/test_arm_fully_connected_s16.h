@@ -1,0 +1,6 @@
+
+#ifndef INC_TEST_ARM_FULLY_CONNECTED_S16_H
+#define INC_TEST_ARM_FULLY_CONNECTED_S16_H
+int fully_connected_int16_arm_fully_connected_s16(void);
+int fully_connected_int16_big_arm_fully_connected_s16(void);
+#endif
