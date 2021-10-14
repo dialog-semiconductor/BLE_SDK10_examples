@@ -39,7 +39,7 @@ demonstrates the right operation of the neural network libraries on the DA1469x 
   - parity: None
   - flow  control: none
 
-- The terminal displays the sin_cos example has run successfully.
+- The terminal displays the NN tests have completed successfully.
 
 ```
 arm_fully_connected_s16 test success
