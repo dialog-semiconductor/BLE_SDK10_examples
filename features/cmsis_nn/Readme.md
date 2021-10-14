@@ -1,12 +1,12 @@
-# DA1469x CMSIS DSP example
+# DA1469x CMSIS NN example
 
 ______________________________________________________________________
 
 ## Example description
 
-This example runs the ARM CMSIS DSP library on the DA1469x. One of the example
-from the CMSIS library has been extracted and used as a sanity check. This
-demonstrate the right operation of the floatin point unit on the DA1469x platform.
+This example runs the ARM CMSIS NN library on the DA1469x. Four of the Tests
+from the CMSIS library have been extracted and used as a sanity check. This
+demonstrates the right operation of the neural network libraries on the DA1469x platform.
 
 ## HW and SW configuration
 
@@ -41,7 +41,12 @@ demonstrate the right operation of the floatin point unit on the DA1469x platfor
 
 - The terminal displays the sin_cos example has run successfully.
 
-![result](assets/results.png)
+```
+arm_fully_connected_s16 test success
+arm_fully_connected_s16_big test success
+int16xint8_arm_convolve_fast_s16 test success
+requantize_s64_arm_convolve_fast_s16 test success
+```
 
 ## Known Limitations
 
