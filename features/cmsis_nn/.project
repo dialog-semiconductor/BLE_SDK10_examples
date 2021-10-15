@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>freertos_retarget</name>
+	<name>cmsis_nn</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -98,7 +98,7 @@
 	<variableList>
 		<variable>
 			<name>SDKROOT</name>
-			<value>$%7BPARENT-4-PROJECT_LOC%7D</value>
+			<value>$%7BWORKSPACE_LOC%7D</value>
 		</variable>
 	</variableList>
 </projectDescription>
