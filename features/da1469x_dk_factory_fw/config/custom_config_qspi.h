@@ -16,6 +16,9 @@
 
 #include "bsp_definitions.h"
 
+#define dg_configUSE_SEGGER_FLASH_LOADER (1)
+#define dg_configWDOG_MAX_TASKS_CNT (8)
+
 #define CONFIG_USE_BLE
 
 #define CONFIG_RETARGET
@@ -42,7 +45,6 @@
 #define dg_configUSE_LP_CLK                     ( LP_CLK_32768 )
 #define dg_configEXEC_MODE                      ( MODE_IS_CACHED )
 #define dg_configCODE_LOCATION                  ( NON_VOLATILE_IS_FLASH )
-#define dg_configEMULATE_OTP_COPY               ( 0 )
 
 #define dg_configUSE_WDOG                       ( 1 )
 
@@ -51,13 +53,12 @@
 #define dg_configPOWER_1V8_ACTIVE               ( 1 )
 #define dg_configPOWER_1V8_SLEEP                ( 1 )
 
-#define dg_configUSE_SOC                        ( 0 )
-
 /* Uncomment the following line to enable State-of-Charge debugging or performance test */
 //#define DEBUG_SOC
 #if defined(DEBUG_SOC)
         #define CONFIG_RETARGET
 #endif
+
 
 #define dg_configUSE_SYS_CHARGER                ( 1 )
 
@@ -70,19 +71,15 @@
  * FreeRTOS configuration
  */
 #define OS_FREERTOS                             /* Define this to use FreeRTOS */
-#if (dg_configUSE_SOC)
-        #if defined(DEBUG_SOC)
-                #define configTOTAL_HEAP_SIZE   ( 18888 )  /* FreeRTOS Total Heap Size */
-        #else
-                #define configTOTAL_HEAP_SIZE   ( 17788 )  /* FreeRTOS Total Heap Size */
-        #endif
-#else
-        #define configTOTAL_HEAP_SIZE           ( 32000 )  /* FreeRTOS Total Heap Size */
-#endif
+
+#define configTOTAL_HEAP_SIZE           ( 64000 )  /* FreeRTOS Total Heap Size */
 
 /*************************************************************************************************\
  * Peripherals configuration
  */
+ #define CONFIG_BLE_STORAGE
+
+ 
 #define dg_configFLASH_ADAPTER                  ( 1 )
 #define dg_configNVMS_ADAPTER                   ( 1 )
 #define dg_configNVMS_VES                       ( 1 )
