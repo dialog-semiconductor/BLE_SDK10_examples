@@ -24,6 +24,9 @@
 #include "sys_clock_mgr.h"
 #include "sys_power_mgr.h"
 
+#include "adf_config.h"
+#include "app_debug_freertos_tcb.h"
+
 /* Task priorities */
 #define mainTEMPLATE_TASK_PRIORITY              ( OS_TASK_PRIORITY_NORMAL )
 
@@ -93,6 +96,8 @@ int main( void )
 {
         OS_BASE_TYPE status;
 
+        adf_tracking_boot();
+
 
         /* Start the two tasks as described in the comments at the top of this
         file. */
@@ -129,6 +134,13 @@ static void prvTemplateTask( void *pvParameters )
         OS_TICK_TIME xNextWakeTime;
         static uint32_t test_counter=0;
 
+        uint8_t *reset_data;
+        uint16_t adf_length;
+
+        adf_get_serialized_reset_data(&reset_data, &adf_length);
+        adf_print_verbose(reset_data, adf_length);
+        ADF_FREE(reset_data);
+
         /* Initialise xNextWakeTime - this only needs to be done once. */
         xNextWakeTime = OS_GET_TICK_COUNT();
 
@@ -141,7 +153,7 @@ static void prvTemplateTask( void *pvParameters )
                 test_counter++;
 
                 if (test_counter % (1000 / OS_TICKS_2_MS(mainCOUNTER_FREQUENCY_MS)) == 0) {
-                        printf("#");
+                        ADF_PRINTF("#");
                         fflush(stdout);
                 }
         }

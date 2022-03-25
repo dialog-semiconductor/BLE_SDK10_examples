@@ -6,16 +6,11 @@
 #include <stdint.h>
 
 
+void adf_tracking_boot(void);
 
-uint16_t adf_get_data_length_avail(void);
+void adf_get_serialized_reset_data(uint8_t **data, uint16_t *len);
 
-void adf_get_task_data(uint8_t *data);
-
-void adf_clear_data(void);
-
-void adf_save_task_data(unsigned long *exception_args, uint32_t fault_lr);
-
-void adf_tracking_boot(bool ret_needs_init);
+void adf_print_verbose(uint8_t *data, uint16_t len);
 
 
 

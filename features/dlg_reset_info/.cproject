@@ -891,7 +891,7 @@
                             							
                             <targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform.188356459" isAbstract="false" osList="all" superClass="ilg.gnuarmeclipse.managedbuild.cross.targetPlatform"/>
                             							
-                            <builder arguments="--silent" buildPath="${workspace_loc:/freertos_rtt}/Debug_QSPI" command="${cross_make}" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.839508653" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="false" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
+                            <builder arguments="--silent" buildPath="${workspace_loc:/freertos_rtt}/Debug_QSPI" command="${cross_make}" errorParsers="org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.CWDLocator" id="ilg.gnuarmeclipse.managedbuild.cross.builder.839508653" keepEnvironmentInBuildfile="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="optimal" superClass="ilg.gnuarmeclipse.managedbuild.cross.builder"/>
                             							
                             <tool command="${cross_prefix}${cross_c}${cross_suffix}" commandLinePattern="${COMMAND} ${cross_toolchain_flags} ${FLAGS} -c ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1984206173" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
                                 								
@@ -952,6 +952,10 @@
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sdk/snc/include}&quot;"/>
                                     									
                                     <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/sdk/snc/src}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/app_debug_freertos/include}&quot;"/>
+                                    									
+                                    <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/app_debug_freertos/src}&quot;"/>
                                     								
                                 </option>
                                 								
@@ -1085,11 +1089,45 @@
     	
     <storageModule moduleId="refreshScope"/>
     	
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="DA1469x-00-Release_RAM">
+            			
+            <resource resourceType="PROJECT" workspacePath="/freertos_retarget"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="DA1469x-00-Debug_RAM">
+            			
+            <resource resourceType="PROJECT" workspacePath="/freertos_retarget"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="DA1469x-00-Release_QSPI">
+            			
+            <resource resourceType="PROJECT" workspacePath="/freertos_retarget"/>
+            		
+        </configuration>
+        		
+        <configuration configurationName="DA1469x-00-Debug_QSPI">
+            			
+            <resource resourceType="PROJECT" workspacePath="/freertos_retarget"/>
+            		
+        </configuration>
+        	
+    </storageModule>
+    	
     <storageModule moduleId="scannerConfiguration">
         		
         <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
         		
         <scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.550104045;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.903589725">
+            			
+            <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+            		
+        </scannerConfigBuildInfo>
+        		
+        <scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.1007346875.660827118.235708102.1847866934.384067096.802618131;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.1007346875.660827118.235708102.1847866934.384067096.802618131.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.540208732;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1449129890">
             			
             <autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
             		
@@ -1138,7 +1176,5 @@
         </scannerConfigBuildInfo>
         	
     </storageModule>
-    	
-    <storageModule moduleId="refreshScope"/>
     
 </cproject>
