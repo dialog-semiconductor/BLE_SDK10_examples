@@ -386,6 +386,7 @@ __RETAINED_CODE static void adf_save_task_data(unsigned long *exception_args)
 
 }
 
+
 void adf_tracking_boot(void)
 {
         s_start_tracking_tcbs = true;
@@ -397,11 +398,127 @@ void adf_tracking_boot(void)
         {
                 memset(&s_adf_info, 0, sizeof(s_adf_info));
         }
+
+        boot_ram_mn_val = SYS_RAM_MAGIC_NUM;
 }
 
-static uint16_t adf_get_serialized_size(void)
+
+#ifdef ADF_PRINTF
+
+char reset_reason_map[][10] = {
+        "RESET_POR",
+        "RESET_HW",
+        "RESET_SW",
+        "RESET_WDOG",
+        "RESET_SWD",
+        "RESET_CMAC",
+
+};
+
+char last_frame_type_map [][13] =
+{
+        "LF_HARDFAULT",
+        "LF_NMI",
+        "LF_CMAC_NMI",
+        "LF_CMAC_HF",
+};
+
+void adf_print_verbose(uint8_t *data, uint16_t len)
+{
+        uint16_t ptr = 0;
+        uint8_t *p_data = data;
+        ADF_PRINTF("\r\n*****************ADF Data*****************\r\n\r\n");
+
+        while(ptr < len)
+        {
+                adf_serialize_type_t type = (adf_serialize_type_t)*p_data;
+                p_data += sizeof(adf_serialize_type_t);
+                uint16_t adf_len = *((uint16_t *)p_data);
+                p_data += sizeof(uint16_t);
+
+                switch (type)
+                {
+                        case ADF_TYPE_HEADER:
+                        {
+                                reset_reason_t reason = *p_data;
+                                p_data += sizeof(reset_reason_t);
+
+                                ADF_PRINTF("ADF Header:\r\n");
+                                ADF_PRINTF("\tADF Total Length: %d bytes\r\n", adf_len);
+
+
+                                ADF_PRINTF("\tLast Reset Reason: %s\r\n\r\n", reset_reason_map[reason]);
+
+                        }break;
+                        case ADF_TYPE_LAST_FRAME:
+                        {
+                                adf_last_frame_info_t * lf = (adf_last_frame_info_t *)p_data;
+
+                                ADF_PRINTF("ADF Last Frame Information:\r\n");
+                                ADF_PRINTF("\t Last Frame Type: %s\r\n", last_frame_type_map[lf->type]);
+                                ADF_PRINTF("\t Last Stack Frame:\r\n");
+
+                                ADF_PRINTF("\t\t r0: 0x%08x\r\n", (unsigned int)lf->last_frame.r0);
+                                ADF_PRINTF("\t\t r1: 0x%08x\r\n", (unsigned int)lf->last_frame.r1);
+                                ADF_PRINTF("\t\t r2: 0x%08x\r\n", (unsigned int)lf->last_frame.r2);
+                                ADF_PRINTF("\t\t r3: 0x%08x\r\n", (unsigned int)lf->last_frame.r3);
+                                ADF_PRINTF("\t\t r12: 0x%08x\r\n", (unsigned int)lf->last_frame.r12);
+                                ADF_PRINTF("\t\t LR: 0x%08x\r\n", (unsigned int)lf->last_frame.LR);
+                                ADF_PRINTF("\t\t ReturnAddress: %08x\r\n", (unsigned int)lf->last_frame.ReturnAddress);
+                                ADF_PRINTF("\t\t xPSR: %08x\r\n", (unsigned int)lf->last_frame.xPSR);
+
+
+
+                                p_data += sizeof(adf_last_frame_info_t);
+
+                        }break;
+                        case ADF_TYPE_TCB_TRACE:
+                        {
+                                //We don't serialize data_avail bit
+                                tcb_info_t *info = (tcb_info_t *)p_data;
+
+                                ADF_PRINTF("ADF TCB Trace:\r\n");
+                                ADF_PRINTF("\t Data Valid: %s\r\n", info->data_avail != 0 ? "True" : "False");
+                                ADF_PRINTF("\t Task Name: %s\r\n", info->pcTaskName);
+                                ADF_PRINTF("\t Link Register: 0x%08x\r\n", (unsigned int)info->lr);
+                                ADF_PRINTF("\t PC: 0x%08x\r\n", (unsigned int)info->pc);
+                                ADF_PRINTF("\t Task is Active: %s\r\n", info->taskIsActive ? "True" : "False");
+                                ADF_PRINTF("\t Call Stack Depth: %d words\r\n", info->stack_collected);
+                                ADF_PRINTF("\t Call Stack:\r\n");
+
+
+
+                                for(uintptr_t i = 0;
+                                        i < info->stack_collected; i ++)
+                                {
+                                        ADF_PRINTF("\t\tCall #%d:0x%08x\r\n", i+1, (unsigned int)info->stack_vals[i]);
+                                }
+
+
+
+
+                                p_data += sizeof(tcb_info_t) - (ADF_CALL_DEPTH - info->stack_collected);;
+
+                        }break;
+                        case ADF_TYPE_CMAC_TRACE:
+                        {
+                        }break;
+
+                        default:
+                        break;
+                }
+
+                ptr = p_data - data;
+
+        }
+
+}
+#endif
+
+uint16_t adf_get_serialized_size(void)
 {
         uint16_t len = sizeof(reset_reason_t);
+        len += sizeof(adf_serialize_tlv_t);
 
         if(s_adf_info.mn != ADF_MN)
         {
@@ -442,74 +559,20 @@ static uint16_t adf_get_serialized_size(void)
 
 }
 
-#ifdef ADF_PRINTF
 
-char reset_reason_map[][10] = {
-        "RESET_POR",
-        "RESET_HW",
-        "RESET_SW",
-        "RESET_WDOG",
-        "RESET_SWD",
-        "RESET_CMAC",
-
-};
-void adf_print_verbose(uint8_t *data, uint16_t len)
-{
-        uint16_t ptr = 0;
-        uint8_t *p_data = data;
-        ADF_PRINTF("***ADF Data****\r\n");
-
-        while(ptr < len)
-        {
-                adf_last_frame_type type = (adf_last_frame_type)*p_data;
-                p_data += sizeof(adf_last_frame_type);
-                uint16_t adf_len = *((uint16_t *)p_data);
-                p_data += sizeof(uint16_t);
-
-                switch (type)
-                {
-                case ADF_TYPE_HEADER:
-                {
-                        reset_reason_t reason = *p_data;
-                        p_data += sizeof(reset_reason_t);
-
-                        ADF_PRINTF("ADF_TYPE_HEADER:\r\n");
-                        ADF_PRINTF("\tADF Total Length: %d bytes\r\n", adf_len);
-
-
-                        ADF_PRINTF("\tLast Reset Reason: %s\r\n", reset_reason_map[reason]);
-
-                }break;
-                case ADF_TYPE_LAST_FRAME:
-                case ADF_TYPE_TCB_TRACE:
-                case ADF_TYPE_CMAC_TRACE:
-
-                default:
-                break;
-                }
-
-                ptr = p_data - data;
-
-
-        }
-}
-#endif
-
-void adf_get_serialized_reset_data(uint8_t **data, uint16_t *len)
+void adf_get_serialized_reset_data(uint8_t *data, uint16_t *len, uint16_t serial_len)
 {
 
         uint16_t current_ptr = 0;
-
-        uint16_t serial_len = adf_get_serialized_size();
-        *data = ADF_MALLOC(serial_len);
+        uint16_t adf_header_len = serial_len - sizeof(adf_serialize_tlv_t);
 
          /*
           * Copy over header information
           */
-         *data[current_ptr++] = ADF_TYPE_HEADER;
-         *data[current_ptr++] = serial_len & 0xFF;
-         *data[current_ptr++] = serial_len >> 8;
-         *data[current_ptr++] = s_last_reset_reason;
+         data[current_ptr++] = ADF_TYPE_HEADER;
+         data[current_ptr++] = adf_header_len & 0xFF;
+         data[current_ptr++] = adf_header_len >> 8;
+         data[current_ptr++] = s_last_reset_reason;
 
         if(s_adf_info.mn != ADF_MN)
         {
@@ -524,10 +587,10 @@ void adf_get_serialized_reset_data(uint8_t **data, uint16_t *len)
 
          uint8_t last_stack_frame_size = sizeof(adf_last_frame_info_t);
 
-         *data[current_ptr++] = ADF_TYPE_LAST_FRAME;  //Type
-         *data[current_ptr++] = last_stack_frame_size & 0xFF; //Length
-         *data[current_ptr++] = last_stack_frame_size >> 8;
-         memcpy(*data+current_ptr, &s_adf_info.last_stack_frame, last_stack_frame_size);
+         data[current_ptr++] = ADF_TYPE_LAST_FRAME;  //Type
+         data[current_ptr++] = last_stack_frame_size & 0xFF; //Length
+         data[current_ptr++] = last_stack_frame_size >> 8;
+         memcpy(data+current_ptr, &s_adf_info.last_stack_frame, last_stack_frame_size);
          current_ptr += last_stack_frame_size;
 
 
@@ -539,12 +602,12 @@ void adf_get_serialized_reset_data(uint8_t **data, uint16_t *len)
          {
                  if(s_adf_info.tcb_data[i].data_avail == 1)
                  {
-                         *data[current_ptr++] = ADF_TYPE_TCB_TRACE;
-                         uint8_t tcb_len  = (ADF_CALL_DEPTH - s_adf_info.tcb_data[i].stack_collected);
-                         *data[current_ptr++] = tcb_len & 0xFF;
-                         *data[current_ptr++] = tcb_len >> 8;
+                         data[current_ptr++] = ADF_TYPE_TCB_TRACE;
+                         uint8_t tcb_len  = sizeof(tcb_info_t) - (ADF_CALL_DEPTH - s_adf_info.tcb_data[i].stack_collected);
+                         data[current_ptr++] = tcb_len & 0xFF;
+                         data[current_ptr++] = tcb_len >> 8;
 
-                         memcpy(*data + current_ptr, &s_adf_info.tcb_data[i], tcb_len);
+                         memcpy(data + current_ptr, &s_adf_info.tcb_data[i], tcb_len);
                          current_ptr += tcb_len;
 
                  }
@@ -703,7 +766,6 @@ __RETAINED_CODE void ble_controller_error(void)
 }
 #endif //CONFIG_USE_BLE
 
-#endif //dg_configENABLE_ADF
 
 __RETAINED_CODE void HardFault_HandlerC(unsigned long *hardfault_args)
 {
@@ -712,84 +774,23 @@ __RETAINED_CODE void HardFault_HandlerC(unsigned long *hardfault_args)
         *MTB_MASTER_REG = MTB_MASTER_DISABLE_MSK;
 #endif /* dg_configENABLE_MTB */
 
-        // Stack frame contains:
-        // r0, r1, r2, r3, r12, r14, the return address and xPSR
-        // - Stacked R0 = hf_args[0]
-        // - Stacked R1 = hf_args[1]
-        // - Stacked R2 = hf_args[2]
-        // - Stacked R3 = hf_args[3]
-        // - Stacked R12 = hf_args[4]
-        // - Stacked LR = hf_args[5]
-        // - Stacked PC = hf_args[6]
-        // - Stacked xPSR= hf_args[7]
         if (dg_configIMAGE_SETUP == DEVELOPMENT_MODE) {
                 hw_watchdog_freeze();                           // Stop WDOG
 
                 ENABLE_DEBUGGER;
 
-                *(volatile unsigned long *)(STATUS_BASE       ) = hardfault_args[0];    // R0
-                *(volatile unsigned long *)(STATUS_BASE + 0x04) = hardfault_args[1];    // R1
-                *(volatile unsigned long *)(STATUS_BASE + 0x08) = hardfault_args[2];    // R2
-                *(volatile unsigned long *)(STATUS_BASE + 0x0C) = hardfault_args[3];    // R3
-                *(volatile unsigned long *)(STATUS_BASE + 0x10) = hardfault_args[4];    // R12
-                *(volatile unsigned long *)(STATUS_BASE + 0x14) = hardfault_args[5];    // LR
-                *(volatile unsigned long *)(STATUS_BASE + 0x18) = hardfault_args[6];    // PC
-                *(volatile unsigned long *)(STATUS_BASE + 0x1C) = hardfault_args[7];    // PSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x20) = (unsigned long)hardfault_args;    // Stack Pointer
-
-                *(volatile unsigned long *)(STATUS_BASE + 0x24) = (*((volatile unsigned long *)(0xE000ED28)));    // CFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x28) = (*((volatile unsigned long *)(0xE000ED2C)));    // HFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x2C) = (*((volatile unsigned long *)(0xE000ED30)));    // DFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x30) = (*((volatile unsigned long *)(0xE000ED3C)));    // AFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x34) = (*((volatile unsigned long *)(0xE000ED34)));    // MMAR
-                *(volatile unsigned long *)(STATUS_BASE + 0x38) = (*((volatile unsigned long *)(0xE000ED38)));    // BFAR
-
-                if (VERBOSE_HARDFAULT) {
-                        printf("HardFault Handler:\r\n");
-                        printf("- R0  = 0x%08lx\r\n", hardfault_args[0]);
-                        printf("- R1  = 0x%08lx\r\n", hardfault_args[1]);
-                        printf("- R2  = 0x%08lx\r\n", hardfault_args[2]);
-                        printf("- R3  = 0x%08lx\r\n", hardfault_args[3]);
-                        printf("- R12 = 0x%08lx\r\n", hardfault_args[4]);
-                        printf("- LR  = 0x%08lx\r\n", hardfault_args[5]);
-                        printf("- PC  = 0x%08lx\r\n", hardfault_args[6]);
-                        printf("- xPSR= 0x%08lx\r\n", hardfault_args[7]);
-                }
 
                 if (EXCEPTION_DEBUG == 1) {
                         hw_sys_assert_trigger_gpio();
                 }
 
+                adf_hardfault_event_handler(hardfault_args);
+
                 while (1);
         }
         else {
-# ifdef PRODUCTION_DEBUG_OUTPUT
-        #if dg_configENABLE_ADF == 0
-# if (USE_WDOG)
-                WDOG->WATCHDOG_REG = 0xC8;                      // Reset WDOG! 200 * 10.24ms active time for UART to finish printing!
-# endif
-                dbg_prod_output(1, hardfault_args);
-        #endif //dg_configENABLE_ADF
-# endif // PRODUCTION_DEBUG_OUTPUT
 
-#if dg_configENABLE_ADF
                 adf_hardfault_event_handler(hardfault_args);
-#else
-
-                hardfault_event_data[0] = HARDFAULT_MAGIC_NUMBER;
-                hardfault_event_data[1] = hardfault_args[0];    // R0
-                hardfault_event_data[2] = hardfault_args[1];    // R1
-                hardfault_event_data[3] = hardfault_args[2];    // R2
-                hardfault_event_data[4] = hardfault_args[3];    // R3
-                hardfault_event_data[5] = hardfault_args[4];    // R12
-                hardfault_event_data[6] = hardfault_args[5];    // LR
-                hardfault_event_data[7] = hardfault_args[6];    // PC
-                hardfault_event_data[8] = hardfault_args[7];    // PSR
-#endif
-
-
-
-
                 hw_cpm_reboot_system();                         // Force reset
 
                 while (1);
@@ -811,24 +812,7 @@ __RETAINED_CODE void hw_watchdog_handle_int(unsigned long *exception_args)
 
         ENABLE_DEBUGGER;
 
-        if (exception_args != NULL) {
-                *(volatile unsigned long *)(STATUS_BASE       ) = exception_args[0];    // R0
-                *(volatile unsigned long *)(STATUS_BASE + 0x04) = exception_args[1];    // R1
-                *(volatile unsigned long *)(STATUS_BASE + 0x08) = exception_args[2];    // R2
-                *(volatile unsigned long *)(STATUS_BASE + 0x0C) = exception_args[3];    // R3
-                *(volatile unsigned long *)(STATUS_BASE + 0x10) = exception_args[4];    // R12
-                *(volatile unsigned long *)(STATUS_BASE + 0x14) = exception_args[5];    // LR
-                *(volatile unsigned long *)(STATUS_BASE + 0x18) = exception_args[6];    // PC
-                *(volatile unsigned long *)(STATUS_BASE + 0x1C) = exception_args[7];    // PSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x20) = (unsigned long)exception_args;    // Stack Pointer
-
-                *(volatile unsigned long *)(STATUS_BASE + 0x24) = (*((volatile unsigned long *)(0xE000ED28)));    // CFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x28) = (*((volatile unsigned long *)(0xE000ED2C)));    // HFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x2C) = (*((volatile unsigned long *)(0xE000ED30)));    // DFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x30) = (*((volatile unsigned long *)(0xE000ED3C)));    // AFSR
-                *(volatile unsigned long *)(STATUS_BASE + 0x34) = (*((volatile unsigned long *)(0xE000ED34)));    // MMAR
-                *(volatile unsigned long *)(STATUS_BASE + 0x38) = (*((volatile unsigned long *)(0xE000ED38)));    // BFAR
-        }
+        adf_nmi_event_handler(exception_args);
 
         if (EXCEPTION_DEBUG == 1) {
                 hw_sys_assert_trigger_gpio();
@@ -843,27 +827,11 @@ __RETAINED_CODE void hw_watchdog_handle_int(unsigned long *exception_args)
 
 #else // dg_configIMAGE_SETUP == DEVELOPMENT_MODE
 
-#if dg_configENABLE_ADF
         adf_nmi_event_handler(exception_args);
-#else
-        if (exception_args != NULL) {
-                nmi_event_data[0] = NMI_MAGIC_NUMBER;
-                nmi_event_data[1] = exception_args[0];          // R0
-                nmi_event_data[2] = exception_args[1];          // R1
-                nmi_event_data[3] = exception_args[2];          // R2
-                nmi_event_data[4] = exception_args[3];          // R3
-                nmi_event_data[5] = exception_args[4];          // R12
-                nmi_event_data[6] = exception_args[5];          // LR
-                nmi_event_data[7] = exception_args[6];          // PC
-                nmi_event_data[8] = exception_args[7];          // PSR
-        }
-
-#endif //dg_configENABLE_ADF
-
-
-
-
         // Wait for the reset to occur
         while (1);
 #endif // dg_configIMAGE_SETUP == DEVELOPMENT_MODE
 }
+
+
+#endif //dg_configENABLE_ADF

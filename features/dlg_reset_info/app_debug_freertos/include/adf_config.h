@@ -1,12 +1,9 @@
 #ifndef __ADF_CONFIG_H__
 #define __ADF_CONFIG_H__
 
-#include "osal.h"
-#include "stdio.h"
 
-#define ADF_MALLOC(size)                    OS_MALLOC(size)
-#define ADF_FREE(ptr)                       OS_FREE(ptr)
-#define ADF_PRINTF(...)                     printf(__VA_ARGS__)
+
+
 
 #define ADF_MAX_TASK_NAME_LEN               (8)
 #define ADF_CALL_DEPTH                      (10)
@@ -19,15 +16,16 @@
 void adf_trace_task_create(void *pxTCB);
 void adf_trace_task_delete(void *pxTCB);
 
-#ifdef traceTASK_CREATE
-#undef traceTASK_CREATE
-#undef traceTASK_DELETE
-#endif
 
 #define traceTASK_CREATE(tcb)           adf_trace_task_create(tcb)
 #define traceTASK_DELETE(tcb)           adf_trace_task_delete(tcb)
 
+#include "stdio.h"
+
+#define ADF_PRINTF(...)                     printf(__VA_ARGS__)
+
 #include "FreeRTOS.h"
+
 
 
 

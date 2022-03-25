@@ -1,14 +1,89 @@
-# WKUP Controller Demonstration
+# Debug Reset Information
 
-The key goal of this application is to demonstrate the use of the WakeUp controller. The controller consists of two sub blocks: 1) The **KEY** block which incorporates a debounce circuitry (used for suppressing spikes produced by mechanical parts) 2) The **GPIO** sub block which does not incorporate a debounce circuitry. Both blocks can generate interrupts and trigger the ARM M33 core to exit from sleep. Please note that only interrupts produced by the KEY block can wakeup the system while in hibernation sleep mode. By default, the KEY sub block of the WKUP controller is demonstrated (`WKUP_KEY_BLOCK_ENABLE`). User can also enable the GPIO P0 sub block by setting the  `WKUP_GPIO_P0_BLOCK_ENABLE` macro to 1. In this case, you may observe more than one non-debounced IO IRQs.
+The goal of this application is to provide the user with a means to debug fault data in a production environment.  The ADF (Application Debug FreeRTOS) module is intended to be portable to any application. On any fault, it will capture appropriate data and report to the user meaningful information. 
 
-### HW & SW Configurations
+This module relies on uninitialized RAM, a few minor modifications to the SDK and basic unrolling of stacks to communicate to the user pertinent states of each active task.
+
+
+## HW & SW Configurations
 
 - **Hardware Configurations**
   - This example runs on a DA1469x Bluetooth Smart SoC.
-  - A DA1469x Pro Development Kit is needed for this example.
+  - A DA1469x Pro Development Kit or USB kit is needed for this example.
 - **Software Configurations**
   - Download the latest SDK version for the DA1469x family of devices (10.0.10.x)
   - **SEGGER's J-Link** tools should be downloaded and installed.
+
+## SDK Modifications
+
+  - **FreeRTOS Modifications**
+    - Navigate to sdk/FreeRTOS/include/task.h and at the very bottom of the include file, place the following two prototypes:
+
+    ```
+    #if dg_configENABLE_ADF
+    /*
+    * Added for interrupt safe mechanism for determining stack locations
+    * without exposing TCB through API
+    */
+    BaseType_t vTaskIsActive(TaskHandle_t xTask);
+
+    void *vTaskGetEndOfStack(TaskHandle_t xTask);
+
+    #endif //dg_configENABLE_ADF
+
+    ```
+
+    - Next, navigate to sdk/FreeRTOS/src/task.c and add the functions for the prototypes above:
+
+
+    ```
+    #if dg_configENABLE_ADF
+    /*-----------------------------------------------------------*/
+    BaseType_t vTaskIsActive(TaskHandle_t xTask)
+    {
+
+        const TCB_t * const pxTCB = ( TCB_t * ) xTask;
+
+        if(pxTCB == pxCurrentTCB)
+        {
+                return pdTRUE;
+        }
+
+        return pdFALSE;
+
+    }
+
+    void *vTaskGetEndOfStack(TaskHandle_t xTask)
+    {
+
+        const TCB_t * const pxTCB = ( TCB_t * ) xTask;
+
+        return pxTCB->pxEndOfStack;
+
+    }
+
+    #endif
+    ```
+  - **Linker Script - Add Boot Magic Number**
+    - Place the following section into section_da1469x.ld.h (sys_init_magic_num), in between hardf_fault_info and retention_mem_uninit:
+
+    
+        KEEP(\*(hard_fault_info)) <br>
+        `KEEP(*(sys_init_magic_num) )` <br>
+        KEEP(*(retention_mem_uninit)) <br>
+
+  - **Hardfault and NMI Handler Modifications**
+    - Navigate to sdk/peripherals/src/hw_hard_fault.c and declare Hardfault_HandlerC as __WEAK
+
+    ```
+    __WEAK void HardFault_HandlerC(unsigned long *hardfault_args)
+    ```
+
+    - Navigate to sdk/peripherals/src/hw_watchdog.c and declare hw_watchdog_handle_int as weak:
+
+    ```
+    
+    ```
+    
 
 

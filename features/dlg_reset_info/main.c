@@ -78,7 +78,7 @@ static void system_init( void *pvParameters )
                                                            debug only; not used by the kernel. */
                         prvTemplateTask,                /* The function that implements the task. */
                         NULL,                           /* The parameter passed to the task. */
-                        configMINIMAL_STACK_SIZE * OS_STACK_WORD_SIZE,
+                        1024 * OS_STACK_WORD_SIZE,
                                                         /* The number of bytes to allocate to the
                                                            stack of the task. */
                         mainTEMPLATE_TASK_PRIORITY,     /* The priority assigned to the task. */
@@ -134,12 +134,15 @@ static void prvTemplateTask( void *pvParameters )
         OS_TICK_TIME xNextWakeTime;
         static uint32_t test_counter=0;
 
-        uint8_t *reset_data;
-        uint16_t adf_length;
+        uint16_t adf_actual_len;
+        uint16_t adf_length = adf_get_serialized_size();
 
-        adf_get_serialized_reset_data(&reset_data, &adf_length);
+        uint8_t *reset_data = OS_MALLOC(adf_length);
+
+        adf_get_serialized_reset_data(reset_data, &adf_actual_len, adf_length);
         adf_print_verbose(reset_data, adf_length);
-        ADF_FREE(reset_data);
+
+        OS_FREE(reset_data);
 
         /* Initialise xNextWakeTime - this only needs to be done once. */
         xNextWakeTime = OS_GET_TICK_COUNT();
@@ -152,9 +155,11 @@ static void prvTemplateTask( void *pvParameters )
                 vTaskDelayUntil( &xNextWakeTime, mainCOUNTER_FREQUENCY_MS );
                 test_counter++;
 
-                if (test_counter % (1000 / OS_TICKS_2_MS(mainCOUNTER_FREQUENCY_MS)) == 0) {
+                if (test_counter % (10000 / OS_TICKS_2_MS(mainCOUNTER_FREQUENCY_MS)) == 0) {
                         ADF_PRINTF("#");
-                        fflush(stdout);
+                        /* Set the HardFaultPended bit of SHCSR ARM Register to cause a Hardfault. */
+                        SCB->SHCSR |= SCB_SHCSR_HARDFAULTPENDED_Msk;
+                        while(1){};
                 }
         }
 }
