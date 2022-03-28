@@ -4,12 +4,16 @@
 #include "adf_config.h"
 #include "cmsis_gcc.h"
 
+
+/*
+ * Debug Info Type
+ */
 typedef enum
 {
-        ADF_TYPE_HEADER,
-        ADF_TYPE_LAST_FRAME,
-        ADF_TYPE_TCB_TRACE,
-        ADF_TYPE_CMAC_TRACE,
+        ADF_TYPE_HEADER,                //Main ADF Header
+        ADF_TYPE_LAST_FRAME,            //Last stack frame, including type
+        ADF_TYPE_TCB_TRACE,             //Task information from FreeRTOS TCB
+        ADF_TYPE_CMAC_TRACE,            //CMAC stack trace
 
 }adf_serialize_type_t;
 
@@ -30,6 +34,10 @@ typedef enum
         RESET_CMAC,
         RESET_LAST,
 }reset_reason_t;
+
+/*
+ * Basic stack frame
+ */
 
 typedef struct
 {

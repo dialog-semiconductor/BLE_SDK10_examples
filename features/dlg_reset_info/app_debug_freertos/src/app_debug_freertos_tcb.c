@@ -14,15 +14,6 @@
 #include "../../app_debug_freertos/include/adf_types.h"
 #include "../../app_debug_freertos/include/adf_config.h"
 
-#ifndef VERBOSE_HARDFAULT
-#       define VERBOSE_HARDFAULT        0
-#endif
-
-#ifndef STATUS_BASE
-#define STATUS_BASE (0x20005600)
-#endif
-
-
 #if dg_configENABLE_ADF
 
 
@@ -35,14 +26,18 @@
 #define FPU_CONTEXT_MASK                (0x10)
 #define FOUR_BYTE_PADDING_MASK          (0x100)
 
+#define IVT_SIZE                        (0x200)
+#define CMAC_IVT_SIZE                   (0xb4)
+#define MAX_IMAGE_ADDRESS               (dg_configQSPI_MAX_IMAGE_SIZE)
+
 
 #define IS_IN_RAM(x)                    (x > MEMORY_SYSRAM_BASE && x < MEMORY_SYSRAM_END)
-#define IS_IN_FLASH(x)                  (x>0x200 && x <512*1024)
+#define IS_IN_FLASH(x)                  (x>IVT_SIZE && x<MAX_IMAGE_ADDRESS)
 #define IS_VALID_ADDRESS(x)             (x & 0x01) && ( IS_IN_RAM(x) || IS_IN_FLASH(x) )
 #define IN_FPU_CONTEXT(f)               (!(f & FPU_CONTEXT_MASK))
 #define GET_STACK_ALIGN_BYTES(xPSR)     (xPSR & FOUR_BYTE_PADDING_MASK ? 4 : 0)
 
-#define CMAC_IVT_SIZE                           (0xb4)
+
 #define CMAC_STACK_VAL_IN_RANGE(x, cmi_end)     (x > CMAC_IVT_SIZE && x < cmi_end)
 #define CMAC_ADDR_LINKED(x, cmi_end)            (CMAC_STACK_VAL_IN_RANGE(x, cmi_end)) && (x & 0x01)
 
@@ -193,6 +188,10 @@ __STATIC_FORCEINLINE uint32_t __get_LR(void)
 }
 
 
+
+/*
+ * Find tcb pointer in static tcb buffer
+ */
 static bool find_slot(size_t *idx, void *desired_tcb) {
 
         for (size_t i = 0; i < ADF_MAX_TRACKED_APP_TASKS; i++)
@@ -206,6 +205,11 @@ static bool find_slot(size_t *idx, void *desired_tcb) {
 
         return false;
 }
+
+
+/*
+ * Get the reset reason as indicated by the RESET_STAT_REG
+ */
 
 static reset_reason_t get_reset_reason(void)
 {
@@ -230,6 +234,10 @@ static reset_reason_t get_reset_reason(void)
         return reason;
 
 }
+
+/*
+ * Get relative stack location offset, relative to the stack pointer
+ */
 
 __RETAINED_CODE uint8_t get_relative_stack_location(void *stack_pointer, bool task_active, uint8_t slot, uint32_t fault_lr)
 {
@@ -337,6 +345,10 @@ __RETAINED_CODE static void adf_save_task_data(unsigned long *exception_args)
                         void *stack_pointer = task_active ? exception_args : top_of_stack;
 
 
+                        /*
+                         * Get the relative stack location, relative to the stack pointer, to find
+                         * call stack
+                         */
                         task_stack_vals_loc = (void *)stack_pointer + get_relative_stack_location(stack_pointer,
                                                                 task_active,
                                                                 tcb_info_slot,
@@ -386,13 +398,21 @@ __RETAINED_CODE static void adf_save_task_data(unsigned long *exception_args)
 
 }
 
+/*
+ * Start tracking tcbs.
+ */
 
-void adf_tracking_boot(void)
+void adf_start_tracking_init(void)
 {
         s_start_tracking_tcbs = true;
         memset(s_task_tcbs, 0, sizeof(s_task_tcbs));
         s_last_reset_reason = get_reset_reason();
 
+        /*
+         * If we have a POR or the sys_ram_magic_num is corrupted, then reinitialize.
+         * The magic number is placed in a linker location, that if you rebuild new firmware, this will move
+         * the number, and not trigger reset data for a new firwmare load (New firmware load is a HW_RESET, not POR).
+         */
         if(s_last_reset_reason == RESET_POR ||
                 RET_RAM_NEEDS_INITIALIZED(boot_ram_mn_val))
         {
@@ -415,7 +435,7 @@ char reset_reason_map[][10] = {
 
 };
 
-char last_frame_type_map [][13] =
+char last_frame_type_map [][15] =
 {
         "LF_HARDFAULT",
         "LF_NMI",
@@ -464,8 +484,8 @@ void adf_print_verbose(uint8_t *data, uint16_t len)
                                 ADF_PRINTF("\t\t r3: 0x%08x\r\n", (unsigned int)lf->last_frame.r3);
                                 ADF_PRINTF("\t\t r12: 0x%08x\r\n", (unsigned int)lf->last_frame.r12);
                                 ADF_PRINTF("\t\t LR: 0x%08x\r\n", (unsigned int)lf->last_frame.LR);
-                                ADF_PRINTF("\t\t ReturnAddress: %08x\r\n", (unsigned int)lf->last_frame.ReturnAddress);
-                                ADF_PRINTF("\t\t xPSR: %08x\r\n", (unsigned int)lf->last_frame.xPSR);
+                                ADF_PRINTF("\t\t ReturnAddress: 0x%08x\r\n", (unsigned int)lf->last_frame.ReturnAddress);
+                                ADF_PRINTF("\t\t xPSR: 0x%08x\r\n", (unsigned int)lf->last_frame.xPSR);
 
 
 
@@ -476,26 +496,29 @@ void adf_print_verbose(uint8_t *data, uint16_t len)
                         {
                                 //We don't serialize data_avail bit
                                 tcb_info_t *info = (tcb_info_t *)p_data;
+                                char taskname[ADF_MAX_TASK_NAME_LEN + 1];
+                                memcpy(taskname, info->pcTaskName, ADF_MAX_TASK_NAME_LEN);
+                                taskname[ADF_MAX_TASK_NAME_LEN] = '\0';
 
                                 ADF_PRINTF("ADF TCB Trace:\r\n");
                                 ADF_PRINTF("\t Data Valid: %s\r\n", info->data_avail != 0 ? "True" : "False");
-                                ADF_PRINTF("\t Task Name: %s\r\n", info->pcTaskName);
+                                ADF_PRINTF("\t Task Name: %s\r\n", taskname);
                                 ADF_PRINTF("\t Link Register: 0x%08x\r\n", (unsigned int)info->lr);
                                 ADF_PRINTF("\t PC: 0x%08x\r\n", (unsigned int)info->pc);
                                 ADF_PRINTF("\t Task is Active: %s\r\n", info->taskIsActive ? "True" : "False");
                                 ADF_PRINTF("\t Call Stack Depth: %d words\r\n", info->stack_collected);
-                                ADF_PRINTF("\t Call Stack:\r\n");
 
-
-
-                                for(uintptr_t i = 0;
-                                        i < info->stack_collected; i ++)
+                                if(info->stack_collected > 0)
                                 {
-                                        ADF_PRINTF("\t\tCall #%d:0x%08x\r\n", i+1, (unsigned int)info->stack_vals[i]);
+                                        ADF_PRINTF("\t Call Stack:\r\n");
+
+                                        for(uintptr_t i = 0;
+                                                i < info->stack_collected; i ++)
+                                        {
+                                                ADF_PRINTF("\t\tCall #%d:0x%08x\r\n", i+1, (unsigned int)info->stack_vals[i]);
+                                        }
+
                                 }
-
-
-
 
                                 p_data += sizeof(tcb_info_t) - (ADF_CALL_DEPTH - info->stack_collected);;
 
@@ -511,6 +534,8 @@ void adf_print_verbose(uint8_t *data, uint16_t len)
                 ptr = p_data - data;
 
         }
+
+        ADF_PRINTF("\r\n******************************************\r\n\r\n");
 
 }
 #endif
@@ -685,7 +710,7 @@ void adf_trace_task_delete(void *pxTCB)
 __STATIC_INLINE void set_last_stack_frame(void *frame)
 {
         s_adf_info.mn = ADF_MN;
-        memcpy(&s_adf_info.last_stack_frame, frame, sizeof(cortex_m_stack_frame_t));
+        memcpy(&s_adf_info.last_stack_frame.last_frame, frame, sizeof(cortex_m_stack_frame_t));
 }
 
 __RETAINED_CODE void adf_hardfault_event_handler(void *exception_args)
@@ -717,10 +742,10 @@ __RETAINED_CODE void ble_controller_error(void)
 
         if(s_adf_info.last_stack_frame.type == LF_CMAC_HF)
         {
-                memcpy(&s_adf_info.last_stack_frame, &reg_info->hardfault_stack_frame, sizeof(cortex_m_stack_frame_t));
+                memcpy(&s_adf_info.last_stack_frame.last_frame, &reg_info->hardfault_stack_frame, sizeof(cortex_m_stack_frame_t));
         }else
         {
-                memcpy(&s_adf_info.last_stack_frame, &reg_info->nmi_stack_frame, sizeof(cortex_m_stack_frame_t));
+                memcpy(&s_adf_info.last_stack_frame.last_frame, &reg_info->nmi_stack_frame, sizeof(cortex_m_stack_frame_t));
         }
 
         extern uint32_t cmi_fw_dst_addr;

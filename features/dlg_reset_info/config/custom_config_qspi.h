@@ -19,15 +19,16 @@
 
 #define CONFIG_RETARGET
 
+#define dg_configIMAGE_SETUP                            ( PRODUCTION_MODE )
+#define dg_configSKIP_MAGIC_CHECK_AT_START              ( 1 )
+#define dg_configUSE_WDOG                               ( 1 )
+
 
 /*****************************************************************************
  * ADF Related defines
  *****************************************************************************/
-
-#define dg_configENABLE_ADF                             (1)
-#define dg_configIMAGE_SETUP                            (PRODUCTION_MODE)
-#define dg_configSKIP_MAGIC_CHECK_AT_START              (1)
-#define dg_configFREERTOS_ENABLE_THREAD_AWARENESS       (1)
+#define dg_configENABLE_ADF                             ( 1 )
+#define dg_configFREERTOS_ENABLE_THREAD_AWARENESS       ( 1 )
 
 #ifdef dg_configENABLE_ADF
 #define ADDTL_UNINIT            (1024)          //Could be optimized if needed
@@ -45,7 +46,6 @@
 #define dg_configEXEC_MODE                      MODE_IS_CACHED
 #define dg_configCODE_LOCATION                  NON_VOLATILE_IS_FLASH
 
-#define dg_configUSE_WDOG                       (0)
 
 #define dg_configFLASH_CONNECTED_TO             (FLASH_CONNECTED_TO_1V8)
 #define dg_configFLASH_POWER_DOWN               (0)
