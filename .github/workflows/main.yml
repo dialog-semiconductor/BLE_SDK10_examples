@@ -35,16 +35,16 @@ jobs:
 
       - name: Copy SDK files from AWS
         run: |
-          aws s3 cp s3://dlglpcgithubci/sdk/SDK_10.0.10.118.cs_release.2.zip ..
+          aws s3 cp s3://dlglpcgithubci/sdk/SDK_10.0.10.118.cs_release.3.zip ..
          
       - name: Unzip SDK
         run: |
-          unzip ../SDK_10.0.10.118.cs_release.2.zip -d ..
+          unzip ../SDK_10.0.10.118.cs_release.3.zip -d ..
           
       - name: Import examples
         run: |
-          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.2 -importAll .
+          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.3 -importAll .
           
       - name: Build examples
         run: |
-          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.2 -build all
+          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.3 -build all
