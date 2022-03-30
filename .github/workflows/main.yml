@@ -43,8 +43,8 @@ jobs:
           
       - name: Import examples
         run: |
-          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK10.0.10.118_cs_release.2 -importAll .
+          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.2 -importAll .
           
       - name: Build examples
         run: |
-          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK10.0.10.118_cs_release.2 -build all
+          /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.10.118.cs_release.2 -build all
