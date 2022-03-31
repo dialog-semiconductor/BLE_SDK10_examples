@@ -15,7 +15,14 @@ This module relies on uninitialized RAM, a few minor modifications to the SDK an
 
 ## SDK Modifications
 
-You can apply patch the SDK to support
+You can apply the modification to the SDK in order to support the ADF feature by using the following command:
+
+```console
+  > cd <SDKROOT>
+  > patch -p1 < <SDK_EXAMPLE_ROOT>/features/features/dlg_reset_info/sdk.patch 
+```
+
+Alternatively you can apply the modification manually
 
 - **FreeRTOS Modifications**
 
@@ -111,7 +118,7 @@ You can apply patch the SDK to support
 
     ```
 
-## Runing the example
+## Running the example
 
 ### Initial Setup
 
@@ -139,7 +146,7 @@ Each piece of information is serialized in the following ADF Frame formats and c
 | ADF_TYPE_TCB_TRACE   | Length of tcb data    | tcb_info_t            |
 | ADF_TYPE_CMAC_TRACE  | Length of cmac trace  | cmac_event_info_t     |
 
-## Interpretting the Data
+## Interpreting the Data
 
 - ADF Header
   - Length 197 bytes following the Type and length bytes
@@ -159,6 +166,7 @@ Each piece of information is serialized in the following ADF Frame formats and c
     This project also uses a post build script to generate an objdump.txt file.  We can use this locate the addresses for the errors.  Looking at the addresses and subtracting one, we can determine this.
 
   - Link Register: 0x000009e9
+
       ![dlg_reset_info - adf link register](assets/adf_link_register.png)
 
       This shows the last linked address coming from the CONFIG_RETARGET module, which makes sense, as the last thing we did was printed information:
@@ -208,26 +216,21 @@ Each piece of information is serialized in the following ADF Frame formats and c
       ```
 
   5. If you wish to generate the objdump.txt file, for easier address tracing.  Do the following:
-     - in your makefile.targets, add a post build script for generating this as in the example:
 
-      ![dlg_reset_info - adf call stack](assets/post_build_objdump.png)
-     - Right click on your project, go to C/C++ Build/Settings, then go to build steps, and in post build commands add the following arguments:
+     Right click on your project, go to C/C++ Build/Settings, then go to build steps, and in post build commands add the following arguments:
 
-     ```console
-
-     ${cross_make} generate_obj_dump_file FILENAME=${ProjName} TOOLCHAIN_PATH="${toolchain_path}"
-
-     ```
+        ```console
+        ${cross_prefix}${cross_objdump} -S ${ProjName}.elf > ${ProjName}_objdump.txt
+        ```
 
   6. Call adf_tracking_init() in the main function, where you would like to start tracking tasks (before RTOS initialization will track all)
 
   7. In one of your application tasks, call the following two functions prior to entering the main loop:
 
       ```c
-
       adf_get_serialized_size();
       adf_get_serialized_reset_data(reset_data, &adf_actual_len, adf_length);
-      
+     
       ```
 
   8. If you wish to just print out the data, make sure ADF_PRINT() is defined and calls your print function.  If you are using CONFIG_RETARGET, make sure this is setup appropriately (use freertos_retarget as reference if not setup)

@@ -1,0 +1,110 @@
+diff --git a/sdk/bsp/ldscripts/ble_projects/sections_da1469x.ld.h b/sdk/bsp/ldscripts/ble_projects/sections_da1469x.ld.h
+index d392ab51..b90e6eb6 100644
+--- a/sdk/bsp/ldscripts/ble_projects/sections_da1469x.ld.h
++++ b/sdk/bsp/ldscripts/ble_projects/sections_da1469x.ld.h
+@@ -239,6 +239,7 @@ SECTIONS
+ #endif /* (dg_configEXEC_MODE == MODE_IS_CACHED) */
+                 KEEP(*(nmi_info))
+                 KEEP(*(hard_fault_info))
++                KEEP(*(sys_init_magic_num) )
+                 KEEP(*(retention_mem_uninit))
+ 
+                 ASSERT( . <= __retention_ram_uninit_start__ + dg_configRETAINED_UNINIT_SECTION_SIZE,
+diff --git a/sdk/bsp/peripherals/src/hw_hard_fault.c b/sdk/bsp/peripherals/src/hw_hard_fault.c
+index 4498b55d..4055cee3 100644
+--- a/sdk/bsp/peripherals/src/hw_hard_fault.c
++++ b/sdk/bsp/peripherals/src/hw_hard_fault.c
+@@ -71,7 +71,7 @@ volatile uint32_t hardfault_event_data[9] __attribute__((section("hard_fault_inf
+ *
+ */
+ #if (dg_configCODE_LOCATION == NON_VOLATILE_IS_FLASH)
+-__attribute__((section("text_retained")))
++__WEAK __attribute__((section("text_retained")))
+ #endif
+ void HardFault_HandlerC(unsigned long *hardfault_args)
+ {
+diff --git a/sdk/bsp/peripherals/src/hw_watchdog.c b/sdk/bsp/peripherals/src/hw_watchdog.c
+index 1cf58e7c..d7b4c3f9 100644
+--- a/sdk/bsp/peripherals/src/hw_watchdog.c
++++ b/sdk/bsp/peripherals/src/hw_watchdog.c
+@@ -79,7 +79,7 @@ void hw_watchdog_unregister_int(void)
+         int_handler = NULL;
+ }
+ 
+-__RETAINED_CODE void hw_watchdog_handle_int(unsigned long *exception_args)
++__WEAK __RETAINED_CODE void hw_watchdog_handle_int(unsigned long *exception_args)
+ {
+         // Reached this point due to a WDOG timeout
+         uint16_t pmu_ctrl_reg = CRG_TOP->PMU_CTRL_REG;
+diff --git a/sdk/free_rtos/include/FreeRTOS.h b/sdk/free_rtos/include/FreeRTOS.h
+index cf1c09e8..97add58e 100644
+--- a/sdk/free_rtos/include/FreeRTOS.h
++++ b/sdk/free_rtos/include/FreeRTOS.h
+@@ -80,6 +80,10 @@ extern "C" {
+ #include "SEGGER_SYSVIEW_FreeRTOS.h"
+ #endif /* (dg_configSYSTEMVIEW == 1) */
+ 
++#if (dg_configENABLE_ADF == 1)
++#include "adf_config.h"
++#endif
++
+ #ifndef configMINIMAL_STACK_SIZE
+ 	#error Missing definition:  configMINIMAL_STACK_SIZE must be defined in FreeRTOSConfig.h.  configMINIMAL_STACK_SIZE defines the size (in words) of the stack allocated to the idle task.  Refer to the demo project provided for your port for a suitable value.
+ #endif
+diff --git a/sdk/free_rtos/include/task.h b/sdk/free_rtos/include/task.h
+index a3ada6a6..48aefe0f 100644
+--- a/sdk/free_rtos/include/task.h
++++ b/sdk/free_rtos/include/task.h
+@@ -2352,6 +2352,18 @@ void *pvTaskIncrementMutexHeldCount( void ) PRIVILEGED_FUNCTION;
+ void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut ) PRIVILEGED_FUNCTION;
+ 
+ 
++#if dg_configENABLE_ADF
++/*
++* Added for interrupt safe mechanism for determining stack locations
++* without exposing TCB through API
++*/
++BaseType_t vTaskIsActive(TaskHandle_t xTask);
++
++void *vTaskGetEndOfStack(TaskHandle_t xTask);
++
++#endif //dg_configENABLE_ADF
++
++
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/sdk/free_rtos/tasks.c b/sdk/free_rtos/tasks.c
+index 00983d74..a31f66d7 100644
+--- a/sdk/free_rtos/tasks.c
++++ b/sdk/free_rtos/tasks.c
+@@ -5098,3 +5098,29 @@ when performing module tests). */
+ #endif
+ 
+ 
++#if dg_configENABLE_ADF
++/*-----------------------------------------------------------*/
++BaseType_t vTaskIsActive(TaskHandle_t xTask)
++{
++
++    const TCB_t * const pxTCB = ( TCB_t * ) xTask;
++
++    if(pxTCB == pxCurrentTCB)
++    {
++            return pdTRUE;
++    }
++
++    return pdFALSE;
++
++}
++
++void *vTaskGetEndOfStack(TaskHandle_t xTask)
++{
++
++    const TCB_t * const pxTCB = ( TCB_t * ) xTask;
++
++    return pxTCB->pxEndOfStack;
++
++}
++
++#endif

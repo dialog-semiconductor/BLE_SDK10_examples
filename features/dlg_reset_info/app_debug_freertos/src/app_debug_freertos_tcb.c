@@ -700,7 +700,7 @@ void adf_trace_task_delete(void *pxTCB)
 
                 }else
                 {
-                        //If start stracking happens in system init, the TCB wont be tracked so ignore
+                        //If start stracking happens in system init, the TCB won't be tracked so ignore
                 }
         }
 }
