@@ -71,7 +71,7 @@ static void system_init( void *pvParameters )
 
 //        pm_set_wakeup_mode(true);
         /* Set the desired sleep mode. */
-        pm_sleep_mode_set(pm_mode_extended_sleep);
+        pm_sleep_mode_set(pm_mode_idle);
 
         /* Set the desired wakeup mode. */
         pm_set_sys_wakeup_mode(pm_sys_wakeup_mode_fast);
