@@ -151,7 +151,7 @@ static U32 msd_storage_GetReadBuffer(U8 Lun, U32 SectorIndex, void ** ppData, U3
  *    Reads one or multiple sectors from the storage medium.
  *    This is a callback required by the SEGGER MSD class implementation
  */
-static char msd_storage_Read(U8 Lun, U32 SectorIndex, void * pData, U32 NumSectors)
+static int8_t msd_storage_Read(U8 Lun, U32 SectorIndex, void * pData, U32 NumSectors)
 {
         ASSERT_WARNING(Lun==0);
         const void* flash_pData;
@@ -199,7 +199,7 @@ static U32 msd_storage_GetWriteBuffer(U8 Lun, U32 SectorIndex, void ** ppData, U
  *    Writes one or more sectors to the storage medium.
  *    This is a callback required by the SEGGER MSD class implementation
  */
-static char msd_storage_Write(U8 Lun, U32 SectorIndex, const void * pData, U32 NumSectors)
+static int8_t msd_storage_Write(U8 Lun, U32 SectorIndex, const void * pData, U32 NumSectors)
 {
         ASSERT_WARNING(Lun==0);
         nvms_t nvms;
@@ -228,7 +228,7 @@ static char msd_storage_Write(U8 Lun, U32 SectorIndex, const void * pData, U32 N
  *    Checks if medium is present.
  *    This is a callback required by the SEGGER MSD class implementation
  */
-static char msd_storage_MediumIsPresent(U8 Lun)
+static int8_t msd_storage_MediumIsPresent(U8 Lun)
 {
         ASSERT_WARNING(Lun==0);
         nvms_t nvms;
