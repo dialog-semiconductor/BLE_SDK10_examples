@@ -25,11 +25,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>sdk/ldscripts</name>
-			<type>2</type>
-			<locationURI>SDKROOT/sdk/bsp/ldscripts/non_ble_projects</locationURI>
-		</link>
-		<link>
 			<name>sdk</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -40,19 +35,14 @@
 			<locationURI>SDKROOT/sdk/bsp/startup</locationURI>
 		</link>
 		<link>
+			<name>sdk/FreeRTOS</name>
+			<type>2</type>
+			<locationURI>SDKROOT/sdk/free_rtos</locationURI>
+		</link>
+		<link>
 			<name>sdk/adapters</name>
 			<type>2</type>
 			<locationURI>SDKROOT/sdk/middleware/adapters</locationURI>
-		</link>
-		<link>
-			<name>sdk/config</name>
-			<type>2</type>
-			<locationURI>SDKROOT/sdk/bsp/config</locationURI>
-		</link>
-		<link>
-			<name>sdk/middleware_config</name>
-			<type>2</type>
-			<locationURI>SDKROOT/sdk/middleware/config</locationURI>
 		</link>
 		<link>
 			<name>sdk/bsp_include</name>
@@ -60,14 +50,24 @@
 			<locationURI>SDKROOT/sdk/bsp/include</locationURI>
 		</link>
 		<link>
-			<name>sdk/FreeRTOS</name>
+			<name>sdk/config</name>
 			<type>2</type>
-			<locationURI>SDKROOT/sdk/free_rtos</locationURI>
+			<locationURI>SDKROOT/sdk/bsp/config</locationURI>
+		</link>
+		<link>
+			<name>sdk/ldscripts</name>
+			<type>2</type>
+			<locationURI>SDKROOT/sdk/bsp/ldscripts/non_ble_projects</locationURI>
 		</link>
 		<link>
 			<name>sdk/memory</name>
 			<type>2</type>
 			<locationURI>SDKROOT/sdk/bsp/memory</locationURI>
+		</link>
+		<link>
+			<name>sdk/middleware_config</name>
+			<type>2</type>
+			<locationURI>SDKROOT/sdk/middleware/config</locationURI>
 		</link>
 		<link>
 			<name>sdk/osal</name>
@@ -78,6 +78,11 @@
 			<name>sdk/peripherals</name>
 			<type>2</type>
 			<locationURI>SDKROOT/sdk/bsp/peripherals</locationURI>
+		</link>
+		<link>
+			<name>sdk/snc</name>
+			<type>2</type>
+			<locationURI>SDKROOT/sdk/bsp/snc</locationURI>
 		</link>
 		<link>
 			<name>sdk/sys_man</name>

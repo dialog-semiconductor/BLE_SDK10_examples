@@ -91,6 +91,11 @@
 			<locationURI>SDKROOT/sdk/middleware/segger_tools</locationURI>
 		</link>
 		<link>
+			<name>sdk/snc</name>
+			<type>2</type>
+			<locationURI>SDKROOT/sdk/bsp/snc</locationURI>
+		</link>
+		<link>
 			<name>sdk/sys_man</name>
 			<type>2</type>
 			<locationURI>SDKROOT/sdk/bsp/system/sys_man</locationURI>
