@@ -123,7 +123,7 @@ CRYPTO_AES_RET crypto_aes_encrypt(crypto_aes_context_t *ctx, size_t packet_size,
                         }
                 }
                 //store aes key
-                hw_aes_hash_store_keys(ctx->key_size, ctx->aes_key_adress, HW_AES_PERFORM_KEY_EXPANSION);
+                hw_aes_hash_keys_load(ctx->key_size, ctx->aes_key_adress, HW_AES_PERFORM_KEY_EXPANSION);
         }
 
         if(packet_size < ctx->bytes_left){
@@ -213,7 +213,7 @@ CRYPTO_AES_RET crypto_aes_decrypt(crypto_aes_context_t *ctx, size_t packet_size,
                         }
                 }
                 //store aes key
-                hw_aes_hash_store_keys(ctx->key_size, ctx->aes_key_adress, HW_AES_PERFORM_KEY_EXPANSION);
+                hw_aes_hash_keys_load(ctx->key_size, ctx->aes_key_adress, HW_AES_PERFORM_KEY_EXPANSION);
         }
 
         if(packet_size < ctx->bytes_left){
