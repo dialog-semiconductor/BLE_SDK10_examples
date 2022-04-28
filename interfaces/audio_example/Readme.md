@@ -27,14 +27,10 @@ There are five demos supplied as examples:
 
 - This example requires:
 - Smartsnippets Studio V2.0.16 or greater.
-- SDK 10.0.10.118
+- SDK 10.0.12.139
 - **SEGGER’s J-Link** tools should be downloaded and installed.
 
-- A unified diff patch to apply. To apply, copy to the SDK root directory and use the GNU patch program like so:
 
-```console
-patch -u -p1 < sdk10.0.10.patch
-```
 
 ## Demonstrations
 
