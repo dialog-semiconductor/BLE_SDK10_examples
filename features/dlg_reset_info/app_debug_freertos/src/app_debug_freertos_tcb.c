@@ -16,6 +16,8 @@
 
 #if dg_configENABLE_ADF
 
+#define CONFIG_CMAC_SUPPORT    defined(CONFIG_USE_BLE)  && defined(CMAC_CTX_PTR_SUPPORT)
+
 
 #define SYS_RAM_MAGIC_NUM               (0x01C28122)
 #define RET_RAM_NEEDS_INITIALIZED(mn)   (mn != SYS_RAM_MAGIC_NUM)
@@ -571,7 +573,7 @@ uint16_t adf_get_serialized_size(void)
                 }
 
         }
-#ifdef CONFIG_USE_BLE
+#if CONFIG_CMAC_SUPPORT
         if(s_adf_info.last_stack_frame.type == LF_CMAC_HF ||
                 s_adf_info.last_stack_frame.type == LF_CMAC_NMI)
         {
@@ -639,18 +641,18 @@ void adf_get_serialized_reset_data(uint8_t *data, uint16_t *len, uint16_t serial
 
          }
 
-#if CONFIG_USE_BLE
+#if CONFIG_CMAC_SUPPORT
 
          if(s_adf_info.last_stack_frame.type == LF_CMAC_HF ||
                          s_adf_info.last_stack_frame.type == LF_CMAC_NMI)
          {
-                 *data[current_ptr++] = ADF_TYPE_TCB_TRACE;
+                 data[current_ptr++] = ADF_TYPE_TCB_TRACE;
                  uint8_t cmac_len = sizeof(cmac_event_info_t) - (CMAC_STACK_DEPTH - s_cmac_error_event_data.stack_depth);
 
-                 *data[current_ptr++] = cmac_len & 0xFF;
-                 *data[current_ptr++] = cmac_len >> 8;
+                 data[current_ptr++] = cmac_len & 0xFF;
+                 data[current_ptr++] = cmac_len >> 8;
 
-                 memcpy(*data + current_ptr, &s_cmac_error_event_data, cmac_len);
+                 memcpy(data + current_ptr, &s_cmac_error_event_data, cmac_len);
                  current_ptr += cmac_len;
          }
 
@@ -732,7 +734,7 @@ __RETAINED_CODE void adf_nmi_event_handler(unsigned long *exception_args)
 }
 
 
-#ifdef CONFIG_USE_BLE
+#if CONFIG_CMAC_SUPPORT
 __RETAINED_CODE void ble_controller_error(void)
 {
         s_adf_info.mn = ADF_MN;
@@ -789,7 +791,7 @@ __RETAINED_CODE void ble_controller_error(void)
         hw_cpm_reboot_system();                         // Force reset
 
 }
-#endif //CONFIG_USE_BLE
+#endif //CONFIG_CMAC_SUPPORT
 
 
 __RETAINED_CODE void HardFault_HandlerC(unsigned long *hardfault_args)

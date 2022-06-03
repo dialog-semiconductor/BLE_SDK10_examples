@@ -210,12 +210,14 @@ Each piece of information is serialized in the following ADF Frame formats and c
 
       #define dg_configRETAINED_UNINIT_SECTION_SIZE    (ADDTL_UNINIT)
 
+  /*****************************************************************************/  
+  ```
+  5. In newer SDK versions (10.0.12 and newer), tracing of the CMAC is possible.  Check that cmac_exception_ctx_ptr is declared globally, and if support is desired,  add the following #define: 
+  ```
+  #define CMAC_CTX_PTR_SUPPORT
+  ```
 
-      /*****************************************************************************/  
-
-      ```
-
-  5. If you wish to generate the objdump.txt file, for easier address tracing.  Do the following:
+  6. If you wish to generate the objdump.txt file, for easier address tracing.  Do the following:
 
      Right click on your project, go to C/C++ Build/Settings, then go to build steps, and in post build commands add the following arguments:
 
@@ -223,19 +225,18 @@ Each piece of information is serialized in the following ADF Frame formats and c
         ${cross_prefix}${cross_objdump} -S ${ProjName}.elf > ${ProjName}_objdump.txt
         ```
 
-  6. Call adf_tracking_init() in the main function, where you would like to start tracking tasks (before RTOS initialization will track all)
+  7. Call adf_tracking_init() in the main function, where you would like to start tracking tasks (before RTOS initialization will track all)
 
-  7. In one of your application tasks, call the following two functions prior to entering the main loop:
 
-      ```c
-      adf_get_serialized_size();
-      adf_get_serialized_reset_data(reset_data, &adf_actual_len, adf_length);
-     
-      ```
+  8. In one of your application tasks, call the following two functions prior to entering the mainloop:
 
-  8. If you wish to just print out the data, make sure ADF_PRINT() is defined and calls your print function.  If you are using CONFIG_RETARGET, make sure this is setup appropriately (use freertos_retarget as reference if not setup)
+  ```
+  adf_get_serialized_size();
+  adf_get_serialized_reset_data(reset_data, &adf_actual_len, adf_length);
+  ```
+  9. If you wish to just print out the data, make sure ADF_PRINT() is defined and calls your print function.  If you are using CONFIG_RETARGET, make sure this is setup appropriately (use freertos_retarget as reference if not setup)
 
-  9. Once the data is provided, the best use is to pass this over BLE back to a client side.
+  10. Once the data is provided, the best use is to pass this over BLE back to a client side.
 
 ## Additional Notes and Limitations
 
