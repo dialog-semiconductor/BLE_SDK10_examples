@@ -99,7 +99,7 @@
 
 static void flash_is25wp032d_initialize(HW_QSPIC_ID id);
 static void flash_is25wp032d_sys_clock_cfg(HW_QSPIC_ID id, sys_clk_t sys_clk);
-static uint8_t flash_is25wp032d_get_dummy_bytes(HW_QSPIC_ID id);
+static uint8_t flash_is25wp032d_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk);
 
 static const qspi_flash_config_t flash_is25wp032d_config = {
         .manufacturer_id               = ISSI_ID,
@@ -140,7 +140,7 @@ __RETAINED_CODE static void flash_is25wp032d_sys_clock_cfg(HW_QSPIC_ID id, sys_c
 {
 }
 
-__RETAINED_CODE static uint8_t flash_is25wp032d_get_dummy_bytes(HW_QSPIC_ID id)
+__RETAINED_CODE static uint8_t flash_is25wp032d_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk)
 {
         return 2;
 }
