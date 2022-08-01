@@ -28,7 +28,8 @@
 
 /* Required header files for using crypto engine */
 #include "ad_crypto.h"
-#include "hw_aes_hash.h"
+#include "hw_aes.h"
+#include "hw_hash.h"
 #include "vectors_keys.h"
 
 /* Task priorities */
@@ -311,10 +312,13 @@ static void prvHASH_SHA_256( void *pvParameters )
                  * Configure the engine to perform a SHA-512 hashing. Define the number in bytes of the result that the engine will write
                  * to the output memory. This value depends on the selected HASH algorithm. Here developer shall select another hashing function.
                  */
-                hw_aes_hash_cfg_sha_256(NUM_OF_HASH_DATA);
+                hw_hash_set_type(HW_HASH_TYPE_SHA_256);
+                hw_hash_set_output_data_len(HW_HASH_TYPE_SHA_256, HW_HASH_OUTPUT_LEN_MAX_SHA_256);
 
                 /* This function configures the DMA machine with the data to be processed and the destination buffer where results are stored */
-                hw_aes_hash_cfg_dma(hash_data_wd, hash_data_rd, sizeof(hash_data_wd) - 1);
+                hw_aes_hash_set_input_data_addr((uint32_t)hash_data_wd);
+                hw_aes_hash_set_output_data_addr((uint32_t)hash_data_rd);
+                hw_aes_hash_set_input_data_len(sizeof(hash_data_wd) - 1);
 
                 /* Start the AES/HASH engine */
                 hw_aes_hash_start();
@@ -352,7 +356,7 @@ static void prvHASH_SHA_256( void *pvParameters )
 #define NUMBER_OF_DATA   (64)
 
 /* This macro defines the chunked number of bytes */
-#define NUMBER_OF_CHUNK  (16)
+#define NUMBER_OF_BYTE_PER_CHUNK  (16)
 
 #if  (AES_CBC_128_NON_FRAG_DATA == 1)
 /*
@@ -390,16 +394,13 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 /* --------From this point onwards, Low Level Drivers are used for controlling and performing AES/HASH operations-------------- */
 
                 /* Configure engine to perform an AES CBC encryption/decryption operation. Here developer shall select another AES mode. */
-                hw_aes_hash_cfg_aes_cbc(HW_AES_128);
-
-                /* Store the base key in AES/HASH engine memory and configure engine to perform key expansion, as well */
-                //hw_aes_hash_store_keys(HW_AES_128, key_128b, HW_AES_PERFORM_KEY_EXPANSION);
-               
+                hw_aes_set_mode(HW_AES_MODE_CBC);
+                hw_aes_set_key_size(HW_AES_KEY_SIZE_128);
 
 #if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_hash_otp_keys_load(HW_AES_128, key_otp);
+                hw_aes_otp_keys_load(HW_AES_128, key_otp);
 #else
-                hw_aes_hash_keys_load(HW_AES_128, key_otp, HW_AES_PERFORM_KEY_EXPANSION);
+                hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_128, HW_AES_KEY_EXPAND_BY_HW);
 #endif //#if (dg_configAES_USE_OTP_KEYS == 1)
 
                 /* ------------------------------------------------------ Encryption process ------------------------------------------------- */
@@ -408,16 +409,18 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                  * This function is used to configure the engine so as to consider the next input block as the last of the operation (since this task
                  * handles non fragmented data)
                  */
-                hw_aes_hash_mark_input_block_as_last();
+                hw_aes_hash_set_input_data_mode(false);
 
                 /* This function stores the initialization vector (IV) that is necessary for AES CBC mode */
-                hw_aes_hash_store_iv(iv);
+                hw_aes_set_init_vector(iv);
 
                 /* This function configures the DMA machine with the data to be processed and the destination buffer where results are stored */
-                hw_aes_hash_cfg_dma(vector, non_frag_encr_data, NUMBER_OF_DATA);
+                hw_aes_hash_set_input_data_addr((uint32_t)vector);
+                hw_aes_hash_set_output_data_addr((uint32_t)non_frag_encr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_DATA);
 
                 /* Start a AES encryption operation */
-                hw_aes_hash_encrypt();
+                hw_aes_start_operation(HW_AES_OPERATION_ENCRYPT);
 
                 /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
@@ -433,14 +436,16 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 /* ------------------------------------------------- Encryption process ---------------------------------------------------- */
 
                 /* ------------------------------------------------- Decryption process ---------------------------------------------------- */
-                hw_aes_hash_mark_input_block_as_last();
-                hw_aes_hash_store_iv(iv);
+                hw_aes_hash_set_input_data_mode(false);
+                hw_aes_set_init_vector(iv);
 
                 /* Configure DMA with new data source/destination */
-                hw_aes_hash_cfg_dma(non_frag_encr_data, non_frag_decr_data, NUMBER_OF_DATA);
+                hw_aes_hash_set_input_data_addr((uint32_t)non_frag_encr_data);
+                hw_aes_hash_set_output_data_addr((uint32_t)non_frag_decr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_DATA);
 
                 /* Start a AES decryption operation */
-                hw_aes_hash_decrypt();
+                hw_aes_start_operation(HW_AES_OPERATION_DECRYPT);
 
                 /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
@@ -503,13 +508,14 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                 /* --------From this point onwards, Low Level Drivers are used for controlling and performing AES/HASH operations-------------- */
 
                 /* Configure engine to perform an AES CBC encryption/decryption operation. Here developer shall select another AES mode. */
-                hw_aes_hash_cfg_aes_cbc(HW_AES_256);
+                hw_aes_set_mode(HW_AES_MODE_CBC);
+                hw_aes_set_key_size(HW_AES_KEY_SIZE_256);
 
                 /* Store the base key in AES/HASH engine memory and configure engine to perform key expansion, as well */
 #if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_hash_otp_keys_load(HW_AES_256, key_otp);
+                hw_aes_otp_keys_load(HW_AES_256, key_otp);
 #else
-                hw_aes_hash_keys_load(HW_AES_256, key_otp, HW_AES_PERFORM_KEY_EXPANSION);
+                hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_256, HW_AES_KEY_EXPAND_BY_HW);
 #endif //#if (dg_configAES_USE_OTP_KEYS == 1)
                 /* ------------------------------------------------------ Encryption process ------------------------------------------------- */
 
@@ -517,16 +523,18 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                  * This function is used to configure the engine so as to consider the next input block as the last of the operation (since this task
                  * handles non fragmented data)
                  */
-                hw_aes_hash_mark_input_block_as_last();
+                hw_aes_hash_set_input_data_mode(false);
 
                 /* This function stores the initialization vector (IV) that is necessary for AES CBC mode */
-                hw_aes_hash_store_iv(iv);
+                hw_aes_set_init_vector(iv);
 
                 /* This function configures the DMA machine with the data to be processed and the destination buffer where results are stored */
-                hw_aes_hash_cfg_dma(vector, non_frag_encr_data, NUMBER_OF_DATA);
+                hw_aes_hash_set_input_data_addr((uint32_t)vector);
+                hw_aes_hash_set_output_data_addr((uint32_t)non_frag_encr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_DATA);
 
                 /* Start a AES encryption operation */
-                hw_aes_hash_encrypt();
+                hw_aes_start_operation(HW_AES_OPERATION_ENCRYPT);
 
                 /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
@@ -544,14 +552,16 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
 
                 /* ------------------------------------------------- Decryption process ---------------------------------------------------- */
 
-                hw_aes_hash_mark_input_block_as_last();
-                hw_aes_hash_store_iv(iv);
+                hw_aes_hash_set_input_data_mode(false);
+                hw_aes_set_init_vector(iv);
 
                 /* Configure DMA with new data source/destination */
-                hw_aes_hash_cfg_dma(non_frag_encr_data, non_frag_decr_data, NUMBER_OF_DATA);
+                hw_aes_hash_set_input_data_addr((uint32_t)non_frag_encr_data);
+                hw_aes_hash_set_output_data_addr((uint32_t)non_frag_decr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_DATA);
 
                 /* Start a AES decryption operation */
-                hw_aes_hash_decrypt();
+                hw_aes_start_operation(HW_AES_OPERATION_DECRYPT);
 
                 /* Wait for the crypto IRQ  indicating that the task has been executed */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
@@ -617,7 +627,8 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                 /* --------From this point onwards, Low Level Drivers are used for controlling and performing AES/HASH operations-------------- */
 
                 /* Configure engine for AES CTR encryption/decryption. Here developer shall select another AES mode. */
-                hw_aes_hash_cfg_aes_ctr(HW_AES_192);
+                hw_aes_set_mode(HW_AES_MODE_CTR);
+                hw_aes_set_key_size(HW_AES_KEY_SIZE_192);
 
                 /*
                  * This function stores the keys used for AES operations. If key expansion is performed by the engine then the provided key
@@ -625,9 +636,9 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                  */
 
                #if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_hash_otp_keys_load(HW_AES_192, key_otp);
+                hw_aes_otp_keys_load(HW_AES_192, key_otp);
 #else
-                hw_aes_hash_keys_load(HW_AES_192, key_otp, HW_AES_PERFORM_KEY_EXPANSION);
+                hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_192, HW_AES_KEY_EXPAND_BY_HW);
 #endif //#if (dg_configAES_USE_OTP_KEYS == 1)
 
                 /* --------------------------------------------- Encryption process ---------------------------------------------------- */
@@ -636,16 +647,19 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                  * Mark the AES/HASH engine that this is not the last input block to be processed. This must ALWAYS be called to tell AES/HASH
                  * engine that more data will follow after the first encryption/decryption operation.
                  */
-                hw_aes_hash_mark_input_block_as_not_last();
+                hw_aes_hash_set_input_data_mode(true);
 
-                /* This function stores the initialization counter (IC) that is necessary for AES CTR mode. */
-                hw_aes_hash_store_ic(ic);
 
-                /* Configure DMA to process the first 16 bytes of the total 64 bytes */
-                hw_aes_hash_cfg_dma(vector, frag_encr_data, NUMBER_OF_CHUNK);
+                /* This function stores the initialization vector (IV) that is necessary for AES CBC mode */
+                hw_aes_set_init_vector(ic);
 
-                /* Start the encryption process */
-                hw_aes_hash_encrypt();
+                /* This function configures the DMA machine with the data to be processed and the destination buffer where results are stored */
+                hw_aes_hash_set_input_data_addr((uint32_t)&vector[0]);
+                hw_aes_hash_set_output_data_addr((uint32_t)frag_encr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_BYTE_PER_CHUNK);
+
+                /* Start a AES encryption operation */
+                hw_aes_start_operation(HW_AES_OPERATION_ENCRYPT);
 
                 /*
                  * Wait until operation is finished. A callback is triggered, indicating that the AES/HASH engine has finished
@@ -655,26 +669,29 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                 OS_ASSERT(status == OS_OK);
 
                 /* Continue the processing with the rest data. A chunk of NUMBER_OF_CHUNK bytes is processed each time */
-                for (int i = 1; i < (NUMBER_OF_DATA/NUMBER_OF_CHUNK); i++) {
+                for (int i = 1; i < (NUMBER_OF_DATA/NUMBER_OF_BYTE_PER_CHUNK); i++) {
 
                         /*
                          * Configure DMA to transfer the next chunk of data to the AES/HASH engine for processing.
                          * Please note that destination address must be NULL when configuring the DMA while the engine is waiting for
                          * more input data.
                          */
-                        hw_aes_hash_cfg_dma(&vector[i*NUMBER_OF_CHUNK], NULL, NUMBER_OF_CHUNK);
+                        hw_aes_hash_set_input_data_addr((uint32_t)&vector[i*NUMBER_OF_BYTE_PER_CHUNK]);
+                        hw_aes_hash_set_input_data_len(NUMBER_OF_BYTE_PER_CHUNK);
+
 
                         /* Time for processing the last input block has elapsed. */
-                        if (i == ((NUMBER_OF_DATA/NUMBER_OF_CHUNK) - 1)) {
+                        if (i == ((NUMBER_OF_DATA/NUMBER_OF_BYTE_PER_CHUNK) - 1)) {
                                 /* This is the last block of data so signal the AES/HASH engine that this is the last data block to be processed */
-                                hw_aes_hash_mark_input_block_as_last();
+                                hw_aes_hash_set_input_data_mode(false);
 
                                 /* Force the AES/HASH engine to output all the encrypted data in the output buffer */
-                                hw_aes_hash_output_mode_write_all();
+
+                                hw_aes_set_output_data_mode(HW_AES_OUTPUT_DATA_MODE_ALL);
                         }
 
                         /* Continue with the next operation. */
-                        hw_aes_hash_start();
+                        hw_aes_start_operation(HW_AES_OPERATION_ENCRYPT);
 
                         /* Wait until operation is finished */
                         status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);
@@ -693,14 +710,16 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                 /* ------------------------------------------------ Decryption process ------------------------------------------------------- */
 
                 /* Mark the AES/HASH engine that this is the last input block to be processed. Here, decryption is performed in non-fragmented data. */
-                hw_aes_hash_mark_input_block_as_last();
-                hw_aes_hash_store_ic(ic);
+                hw_aes_hash_set_input_data_mode(false);
+                hw_aes_set_init_vector(iv);
 
-                /* Configure the DMA to transfer the whole encrypted data to the AES/HASH engine */
-                hw_aes_hash_cfg_dma(frag_encr_data, frag_decr_data, NUMBER_OF_DATA);
+                /* Configure DMA with new data source/destination */
+                hw_aes_hash_set_input_data_addr((uint32_t)frag_encr_data);
+                hw_aes_hash_set_output_data_addr((uint32_t)frag_decr_data);
+                hw_aes_hash_set_input_data_len(NUMBER_OF_DATA);
 
-                /* Start the decryption process */
-                hw_aes_hash_decrypt();
+                /* Start a AES decryption operation */
+                hw_aes_start_operation(HW_AES_OPERATION_DECRYPT);
 
                 /* Wait until operation is finished */
                 status = ad_crypto_wait_aes_hash_event(OS_EVENT_FOREVER, &aes_hash_status);

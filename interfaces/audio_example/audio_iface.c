@@ -28,8 +28,8 @@ sys_audio_device_t * prepare_i2s(sys_audio_device_t * device, const audio_qualit
                 device->pcm_param.channel_delay = HW_PCM_FSC_STARTS_1_CYCLE_BEFORE_MSB_BIT;
                 device->pcm_param.clock = HW_PCM_CLK_DIVN;
                 device->pcm_param.cycle_per_bit = HW_PCM_ONE_CYCLE_PER_BIT;
-                device->pcm_param.enable_dithering = false;
-                device->pcm_param.clk_generation = HW_PCM_CLK_GEN_FRACTIONAL;
+                device->pcm_param.enable_dithering = true;
+
                 device->pcm_param.fsc_delay = HW_PCM_FSC_STARTS_SYNCH_TO_MSB_BIT;
                 device->pcm_param.inverted_clk_polarity = HW_PCM_CLK_POLARITY_INVERTED;
                 device->pcm_param.inverted_fsc_polarity = HW_PCM_FSC_POLARITY_NORMAL;
@@ -52,8 +52,8 @@ sys_audio_device_t * prepare_pcm(sys_audio_device_t * device, const audio_qualit
                 device->pcm_param.channel_delay = HW_PCM_FSC_STARTS_1_CYCLE_BEFORE_MSB_BIT;
                 device->pcm_param.clock = HW_PCM_CLK_DIVN;
                 device->pcm_param.cycle_per_bit = HW_PCM_ONE_CYCLE_PER_BIT;
-                device->pcm_param.enable_dithering = false;
-                device->pcm_param.clk_generation = HW_PCM_CLK_GEN_FRACTIONAL;
+                device->pcm_param.enable_dithering = true;
+
                 device->pcm_param.fsc_delay = HW_PCM_FSC_STARTS_SYNCH_TO_MSB_BIT;
                 device->pcm_param.inverted_clk_polarity = HW_PCM_CLK_POLARITY_INVERTED;
                 device->pcm_param.inverted_fsc_polarity = HW_PCM_FSC_POLARITY_NORMAL;

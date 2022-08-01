@@ -66,7 +66,7 @@ const uint32_t en25s16_ucode_wakeup[] = {
 static void flash_en25s16_initialize(HW_QSPIC_ID id);
 static bool flash_en25s16_is_suspended(HW_QSPIC_ID id);
 static void flash_en25s16_sys_clock_cfg(HW_QSPIC_ID id, sys_clk_t sys_clk);
-static uint8_t flash_en25s16_get_dummy_bytes(HW_QSPIC_ID id);
+static uint8_t flash_en25s16_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk);
 
 static const qspi_flash_config_t flash_en25s16_config = {
         .manufacturer_id                  = ESMT_ID,
@@ -132,7 +132,7 @@ __RETAINED_CODE static void flash_en25s16_sys_clock_cfg(HW_QSPIC_ID id, sys_clk_
 
 }
 
-__RETAINED_CODE static uint8_t flash_en25s16_get_dummy_bytes(HW_QSPIC_ID id)
+__RETAINED_CODE static uint8_t flash_en25s16_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk)
 {
         return 2;
 }

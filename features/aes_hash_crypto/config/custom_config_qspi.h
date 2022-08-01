@@ -30,7 +30,9 @@
 
 #define dg_configCRYPTO_ADAPTER                 (1)
 
-#define dg_configUSE_HW_AES_HASH                (1)
+#define dg_configUSE_HW_AES                     (1)
+#define dg_configUSE_HW_HASH                    (1)
+
 #define dg_configAES_USE_OTP_KEYS               (0)
 #define dg_configAES_USE_SECURE_DMA_CHANNEL     (1)
 

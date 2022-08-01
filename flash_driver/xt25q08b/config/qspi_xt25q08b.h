@@ -115,7 +115,7 @@ static void flash_xt25q08b_sys_clock_cfg(HW_QSPIC_ID id, sys_clk_t sys_clk);
  * however, the dummy bytes must change (e.g. according to the system clock
  * frequency).
  */
-static uint8_t flash_xt25q08b_get_dummy_bytes(HW_QSPIC_ID id);
+static uint8_t flash_xt25q08b_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk);
 
 /**
  * \brief This structs configures the system for the specific flash
@@ -165,7 +165,7 @@ __RETAINED_CODE static void flash_xt25q08b_sys_clock_cfg(HW_QSPIC_ID id, sys_clk
 
 }
 
-__RETAINED_CODE static uint8_t flash_xt25q08b_get_dummy_bytes(HW_QSPIC_ID id)
+__RETAINED_CODE static uint8_t flash_xt25q08b_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk)
 {
                 return 2;
 }

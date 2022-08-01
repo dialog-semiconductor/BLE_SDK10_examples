@@ -152,7 +152,7 @@ __RETAINED_CODE static void flash_gd25lq128e_enable_quad_mode(HW_QSPIC_ID id);
  * \note This function will return the number of dummy bytes required while Fast Read Quad is activated. In some QSPI Flash devices,
  *       it is possible that the number of dummy bytes required can vary depending on the operating speed.
  */
-__RETAINED_CODE static uint8_t flash_gd25lq128e_get_dummy_bytes(HW_QSPIC_ID id);
+__RETAINED_CODE static uint8_t flash_gd25lq128e_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk);
 
 /**
  * \brief Initialize GD25LQ128E QSPI Flash
@@ -276,7 +276,7 @@ __RETAINED_CODE static void flash_gd25lq128e_enable_quad_mode(HW_QSPIC_ID id)
         }
 }
 
-__RETAINED_CODE static uint8_t flash_gd25lq128e_get_dummy_bytes(HW_QSPIC_ID id)
+__RETAINED_CODE static uint8_t flash_gd25lq128e_get_dummy_bytes(HW_QSPIC_ID id, sys_clk_t sys_clk)
 {
         /* 2 Dummy Bytes are required for non QPI mode of operation regardless of Operating Frequency for GD25LQ128E. */
         return 2;
