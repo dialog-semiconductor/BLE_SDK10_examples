@@ -20,7 +20,19 @@ This application is an example application implementing the CDC + HID USB profil
 
 ## How to run the example
 
-### Initial Setup
+* build the example
+* Flash the example on the board
 
-Write in the flash, connect the USB port
-  
+The device will be detected as both a mouse and a CDC device.
+
+The CDC will echo any character sent to it. For testing, open your favorite serial terminal application (Pyserial, Putty, teraterm...)
+
+Open the *COM<Number>* on windows, or */dev/cu.usbmodem123456781* in macOS, or */dev/ttyACM0* on linux. Type some character.
+
+For the HID device, by default the application is doing nothing. It's possible to generate mouse movement by uncommenting the following statement in the usb_cdc_hid.c file:
+
+```c
+USBD_HID_Write(usb_hid_h, movex, sizeof(movex), 0);
+```
+
+This will send a mouse cursor right and down movement every 50ms. The function will have to be adapted for movement sensor to generator real input.
