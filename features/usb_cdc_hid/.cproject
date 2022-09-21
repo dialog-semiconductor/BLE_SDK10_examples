@@ -168,7 +168,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="Applicable for DA1469x. Release build configuration for executing from QSPI." errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.192963263.711985223.710560559.4316245.1036482742.684730966" name="DA1469x-00-Release_QSPI" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="Generate linker scripts." prebuildStep="+${cross_make} generate_ldscripts DEVICE=DA14699_00 PRE_BUILD_EXTRA_DEFS=&quot;${PRE_BUILD_EXTRA_DEFS}&quot; APP_CONFIG_H=&quot;${workspace_loc:/${ProjName}/config/custom_config_qspi.h}&quot; CC=&quot;${cross_prefix}${cross_c}${cross_suffix}&quot; BSP_CONFIG_DIR=&quot;${workspace_loc:/${ProjName}/sdk/config}&quot; MIDDLEWARE_CONFIG_DIR=&quot;${workspace_loc:/${ProjName}/sdk/middleware_config}&quot; LDSCRIPT_PATH=&quot;${workspace_loc:/${ProjName}/sdk/ldscripts}&quot;">
+				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.exe" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.exe,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="${cross_rm} -rf" description="Applicable for DA1469x. Release build configuration for executing from QSPI." errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser" id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.192963263.711985223.710560559.4316245.1036482742.684730966" name="DA1469x-00-Release_QSPI" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=" parent="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug" postannouncebuildStep="" postbuildStep="" preannouncebuildStep="Generate linker scripts." prebuildStep="+${cross_make} generate_ldscripts DEVICE=DA14699_00 PRE_BUILD_EXTRA_DEFS=&quot;${PRE_BUILD_EXTRA_DEFS}&quot; APP_CONFIG_H=&quot;${workspace_loc:/${ProjName}/config/custom_config_qspi.h}&quot; CC=&quot;${cross_prefix}${cross_c}${cross_suffix}&quot; BSP_CONFIG_DIR=&quot;${workspace_loc:/${ProjName}/sdk/config}&quot; MIDDLEWARE_CONFIG_DIR=&quot;${workspace_loc:/${ProjName}/sdk/middleware_config}&quot; LDSCRIPT_PATH=&quot;${workspace_loc:/${ProjName}/sdk/ldscripts}&quot;">
 					<folderInfo id="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.76586611.192963263.711985223.710560559.4316245.1036482742.684730966." name="/" resourcePath="">
 						<toolChain errorParsers="" id="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug.631344307" name="Cross ARM GCC" superClass="ilg.gnuarmeclipse.managedbuild.cross.toolchain.elf.debug">
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.2119777380" name="Optimization Level" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level" useByScannerDiscovery="true" value="ilg.gnuarmeclipse.managedbuild.cross.option.optimization.level.size" valueType="enumerated"/>
@@ -256,7 +256,7 @@
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other.223063696" name="Other linker flags" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.other" useByScannerDiscovery="false" value="--specs=nosys.specs" valueType="string"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths.1122443796" name="Library search path (-L)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.paths" useByScannerDiscovery="false" valueType="libPaths">
-									<listOptionValue builtIn="false" value="&quot;../../../../../sdk/interfaces/usb//DA1469x-00-Release&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc}/sdk/interfaces/usb//DA1469x-00-Release&quot;"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs.362044265" name="Libraries (-l)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.linker.libs" useByScannerDiscovery="false" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="usb_lib_da1469x"/>
@@ -357,5 +357,12 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="DA1469x-00-Release_QSPI">
+			<resource resourceType="PROJECT" workspacePath="/usb_cdc_hid"/>
+		</configuration>
+		<configuration configurationName="DA1469x-00-Debug_QSPI">
+			<resource resourceType="PROJECT" workspacePath="/usb_cdc_hid"/>
+		</configuration>
+	</storageModule>
 </cproject>
