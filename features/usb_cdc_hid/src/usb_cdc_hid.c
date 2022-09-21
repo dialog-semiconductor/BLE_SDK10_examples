@@ -234,8 +234,9 @@ void usb_cdc_hid_start()
         OS_BASE_TYPE status;
 
         USBD_Init();
-        USBD_CDC_Init();
+        USBD_EnableIAD();
         USBD_HID_Init();
+        USBD_CDC_Init();
         USBD_RegisterSCHook(&UsbpHook, usb_cdc_state_cb, NULL);
         hCDC_Inst = _AddCDC();
         USBD_SetDeviceInfo(&_DeviceInfo);
@@ -335,7 +336,7 @@ void sys_usb_ext_hook_detach(void)
 {
         if (run_usb_cdc_hid_task) {
                 run_usb_cdc_hid_task = false;
-                usb_cdc_hid_start();
+                usb_cdc_hid_stop();
         }
 }
 
@@ -407,27 +408,12 @@ void usb_hid_task(void *params)
                 /* Suspend watchdog while blocking on USBD_HID_Receive */
                 sys_watchdog_suspend(wdog_id);
 
-                /* Read Report ID */
-//                recv = USBD_HID_Read(usb_hid_h, usb_hid_bufs.read, 1, 0);
 
                 /* Resume watchdog */
                 sys_watchdog_notify_and_resume(wdog_id);
 
-                if (recv == 1) {
-
-//                                recv = USBD_HID_Read(usb_hid_h, &usb_hid_bufs.read[1],USBD_HID_GetNumBytesRemToRead(usb_hid_h), 0);
-//                                /* Resume watchdog */
-//                                sys_watchdog_notify_and_resume(wdog_id);
-//
-//                                int ret;
-//
-//
-//                                send_to_ble(HID_OP_DATA, type, id, num_bytes, &usb_bufs.read[1]);
-                }
-
-
-
-                USBD_HID_Write(usb_hid_h, movex, sizeof(movex), 0);
+                // TODO uncomment to make the mouse move
+                //USBD_HID_Write(usb_hid_h, movex, sizeof(movex), 0);
 
                 /* Resume watchdog */
                 sys_watchdog_notify_and_resume(wdog_id);
