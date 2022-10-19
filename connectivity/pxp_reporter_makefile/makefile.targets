@@ -13,7 +13,7 @@ generate_ldscripts : mem.ld sections.ld
 
 %.img: %.bin
 	@echo 'Invoking: Mkimage Prepare SUOTA Image'
-	"$(PYTHON)" "$(SCRIPT)" -q -p "$(REVISION)" --sw_version "$(SW_VERSION_PATH)" $< $(BUILD_OUTPUT_DIR)/$@
+	"$(PYTHON)" "$(SCRIPT)" -q -p "$(REVISION)" --sw_version "$(SW_VERSION_PATH)" $(BUILD_OUTPUT_DIR)/$< $(BUILD_OUTPUT_DIR)/$@
 	@echo ' '
 
 %_secure.img: %.bin

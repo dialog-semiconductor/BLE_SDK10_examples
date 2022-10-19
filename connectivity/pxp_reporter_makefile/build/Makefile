@@ -24,9 +24,13 @@ BUILD_OUTPUT_DIR = $(BUILD_CONFIG)
 CC := arm-none-eabi-gcc
 RM := rm -rf
 
-PYTHON ?= C:/DiaSemi/SmartSnippetsStudio2.0.20/Python35/python.exe
+# TODO this needs to be modified for user
+PYTHON ?= /cygdrive/c/DiaSemi/SmartSnippetsStudio2.0.20/Python35/python.exe
+IMG_SCRIPT ?= $(SOURCEROOT)/utilities/python_scripts/suota/v11/mkimage.py
 PYTHON_SCRIPTS_DIR :=  $(SOURCEROOT)/utilities/python_scripts
 PYTHON_QSPI_DIR :=  $(PYTHON_SCRIPTS_DIR)/qspi
+HEADER_CONFIG_XML ?= $(PYTHON_QSPI_DIR)/program_qspi.xml # Default xml configuration provided with SDK
+IMAGE_PREFIX ?= mx25u3235_ # Default xml configuration is for mx25u3235 flash. Assumption is user will modify this prefix to match their xml config.
 
 # TODO need to separate suota vs non suota
 ifeq (ram, $(word 2,$(subst _, ,$(BUILD_CONFIG))))
@@ -106,7 +110,7 @@ dev:
 # SDK subdirectories with source files
 # TODO check order against prox_reporter. How to add additional c files? 
 SDK_SOURCE_SUBDIRS := bsp/startup/DA1469x
-SDK_SOURCE_SUBDIRS += bsp/startup/
+SDK_SOURCE_SUBDIRS += bsp/startup
 SDK_SOURCE_SUBDIRS += bsp/util/src 
 SDK_SOURCE_SUBDIRS += bsp/system/sys_man 
 SDK_SOURCE_SUBDIRS += bsp/snc/src 
@@ -208,10 +212,6 @@ OBJS += $(2)
 S_UPPER_DEPS += $(patsubst %.o,%.d,$(2))
 endef
 
-# Generate a rule to build a .o and a .d file for every .S file. See the `C_DEPENDENCY_template` 
-# definition and documentation below.
-$(foreach src,$(S_UPPER_SRCS),$(eval $(call S_UPPER_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.S,%.o,$(src))))))
-
 # This macro takes a c file as input and generates a rule for building it. Not only does
 # the rule build the associated .o file (which is the target of the rule), but it also 
 # builds a _makefile_ that lists all the _header_ dependencies of the .o file. 
@@ -243,9 +243,31 @@ OBJS += $(2)
 C_DEPS += $(patsubst %.o,%.d,$(2))
 endef
 
+# Generate a rule to build a .o and a .d file for every .S file. See the `C_DEPENDENCY_template` 
+# definition and documentation below.
+#$(foreach src,$(S_UPPER_SRCS),$(eval $(call S_UPPER_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.S,%.o,$(src))))))
+
+
 # Generate a rule to build a .o and a .d file for every .c file. See the `C_DEPENDENCY_template` 
 # definition and documentation above.
-$(foreach src,$(C_SRCS),$(eval $(call C_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.c,%.o,$(src))))))
+#$(foreach src,$(C_SRCS),$(eval $(call C_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.c,%.o,$(src))))))
+
+
+# Convienent mechanisms to call above dependency templates
+s_template=$(eval $(call S_UPPER_DEPENDENCY_template,$(1),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.S,%.o,$(1)))))
+c_sdk_template=$(eval $(call C_DEPENDENCY_template,$(1),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.c,%.o,$(1))))) 
+# This is used to specify a different output folder for artifacts produced from building user sources
+c_user_src_template=$(eval $(call C_DEPENDENCY_template,$(1),$(subst $(addsuffix /, $(APP_SOURCE_DIR)),$(BUILD_OUTPUT_DIR)/user/,$(patsubst %.c,%.o,$(1))))) 
+
+# Generate a rule to build a .o and a .d file for every .S file. See the `C_DEPENDENCY_template` 
+# definition and documentation below.
+$(foreach src,$(S_UPPER_SRCS),$(call s_template,$(src)))
+
+# Generate a rule to build a .o and a .d file for every .c file. See the `C_DEPENDENCY_template` 
+# definition and documentation above.
+$(foreach src, $(SDK_C_SRCS),$(call c_sdk_template,$(src)))
+$(foreach src, $(APP_C_SRCS),$(call c_user_src_template,$(src)))
+
 
 ################################################################################
 # Import Dependencies
@@ -321,7 +343,7 @@ ifeq (ram, $(word 2,$(subst _, ,$(BUILD_CONFIG))))
 all: pre-build main-build
 else
 # For qspi builds, additional post-build is added to create a binary with the product header
-all: pre-build main-build post-build
+all: pre-build main-build post-build post-build-suota
 endif
 
 # Main-build Target
@@ -393,11 +415,20 @@ pre-build: check-build-config
 	LDSCRIPT_PATH="$(SDKROOT)/bsp/ldscripts/ble_projects"
 	-@echo ' '
 			
-# For qspi builds, create a binary with the appropriate product header. Looks like calls to make image and make secure image
-post-build: main-build
-	# Create image with Macronix product header
-	@python $(PYTHON_QSPI_DIR)/create_flash_image.py --header_config $(PYTHON_QSPI_DIR)/program_qspi.xml --image $(BUILD_OUTPUT_DIR)/mx25u3235_$(BUILD_ARTIFACT_NAME).bin $(BUILD_OUTPUT_DIR)/$(BUILD_ARTIFACT_NAME).bin
+# For qspi builds, create a binary with the appropriate product header. 
+# TODO: meed to allow specifying product header? Verify a .xml config exists before? 
 
+post-build: main-build
+	# Create image with product header
+	@python $(PYTHON_QSPI_DIR)/create_flash_image.py --header_config $(HEADER_CONFIG_XML) --image $(BUILD_OUTPUT_DIR)/$(IMAGE_PREFIX)$(BUILD_ARTIFACT_NAME).bin $(BUILD_OUTPUT_DIR)/$(BUILD_ARTIFACT_NAME).bin
+
+#TODO: based on winmerge seem to be differences in header. Need to run example to see if still functonal
+#post-build-suota: 
+#	-@echo 'Prepare SUOTA image.'
+#	-+make mx25u3235_pxp_reporter_makefile.img PYTHON=$(PYTHON) SCRIPT=$(IMG_SCRIPT) REVISION=DA1469x-00 
+#	-@echo ' '
+
+#& make pxp_reporter_makefile_secure.img PYTHON="C:\DiaSemi\SmartSnippetsStudio2.0.20\Python35\python.exe" SCRIPT="C:\GitKraken\SDK_10.0.12.146/utilities/python_scripts/suota/v11/mkimage.py" REVISION=DA1469x-00
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
 
