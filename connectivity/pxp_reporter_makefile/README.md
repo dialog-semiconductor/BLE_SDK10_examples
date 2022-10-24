@@ -46,7 +46,7 @@ in order to run the default target.
 Example call to build the Debug_QSPI build configuration:
 
 ```
-make BUILD_CONFIG=debug_qpsi
+make BUILD_CONFIG=debug_qspi
 ```
 
 Example call to build Debug_QSPI build configuration with different SOURCEROOT and APP_SOURCE_DIR:
