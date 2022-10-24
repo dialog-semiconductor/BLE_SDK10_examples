@@ -1,73 +1,89 @@
-Proximity Reporter demo application {#pxp}
-===================================
+## Example description
 
-## Overview
+Example makefile for SDK10 using GCC. 
 
-This application is a sample implementation of Proximity Reporter of the Proximity Profile,
-as defined by the Bluetooth Special Interest Group.
+This example demonstrates using a makefile to build a project from the command line, rather than relying on the Eclipse IDE to perform the necessary build steps. 
+The source/project files here are a copy of the pxp_reporter sample project included with SDK10. A makefile has been added to build the project and the default makefile.targets
+file has been modified. 
 
-It supports the mandatory Link Loss Service and both optional Immediate Alert and Tx Power Services.
 
-Features:
+## Software configuration
 
-- Advertising is started automatically once application is started
-
-- Alerting is done using white LED available on ProDK:
-
- * for medium alert level LED blinks at slow rate
- * for high alert level LED blinks at fast rate
-
-- For LLS, alert is automatically disabled after 15 seconds of inactivity or
-  upon reconnection of client which lost connection
-
-- Tx Power Level is hardcoded to static value
-
-- Device name can be read from flash
-
-- Application supports software update over the air; for details look at [SUOTA in Proximity Reporter](@ref pxp_suota) document
-
-## Installation procedure
-
-The project is located in the \b `projects/dk_apps/demos/pxp_reporter` folder.
-
-To install the project follow the [General Installation and Debugging Procedure](@ref install_and_debug_procedure).
-
-## Suggested Configurable parameters
-
-- Default device name
-  In pxp_reporter_config.h, put the device name in PX_REPORTER_DEFAULT_NAME macro
-
-- Advertising Interval
-  In pxp_reporter_task.c, set the advertising interval (adv_intervals[]).
-
-- Alert Actions (use the alert callbacks in pxp_reporter_task.c):
- * ias_alert_cb
- * lls_alert_cb
-
-## PTS testing
-
-Application can be readily used for executing PTS test cases against LLS, IAS and TPS.
-It does not require any user intervention during testing.
-
-## Manual testing
-
-- build the demo for execution from flash
-- download to flash and execute
-- write device name to flash at address 0x80019 preceded by two bytes of its length (optional)
-- scan for the device by name "Dialog PX Reporter" and connect
-- write value to Alert Level characteristic in Immediate Alert service:
-
- * 0x00 (No alert) - the white LED on ProDK device does not blink
- * 0x01 (Mild alert) - the white LED on ProDK blinks slow immediately
- * 0x02 (High Alert) - the white LED on ProDK blinks fast immediately
+- [SDK10](https://www.dialog-semiconductor.com/da1469x_sdk_latest).
+- The [GNU Toolcahin for ARM](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain) should be downloaded. Note this requirement can be met by installing Smart Snippets Stuido. The [DA1469x Getting Started Guide](http://lpccs-docs.renesas.com/um-b-090-da1469x_getting_started/Software_Development_Tools/Software_Development_Tools.html#smartsnippets-tm-studio-installation-and-starting)
+will walk you through the Smart Snippets Studio installation process. 
+- [Python](https://www.python.org/) v3.5 or later. Note this requirement can also be met by installing Smart Snippets Stuido.
  
-- write value to Alert Level characteristic in Link Loss service:
+- On Windows a Unix terminal, such as [cygwin](https://www.cygwin.com/), should be downloaded.
 
- * 0x00 (No alert) - the white LED on ProDK device does not blink
- * 0x01 (Mild alert) - the white LED on ProDK blinks slow after link loss
- * 0x02 (High Alert) - the white LED on ProDK blinks fast after link loss
- * to trigger link loss event put Android/Apple device in RF Shield box or significantly increase
-   the distance between the two devices
 
-- read value of Tx Power Level characteristic in Tx Power service:
- * at each reading should be given the same value (0 dBm hardcoded in application)
+## How to run the example
+
+### Compile
+
+By default the makefile is configured run from a particular location within the SDK directory structure as depecited below.  
+
+Example Directory Structure:
+
+```
+10.0.x.y
+└───projects
+│   └───dk_apps
+│        └───demos
+│            └───prox_reporter_makefile
+│                    └───makefile.targets
+│                    └───build
+│                        └───makefile
+│
+```
+
+This project can either be moved to the appropriate position within the SDK directory structure, or the user can provide the appropriate paths to the SOURCEROOT and APP_SOURCE_DIR variables when calling make.
+SOURCEROOT is the path to the top level directory of the SDK (e.g. SDK_10.0.12.146). APP_SOURCE_DIR in the path to the top level project source files (e.g. <path_on_your_machine>/prox_reporter_makefile/).
+
+A separate build configuration is available for each of the build variants (Debug_QSPI, Debug_QSPI_SUOTA, Debug_RAM, Release_QSPI, Release_QSPI_SUOTA, Release_RAM). A user MUST specify a build configuration by setting the BUILD_CONFIG variable when calling make 
+in order to run the default target.
+
+Example call to build the Debug_QSPI build configuration:
+
+```
+make BUILD_CONFIG=debug_qpsi
+```
+
+Example call to build Debug_QSPI build configuration with different SOURCEROOT and APP_SOURCE_DIR:
+
+```
+make BUILD_CONFIG=debug_qspi SOURCEROOT=<path_to_sdk>/SDK_10.0.12.146 APP_SOURCE_DIR=<path_to_examples_directory>/BLE_SDK10_examples/connectivity/pxp_reporter_makefile
+```
+
+Please note on Windows paths default to using a backslash (`\`) but the paths above should use a forward slash (`/`).
+
+A separate output directory is created for each build configuration: 
+
+![build_output_dirs](assets/build_output_dirs.PNG)
+
+For each build configuration, the top level output directory contains the primary build artifacts including the .map, .elf, and .bin files. The user may optionally change the names of these artifacts by specifying the the BUILD_ARTIFACT_NAME when building.
+The sdk and user directories contain the .o and .d outputs for each file built.
+
+![debug_qspi_output_top](assets/debug_qspi_output_top.PNG)
+
+To clean you have two options. To clean a specific build configuration output (e.g. Debug_QSPI) you must specify the BUILD_CONFIG when calling clean:
+
+```
+make clean BUILD_CONFIG=debug_qspi
+```
+
+Please note if your build requires redefining the SOURCEROOT and APP_SOURCE_DIR variables, these variables must also be defined when cleaning:
+
+```
+make clean BUILD_CONFIG=debug_qspi SOURCEROOT=<path_to_sdk>/SDK_10.0.12.146 APP_SOURCE_DIR=<path_to_examples_directory>/BLE_SDK10_examples/connectivity/pxp_reporter_makefile
+```
+
+If no BUILD_CONFIG is specified when calling clean, all build configurations outputs will be cleaned. 
+
+For QSPI build configurations (Debug_QSPI, Debug_QSPI_SUOTA, Release_QSPI, Release_QSPI_SUOTA) an additional post build step is performed to create a .img file with the necessary product headers and image header as described in the [DA1469x Software Platform Reference](http://lpccs-docs.renesas.com/um-b-092-da1469x_software_platform_reference/User_guides/User_guides.html#flash-layout). 
+
+### Verify
+
+A diff tool, such as [WinMerge](https://winmerge.org/?lang=en) on Windows, can be used to compare the makefile generated .bin to that produced by the pxp_reporter Eclipse project to verifiy they are identical. 
+
+![winmerge](assets/winmerge.PNG)

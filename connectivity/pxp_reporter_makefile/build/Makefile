@@ -214,7 +214,7 @@ $(2): $(1)
 # Create the appropriate folder inside the build folder, if it doesn't exist already.
 	@mkdir -p $(dir $(2))
 
-	$(CC) $(CFLAGS) \
+	@$(CC) $(CFLAGS) \
 	$(addprefix -I, $(C_INCLUDE_DIRS)) \
 	-std=gnu11 \
 	-MF"$(2:%.o=%.d)" \
