@@ -9,9 +9,7 @@ APP_SOURCE_DIR ?= $(SOURCEROOT)/projects/dk_apps/demos/pxp_reporter_makefile
 CONFIG_SOURCE_DIR ?= $(APP_SOURCE_DIR)/config
 DEVICE := DEVICE_DA1469x
 
-
 BUILD_CONFIG ?=  # one of BUILD_CONFIG_TYPES below
-
 BUILD_CONFIG_TYPES := debug_qspi 
 BUILD_CONFIG_TYPES += debug_qspi_suota 
 BUILD_CONFIG_TYPES += debug_ram 
@@ -24,15 +22,12 @@ BUILD_OUTPUT_DIR = $(BUILD_CONFIG)
 CC := arm-none-eabi-gcc
 RM := rm -rf
 
-# TODO this needs to be modified for user
+# The python path below needs to be modified to match that of the user. Below uses the python version included with Smart Snippets Studio. Additionally, the path below is expecting to be called from a cygwin terminal 
 PYTHON ?= /cygdrive/c/DiaSemi/SmartSnippetsStudio2.0.20/Python35/python.exe
-IMG_SCRIPT ?= $(SOURCEROOT)/utilities/python_scripts/suota/v11/mkimage.py
 PYTHON_SCRIPTS_DIR :=  $(SOURCEROOT)/utilities/python_scripts
-PYTHON_QSPI_DIR :=  $(PYTHON_SCRIPTS_DIR)/qspi
-HEADER_CONFIG_XML ?= $(PYTHON_QSPI_DIR)/program_qspi.xml # Default xml configuration provided with SDK
-IMAGE_PREFIX ?= mx25u3235_ # Default xml configuration is for mx25u3235 flash. Assumption is user will modify this prefix to match their xml config.
+CREATE_HEADER_SCRIPT := $(PYTHON_SCRIPTS_DIR)/qspi/create_flash_image.py
+HEADER_CONFIG_XML ?= $(PYTHON_SCRIPTS_DIR)/qspi/program_qspi.xml # The post build step for qspi images requires a .xml flash configuration to be defined. One can be created using  <SDK_ROOT>/utilities/python_scripts/qspi/program_qpsi_config.py
 
-# TODO need to separate suota vs non suota
 ifeq (ram, $(word 2,$(subst _, ,$(BUILD_CONFIG))))
 APP_CONFIG_H = "$(CONFIG_SOURCE_DIR)/custom_config_ram.h"
 else ifeq (suota, $(word 3,$(subst _, ,$(BUILD_CONFIG))))
@@ -40,7 +35,6 @@ APP_CONFIG_H = "$(CONFIG_SOURCE_DIR)/custom_config_qspi_suota.h"
 else
 APP_CONFIG_H = "$(CONFIG_SOURCE_DIR)/custom_config_qspi.h"
 endif
-
 
 # Here all the sources are included. The auto-generated makefile does this
 # By creating makefiles for each subdirectory, and then including them all.
@@ -66,12 +60,6 @@ C_DEPS :=
 ################################################################################
 
 # Header include directories
-# TODO: other middleware directories needed? Missing cli, console, dgtl, haptics, hw_tools, logging, mcif, monitoring. 
-# ble/interfaces all covered
-# missing interfaces/crpyto and interfaces/usb. Usb as .a files as well
-# TODO: Need bsp/config/1M and bsp/config/4M? boards? Missing ldscripts
- # free_rtos all covered
- # Missing bsp/startup but that has .S files and is included in Dependency_Template
 C_INCLUDE_DIRS := \
 $(SDKROOT)/middleware/adapters/include \
 $(SDKROOT)/interfaces/ble/adapter/include \
@@ -108,7 +96,6 @@ dev:
 	@echo -e $(addsuffix \n, $(C_INCLUDE_DIRS))
 
 # SDK subdirectories with source files
-# TODO check order against prox_reporter. How to add additional c files? 
 SDK_SOURCE_SUBDIRS := bsp/startup/DA1469x
 SDK_SOURCE_SUBDIRS += bsp/startup
 SDK_SOURCE_SUBDIRS += bsp/util/src 
@@ -116,20 +103,18 @@ SDK_SOURCE_SUBDIRS += bsp/system/sys_man
 SDK_SOURCE_SUBDIRS += bsp/snc/src 
 SDK_SOURCE_SUBDIRS += bsp/peripherals/src 
 SDK_SOURCE_SUBDIRS += middleware/osal 
-SDK_SOURCE_SUBDIRS += bsp/memory/src # TODO: check build order. All bsp accounted for
-SDK_SOURCE_SUBDIRS += interfaces/ble/stack/da14690/src # GCC uses Reverse order (?)
+SDK_SOURCE_SUBDIRS += bsp/memory/src
+SDK_SOURCE_SUBDIRS += interfaces/ble/stack/da14690/src 
 SDK_SOURCE_SUBDIRS += interfaces/ble/services/src 
 SDK_SOURCE_SUBDIRS += interfaces/ble/manager/src 
 SDK_SOURCE_SUBDIRS += interfaces/ble/clients/src
 SDK_SOURCE_SUBDIRS += interfaces/ble/api/src 
 SDK_SOURCE_SUBDIRS += interfaces/ble/adapter/src 
-SDK_SOURCE_SUBDIRS += middleware/adapters/src # How/where to add middleware? 
+SDK_SOURCE_SUBDIRS += middleware/adapters/src
 SDK_SOURCE_SUBDIRS += free_rtos/portable/MemMang
 SDK_SOURCE_SUBDIRS += free_rtos/portable/GCC/DA1469x 
 SDK_SOURCE_SUBDIRS += free_rtos/portable/Common
-SDK_SOURCE_SUBDIRS += free_rtos # All free_rtos accounted for
-
-# DO not see a discernable order with eclipse virtual folders
+SDK_SOURCE_SUBDIRS += free_rtos
 
 # Optimization flags
 OPT += -g3
@@ -190,7 +175,7 @@ S_UPPER_INCLUDE_DIRS += $(CONFIG_SOURCE_DIR)
 
 S_UPPER_SRCS = $(wildcard $(SDKROOT)/bsp/startup/DA1469x/GCC/*.S)
 
-# See C_DEPENDENCY_template
+# Generate a rule to build a .o and a .d file for every .S file. See C_DEPENDENCY_template
 define S_UPPER_DEPENDENCY_template
 $(2): $(1) 
 	@echo 'Building file: $(1)'
@@ -243,28 +228,16 @@ OBJS += $(2)
 C_DEPS += $(patsubst %.o,%.d,$(2))
 endef
 
-# Generate a rule to build a .o and a .d file for every .S file. See the `C_DEPENDENCY_template` 
-# definition and documentation below.
-#$(foreach src,$(S_UPPER_SRCS),$(eval $(call S_UPPER_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.S,%.o,$(src))))))
-
-
-# Generate a rule to build a .o and a .d file for every .c file. See the `C_DEPENDENCY_template` 
-# definition and documentation above.
-#$(foreach src,$(C_SRCS),$(eval $(call C_DEPENDENCY_template,$(src),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.c,%.o,$(src))))))
-
-
 # Convienent mechanisms to call above dependency templates
 s_template=$(eval $(call S_UPPER_DEPENDENCY_template,$(1),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.S,%.o,$(1)))))
 c_sdk_template=$(eval $(call C_DEPENDENCY_template,$(1),$(subst $(SOURCEROOT)/,$(BUILD_OUTPUT_DIR)/,$(patsubst %.c,%.o,$(1))))) 
 # This is used to specify a different output folder for artifacts produced from building user sources
 c_user_src_template=$(eval $(call C_DEPENDENCY_template,$(1),$(subst $(addsuffix /, $(APP_SOURCE_DIR)),$(BUILD_OUTPUT_DIR)/user/,$(patsubst %.c,%.o,$(1))))) 
 
-# Generate a rule to build a .o and a .d file for every .S file. See the `C_DEPENDENCY_template` 
-# definition and documentation below.
+# Generate a rule to build a .o and a .d file for every .S file.
 $(foreach src,$(S_UPPER_SRCS),$(call s_template,$(src)))
 
-# Generate a rule to build a .o and a .d file for every .c file. See the `C_DEPENDENCY_template` 
-# definition and documentation above.
+# Generate a rule to build a .o and a .d file for every .c file.
 $(foreach src, $(SDK_C_SRCS),$(call c_sdk_template,$(src)))
 $(foreach src, $(APP_C_SRCS),$(call c_user_src_template,$(src)))
 
@@ -286,7 +259,6 @@ endif
 endif
 
 USER_OBJS :=
-# ble_stack_da1469x can currently be found in sdk/interfaces/ble/binaries/DA1469x-Release
 LIBS := -lble_stack_da1469x 
 
 # Templates for cleaning 
@@ -342,8 +314,8 @@ $(BUILD_ARTIFACT_NAME).siz \
 ifeq (ram, $(word 2,$(subst _, ,$(BUILD_CONFIG))))
 all: pre-build main-build
 else
-# For qspi builds, additional post-build is added to create a binary with the product header
-all: pre-build main-build post-build post-build-suota
+# For qspi builds, additional post-build is added to create a .img with the product and image headers
+all: pre-build main-build post-build
 endif
 
 # Main-build Target
@@ -364,7 +336,7 @@ $(BUILD_ARTIFACT): $(OBJS) $(USER_OBJS) $(OPTIONAL_TOOL_DEPS)
 # Generate .bin 
 $(SECONDARY_FLASH): $(BUILD_ARTIFACT) $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Flash Image'
-	@arm-none-eabi-objcopy -O binary "$(BUILD_OUTPUT_DIR)/$<"  "$(BUILD_OUTPUT_DIR)/$@" 
+	arm-none-eabi-objcopy -O binary "$(BUILD_OUTPUT_DIR)/$<"  "$(BUILD_OUTPUT_DIR)/$@" 
 	@echo 'Finished building: $@'
 	@echo ' '
 
@@ -375,7 +347,7 @@ $(SECONDARY_SIZE): $(BUILD_ARTIFACT) $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-# make clean will clean ALL build configurations {debug_qpsi, debug_ram, release_qspi, release_ram}
+# make clean will clean ALL build configurations {debug_qpsi, debug_qpsi_suota, debug_ram, release_qspi, release_qspi_suota, release_ram}
 # setting BUILD_CONFIG when calling clean will clean only that configuration
 # For example:
 # make BUILD_CONFIG=debug_qspi clean 
@@ -415,20 +387,10 @@ pre-build: check-build-config
 	LDSCRIPT_PATH="$(SDKROOT)/bsp/ldscripts/ble_projects"
 	-@echo ' '
 			
-# For qspi builds, create a binary with the appropriate product header. 
-# TODO: meed to allow specifying product header? Verify a .xml config exists before? 
-
+# For qspi builds, create a .img with product and image header. 
 post-build: main-build
-	# Create image with product header
-	@python $(PYTHON_QSPI_DIR)/create_flash_image.py --header_config $(HEADER_CONFIG_XML) --image $(BUILD_OUTPUT_DIR)/$(IMAGE_PREFIX)$(BUILD_ARTIFACT_NAME).bin $(BUILD_OUTPUT_DIR)/$(BUILD_ARTIFACT_NAME).bin
-
-#TODO: based on winmerge seem to be differences in header. Need to run example to see if still functonal
-#post-build-suota: 
-#	-@echo 'Prepare SUOTA image.'
-#	-+make mx25u3235_pxp_reporter_makefile.img PYTHON=$(PYTHON) SCRIPT=$(IMG_SCRIPT) REVISION=DA1469x-00 
-#	-@echo ' '
-
-#& make pxp_reporter_makefile_secure.img PYTHON="C:\DiaSemi\SmartSnippetsStudio2.0.20\Python35\python.exe" SCRIPT="C:\GitKraken\SDK_10.0.12.146/utilities/python_scripts/suota/v11/mkimage.py" REVISION=DA1469x-00
+	# Create .img with product and image headers
+	@$(PYTHON) $(CREATE_HEADER_SCRIPT) --header_config $(HEADER_CONFIG_XML) --image $(BUILD_OUTPUT_DIR)/$(BUILD_ARTIFACT_NAME).img $(BUILD_OUTPUT_DIR)/$(BUILD_ARTIFACT_NAME).bin
 
 secondary-outputs: $(SECONDARY_FLASH) $(SECONDARY_SIZE)
 
