@@ -59,12 +59,12 @@ Please note on Windows paths default to using a backslash (`\`) but the paths ab
 
 A separate output directory is created for each build configuration: 
 
-![build_output_dirs](assets/build_output_dirs.PNG)
+![build_output_dirs](assets/build_output_dirs.png)
 
 For each build configuration, the top level output directory contains the primary build artifacts including the .map, .elf, and .bin files. The user may optionally change the names of these artifacts by specifying the the BUILD_ARTIFACT_NAME when building.
 The sdk and user directories contain the .o and .d outputs for each file built.
 
-![debug_qspi_output_top](assets/debug_qspi_output_top.PNG)
+![debug_qspi_output_top](assets/debug_qspi_output_top.png)
 
 To clean you have two options. To clean a specific build configuration output (e.g. Debug_QSPI) you must specify the BUILD_CONFIG when calling clean:
 
