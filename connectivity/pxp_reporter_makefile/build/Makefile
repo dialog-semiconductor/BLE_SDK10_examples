@@ -92,9 +92,6 @@ USER_INCLUDES += $(APP_SOURCE_DIR)
 # Add user includes
 C_INCLUDE_DIRS += $(USER_INCLUDES)
 
-dev:
-	@echo -e $(addsuffix \n, $(C_INCLUDE_DIRS))
-
 # SDK subdirectories with source files
 SDK_SOURCE_SUBDIRS := bsp/startup/DA1469x
 SDK_SOURCE_SUBDIRS += bsp/startup
