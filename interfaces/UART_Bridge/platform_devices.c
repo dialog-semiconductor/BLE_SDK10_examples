@@ -106,7 +106,7 @@ const ad_uart_io_conf_t uart2_io_conf = {
 
 const ad_uart_driver_conf_t uart2_uart_driver_conf = {
         {
-                .baud_rate = HW_UART_BAUDRATE_115200,   /* Select the baud rate */
+                .baud_rate = HW_UART_BAUDRATE_1000000,   /* Select the baud rate */
                 .data = HW_UART_DATABITS_8,             /* Select the data bits  */
                 .parity = HW_UART_PARITY_NONE,          /* select the Parity    */
                 .stop = HW_UART_STOPBITS_1,             /* Select the number of Stop Bits */
