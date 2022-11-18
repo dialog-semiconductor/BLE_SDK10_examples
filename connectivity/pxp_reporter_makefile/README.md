@@ -13,8 +13,8 @@ file has been modified.
 - The [GNU Toolchain for ARM](https://developer.arm.com/Tools%20and%20Software/GNU%20Toolchain) should be downloaded. Note this requirement can be met by installing Smart Snippets Stuido. The [DA1469x Getting Started Guide](http://lpccs-docs.renesas.com/um-b-090-da1469x_getting_started/Software_Development_Tools/Software_Development_Tools.html#smartsnippets-tm-studio-installation-and-starting)
 will walk you through the Smart Snippets Studio installation process. 
 - [Python](https://www.python.org/) v3.5 or later. Note this requirement can also be met by installing Smart Snippets Studio.
- 
-- On Windows a Unix terminal, such as [cygwin](https://www.cygwin.com/), should be downloaded.
+- On Windows a Unix terminal, such as [cygwin](https://www.cygwin.com/), should be downloaded. Note if you are running make from cygwin the make utility is not installed automatically. Make sure you download it as part of the cygwin setup process.
+
 
 
 ## How to run the example
