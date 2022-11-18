@@ -3,10 +3,8 @@ default: all
 
 -include makefile.init
 
-SOURCEROOT ?= ../../../../..
 SDKROOT := $(SOURCEROOT)/sdk
-APP_SOURCE_DIR ?= $(SOURCEROOT)/projects/dk_apps/demos/pxp_reporter_makefile
-CONFIG_SOURCE_DIR ?= $(APP_SOURCE_DIR)/config
+
 DEVICE := DEVICE_DA1469x
 
 BUILD_CONFIG ?=  # one of BUILD_CONFIG_TYPES below
@@ -19,7 +17,12 @@ BUILD_CONFIG_TYPES += release_ram
 
 BUILD_OUTPUT_DIR = $(BUILD_CONFIG)
 
-CC := arm-none-eabi-gcc
+# The gcc path below needs to be modified to match that of the user. Below uses the gcc version included with Smart Snippets Studio. Additionally, the path below is expecting to be called from a cygwin terminal 
+TOOLDIR ?= /cygdrive/c/DiaSemi/SmartSnippetsStudio2.0.20/GCC/7-2018-q2/
+CC := $(TOOLDIR)/bin/arm-none-eabi-gcc.exe
+BIN := $(TOOLDIR)/bin/arm-none-eabi-objcopy.exe
+SIZE := $(TOOLDIR)/bin/arm-none-eabi-size.exe
+
 RM := rm -rf
 
 # The python path below needs to be modified to match that of the user. Below uses the python version included with Smart Snippets Studio. Additionally, the path below is expecting to be called from a cygwin terminal 
@@ -307,13 +310,8 @@ $(BUILD_ARTIFACT_NAME).bin \
 SECONDARY_SIZE += \
 $(BUILD_ARTIFACT_NAME).siz \
 
-# All Target
-ifeq (ram, $(word 2,$(subst _, ,$(BUILD_CONFIG))))
+
 all: pre-build main-build
-else
-# For qspi builds, additional post-build is added to create a .img with the product and image headers
-all: pre-build main-build post-build
-endif
 
 # Main-build Target
 main-build: check-build-config $(BUILD_ARTIFACT) secondary-outputs 
@@ -333,14 +331,14 @@ $(BUILD_ARTIFACT): $(OBJS) $(USER_OBJS) $(OPTIONAL_TOOL_DEPS)
 # Generate .bin 
 $(SECONDARY_FLASH): $(BUILD_ARTIFACT) $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Create Flash Image'
-	arm-none-eabi-objcopy -O binary "$(BUILD_OUTPUT_DIR)/$<"  "$(BUILD_OUTPUT_DIR)/$@" 
+	@$(BIN) -O binary "$(BUILD_OUTPUT_DIR)/$<" "$(BUILD_OUTPUT_DIR)/$@"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Print size
 $(SECONDARY_SIZE): $(BUILD_ARTIFACT) $(OPTIONAL_TOOL_DEPS)
 	@echo 'Invoking: Cross ARM GNU Print Size'
-	@arm-none-eabi-size --format=berkeley "$(BUILD_OUTPUT_DIR)/$<"
+	@$(SIZE) --format=berkeley "$(BUILD_OUTPUT_DIR)/$<"
 	@echo 'Finished building: $@'
 	@echo ' '
 
