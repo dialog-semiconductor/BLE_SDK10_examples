@@ -1,0 +1,3 @@
+SOURCEROOT ?= ../../../../..
+APP_SOURCE_DIR ?= $(SOURCEROOT)/projects/dk_apps/demos/pxp_reporter_makefile
+CONFIG_SOURCE_DIR ?= $(APP_SOURCE_DIR)/config
