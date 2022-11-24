@@ -50,7 +50,7 @@ jobs:
           /opt/DiaSemi/SmartSnippetsStudio2.0.16/CDT/SmartSnippets_Studio --launcher.suppressErrors -nosplash -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data ../SDK_10.0.12.146.cs_release.1 -build all
 
   deploy:
-    if: github.event_name == "push" && github.ref_name == 'main'
+    if: github.event_name == 'push' && github.ref_name == 'main'
     runs-on: ubuntu-latest
     needs: build
     steps:
