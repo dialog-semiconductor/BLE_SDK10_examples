@@ -34,7 +34,7 @@ if __name__ == "__main__":
         binPath =  glob.glob( os.path.join(proj,'*-Debug_QSPI','*.bin'))
 
         if len(binPath) != 1:
-            raise FileExistsError(binPath)
+            raise FileExistsError(proj)
 
         if not os.path.dirname(proj) in outputDict["groups"]:
             outputDict["groups"].append(os.path.dirname(proj))

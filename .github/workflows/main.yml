@@ -56,4 +56,4 @@ jobs:
       - name: upload aws
         if: github.event_name == 'push' && github.ref_name == 'main'
         run: |
-          aws s3 sync --acl public-read --delete artifacts  s3://lpccs-docs.renesas.com/examples_arfitacts/da1469x
+          aws s3 sync --delete artifacts  s3://lpccs-docs.renesas.com/examples_arfitacts/da1469x
