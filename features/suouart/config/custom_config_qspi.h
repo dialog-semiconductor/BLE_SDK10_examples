@@ -19,7 +19,7 @@
 
 #undef CONFIG_USE_BLE
 
-#define CONFIG_RETARGET
+#undef CONFIG_RETARGET
 
 #define dg_configSUOUART_SUPPORT                 ( 1 )
 
