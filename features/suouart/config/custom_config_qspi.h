@@ -58,6 +58,14 @@
 #define dg_configUSE_USB_ENUMERATION            ( 1 )
 #define dg_configUSB_DMA_SUPPORT                ( 0 )
 
+#define USE_PARTITION_TABLE_4MB_WITH_SUOTA      ( 1 )
+
+#define dg_configUART_ADAPTER                   ( 1 )     /* Enable the UART Adapter abstraction layer and API */
+
+#if (dg_configUART_ADAPTER == 1)
+#undef CONFIG_RETARGET                                    /* Using UART2 for example, must disable RETARGET as it users UART2 */
+#endif
+
 /* Include bsp default values */
 #include "bsp_defaults.h"
 /* Include middleware default values */
