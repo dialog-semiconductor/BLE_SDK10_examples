@@ -22,7 +22,7 @@
 #include "hw_cpm.h"
 #include "suota.h"
 #include "sdk_crc16.h"
-#include "dlg_suousb.h"
+#include "dlg_suouart.h"
 
 #define SUOUSB_MAX_IMAGE_SIZE   (503 * 1024)
 #define SUOUSB_BUFFER_SIZE      (512)

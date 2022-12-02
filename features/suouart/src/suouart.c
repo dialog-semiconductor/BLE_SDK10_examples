@@ -36,7 +36,7 @@
 #include "platform_nvparam.h"
 //#include "platform_devices.h"
 
-#include "dlg_suousb.h"
+#include "dlg_suouart.h"
 
 //#include "commons.h"
 
