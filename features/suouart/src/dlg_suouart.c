@@ -1,9 +1,9 @@
 /**
  ****************************************************************************************
  *
- * @file dlg_suousb.c
+ * @file dlg_suouart.c
  *
- * @brief Dialog SUOUSB service implementation
+ * @brief Dialog SUOUART service implementation
  *
  * Copyright (C) 2016-2017 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
@@ -11,7 +11,7 @@
  *
  ****************************************************************************************
  */
-#if (dg_configSUOUSB_SUPPORT==1)
+#if (dg_configSUOUART_SUPPORT==1)
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
@@ -24,8 +24,8 @@
 #include "sdk_crc16.h"
 #include "dlg_suouart.h"
 
-#define SUOUSB_MAX_IMAGE_SIZE   (503 * 1024)
-#define SUOUSB_BUFFER_SIZE      (512)
+#define SUOUART_MAX_IMAGE_SIZE   (503 * 1024)
+#define SUOUART_BUFFER_SIZE      (512)
 
 /* Size of fixed-place data in product header (identifier ... length of flash config. section) */
 #define PH_STATIC_DATA_SIZE            (22)
@@ -34,53 +34,53 @@
 
 
 typedef enum {
-        SUOUSB_STATE_IDLE,
-        SUOUSB_STATE_W4_HEADER,
-        SUOUSB_STATE_W4_HEADER_EXT,
-        SUOUSB_STATE_W4_IMAGE_DATA,
-        SUOUSB_STATE_DONE,
-        SUOUSB_STATE_ERROR,
-} suousb_state_t;
+        SUOUART_STATE_IDLE,
+        SUOUART_STATE_W4_HEADER,
+        SUOUART_STATE_W4_HEADER_EXT,
+        SUOUART_STATE_W4_IMAGE_DATA,
+        SUOUART_STATE_DONE,
+        SUOUART_STATE_ERROR,
+} suouart_state_t;
 
 /**
- * SUOUSB status
+ * SUOUART status
  *
  * As defined by Dialog SUOTA specification.
  *
  */
 typedef enum {
         /* Value zero must not be used !! Notifications are sent when status changes. */
-        SUOUSB_SRV_STARTED      = 0x01,     // Valid memory device has been configured by initiator. No sleep state while in this mode
-        SUOUSB_CMP_OK           = 0x02,     // SUOUSB process completed successfully.
-        SUOUSB_SRV_EXIT         = 0x03,     // Forced exit of SUOUSB service.
-        SUOUSB_CRC_ERR          = 0x04,     // Overall Patch Data CRC failed
-        SUOUSB_PATCH_LEN_ERR    = 0x05,     // Received patch Length not equal to PATCH_LEN characteristic value
-        SUOUSB_EXT_MEM_WRITE_ERR= 0x06,     // External Mem Error (Writing to external device failed)
-        SUOUSB_INT_MEM_ERR      = 0x07,     // Internal Mem Error (not enough space for Patch)
-        SUOUSB_INVAL_MEM_TYPE   = 0x08,     // Invalid memory device
-        SUOUSB_APP_ERROR        = 0x09,     // Application error
+        SUOUART_SRV_STARTED      = 0x01,     // Valid memory device has been configured by initiator. No sleep state while in this mode
+        SUOUART_CMP_OK           = 0x02,     // SUOUART process completed successfully.
+        SUOUART_SRV_EXIT         = 0x03,     // Forced exit of SUOUART service.
+        SUOUART_CRC_ERR          = 0x04,     // Overall Patch Data CRC failed
+        SUOUART_PATCH_LEN_ERR    = 0x05,     // Received patch Length not equal to PATCH_LEN characteristic value
+        SUOUART_EXT_MEM_WRITE_ERR= 0x06,     // External Mem Error (Writing to external device failed)
+        SUOUART_INT_MEM_ERR      = 0x07,     // Internal Mem Error (not enough space for Patch)
+        SUOUART_INVAL_MEM_TYPE   = 0x08,     // Invalid memory device
+        SUOUART_APP_ERROR        = 0x09,     // Application error
 
-        /* SUOUSB application specific error codes */
-        SUOUSB_IMG_STARTED      = 0x10,     // SUOUSB started for downloading image (SUOUSB application)
-        SUOUSB_INVAL_IMG_BANK   = 0x11,     // Invalid image bank
-        SUOUSB_INVAL_IMG_HDR    = 0x12,     // Invalid image header
-        SUOUSB_INVAL_IMG_SIZE   = 0x13,     // Invalid image size
-        SUOUSB_INVAL_PRODUCT_HDR= 0x14,     // Invalid product header
-        SUOUSB_SAME_IMG_ERR     = 0x15,     // Same Image Error
-        SUOUSB_EXT_MEM_READ_ERR = 0x16,     // Failed to read from external memory device
-} suousb_status_t;
+        /* SUOUART application specific error codes */
+        SUOUART_IMG_STARTED      = 0x10,     // SUOUART started for downloading image (SUOUART application)
+        SUOUART_INVAL_IMG_BANK   = 0x11,     // Invalid image bank
+        SUOUART_INVAL_IMG_HDR    = 0x12,     // Invalid image header
+        SUOUART_INVAL_IMG_SIZE   = 0x13,     // Invalid image size
+        SUOUART_INVAL_PRODUCT_HDR= 0x14,     // Invalid product header
+        SUOUART_SAME_IMG_ERR     = 0x15,     // Same Image Error
+        SUOUART_EXT_MEM_READ_ERR = 0x16,     // Failed to read from external memory device
+} suouart_status_t;
 
-const char *suousb_status_str[] = {
+const char *suouart_status_str[] = {
         "INVALID:0",
-        "SUOUSB_SRV_STARTED",           //= 0x01,     // Valid memory device has been configured by initiator. No sleep state while in this mode
-        "SUOUSB_CMP_OK",                //= 0x02,     // SUOUSB process completed successfully.
-        "SUOUSB_SRV_EXIT",              //= 0x03,     // Forced exit of SUOUSB service.
-        "SUOUSB_CRC_ERR",               //= 0x04,     // Overall Patch Data CRC failed
-        "SUOUSB_PATCH_LEN_ERR",         //= 0x05,     // Received patch Length not equal to PATCH_LEN characteristic value
-        "SUOUSB_EXT_MEM_WRITE_ERR",     //= 0x06,     // External Mem Error (Writing to external device failed)
-        "SUOUSB_INT_MEM_ERR",           //= 0x07,     // Internal Mem Error (not enough space for Patch)
-        "SUOUSB_INVAL_MEM_TYPE",        //= 0x08,     // Invalid memory device
-        "SUOUSB_APP_ERROR",             //= 0x09,     // Application error
+        "SUOUART_SRV_STARTED",           //= 0x01,     // Valid memory device has been configured by initiator. No sleep state while in this mode
+        "SUOUART_CMP_OK",                //= 0x02,     // SUOUART process completed successfully.
+        "SUOUART_SRV_EXIT",              //= 0x03,     // Forced exit of SUOUART service.
+        "SUOUART_CRC_ERR",               //= 0x04,     // Overall Patch Data CRC failed
+        "SUOUART_PATCH_LEN_ERR",         //= 0x05,     // Received patch Length not equal to PATCH_LEN characteristic value
+        "SUOUART_EXT_MEM_WRITE_ERR",     //= 0x06,     // External Mem Error (Writing to external device failed)
+        "SUOUART_INT_MEM_ERR",           //= 0x07,     // Internal Mem Error (not enough space for Patch)
+        "SUOUART_INVAL_MEM_TYPE",        //= 0x08,     // Invalid memory device
+        "SUOUART_APP_ERROR",             //= 0x09,     // Application error
 
         "INVALID:A",
         "INVALID:B",
@@ -89,62 +89,62 @@ const char *suousb_status_str[] = {
         "INVALID:E",
         "INVALID:F",
 
-        /* SUOUSB application specific error codes */
-        "SUOUSB_IMG_STARTED",           //= 0x10,     // SUOUSB started for downloading image (SUOUSB application)
-        "SUOUSB_INVAL_IMG_BANK",        //= 0x11,     // Invalid image bank
-        "SUOUSB_INVAL_IMG_HDR",         //= 0x12,     // Invalid image header
-        "SUOUSB_INVAL_IMG_SIZE",        //= 0x13,     // Invalid image size
-        "SUOUSB_INVAL_PRODUCT_HDR",     //= 0x14,     // Invalid product header
-        "SUOUSB_SAME_IMG_ERR",          //= 0x15,     // Same Image Error
-        "SUOUSB_EXT_MEM_READ_ERR",      //= 0x16,     // Failed to read from external memory device
+        /* SUOUART application specific error codes */
+        "SUOUART_IMG_STARTED",           //= 0x10,     // SUOUART started for downloading image (SUOUART application)
+        "SUOUART_INVAL_IMG_BANK",        //= 0x11,     // Invalid image bank
+        "SUOUART_INVAL_IMG_HDR",         //= 0x12,     // Invalid image header
+        "SUOUART_INVAL_IMG_SIZE",        //= 0x13,     // Invalid image size
+        "SUOUART_INVAL_PRODUCT_HDR",     //= 0x14,     // Invalid product header
+        "SUOUART_SAME_IMG_ERR",          //= 0x15,     // Same Image Error
+        "SUOUART_EXT_MEM_READ_ERR",      //= 0x16,     // Failed to read from external memory device
 
         "INVALID:17",
 };
 
 /**
- * SUOUSB commands
+ * SUOUART commands
  *
  * As defined by Dialog SUOTA specification.
  *
  */
 typedef enum {
-        /* SUOUSB is used to send entire image */
-        SUOUSB_IMG_INT_SYSRAM = 0x10,
-        SUOUSB_IMG_INT_RETRAM = 0x11,
-        SUOUSB_IMG_I2C_EEPROM = 0x12,
-        SUOUSB_IMG_SPI_FLASH  = 0x13,
+        /* SUOUART is used to send entire image */
+        SUOUART_IMG_INT_SYSRAM = 0x10,
+        SUOUART_IMG_INT_RETRAM = 0x11,
+        SUOUART_IMG_I2C_EEPROM = 0x12,
+        SUOUART_IMG_SPI_FLASH  = 0x13,
 
         /* DO NOT move. Must be before commands */
-        SUOUSB_MEM_INVAL_DEV  = 0x14,
+        SUOUART_MEM_INVAL_DEV  = 0x14,
 
-        /* SUOUSB commands */
-        SUOUSB_REBOOT         = 0xFD,
-        SUOUSB_IMG_END        = 0xFE,
+        /* SUOUART commands */
+        SUOUART_REBOOT         = 0xFD,
+        SUOUART_IMG_END        = 0xFE,
 
         /*
-         * When initiator selects 0xff, it wants to exit SUOUSB service.
-         * This is used in case of unexplained failures. If SUOUSB process
+         * When initiator selects 0xff, it wants to exit SUOUART service.
+         * This is used in case of unexplained failures. If SUOUART process
          * finishes correctly it will exit automatically.
          */
-        SUOUSB_MEM_SERVICE_EXIT   = 0xFF,
-} suousb_commands_t;
+        SUOUART_MEM_SERVICE_EXIT   = 0xFF,
+} suouart_commands_t;
 
-typedef struct suousb_service suousb_service_t;
+typedef struct suouart_service suouart_service_t;
 
-/** SUOUSB status callback during image transfer */
-typedef void (* suousb_error_cb_t) (suousb_service_t *suousb, suousb_status_t status);
+/** SUOUART status callback during image transfer */
+typedef void (* suouart_error_cb_t) (suouart_service_t *suouart, suouart_status_t status);
 
-/** SUOUSB callback after full chunk is received during image transfer */
-typedef void (* suousb_chunk_cb_t) (suousb_service_t *suousb);
+/** SUOUART callback after full chunk is received during image transfer */
+typedef void (* suouart_chunk_cb_t) (suouart_service_t *suouart);
 
-typedef struct suousb_service {
-//        const suousb_callbacks_t *cb;
+typedef struct suouart_service {
+//        const suouart_callbacks_t *cb;
 
         uint8_t notified_app_status_mask;
 
-        suousb_state_t state;            // image transfer state
-        suousb_chunk_cb_t chunk_cb;       // called on every 'patch_len' bytes of data received
-        suousb_error_cb_t error_cb;       // called in case of error during image transfer
+        suouart_state_t state;            // image transfer state
+        suouart_chunk_cb_t chunk_cb;       // called on every 'patch_len' bytes of data received
+        suouart_error_cb_t error_cb;       // called in case of error during image transfer
 
         uint8_t *buffer;
         uint16_t buffer_len;
@@ -164,10 +164,10 @@ typedef struct suousb_service {
         uint16_t patch_len;
         uint16_t conn_idx;
 
-        suousb_active_img_t active_img;
+        suouart_active_img_t active_img;
 
         nvms_t  nvms;
-} suousb_service_t;
+} suouart_service_t;
 
 typedef struct {
         void *next;
@@ -175,12 +175,12 @@ typedef struct {
 } client_status_notif_t;
 
 
-static suousb_service_t SUoUSB;
-static suousb_service_t *pSUoUSB_svc;
+static suouart_service_t SUoUSB;
+static suouart_service_t *pSUoUSB_svc;
 
-static suousb_notify_cb_t ext_notify_cb;
+static suouart_notify_cb_t ext_notify_cb;
 
-static uint16_t suousb_external_status;
+static uint16_t suouart_external_status;
 
 static const uint32_t crc32_tab[] = {
         0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
@@ -228,9 +228,9 @@ static const uint32_t crc32_tab[] = {
         0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 };
 
-static nvms_t suousb_open_suota_fw_partition(uint32_t* product_header_address);
+static nvms_t suouart_open_suota_fw_partition(uint32_t* product_header_address);
 
-uint32_t suousb_update_crc(uint32_t crc, const uint8_t *data, size_t len)
+uint32_t suouart_update_crc(uint32_t crc, const uint8_t *data, size_t len)
 {
         while (len--) {
                 crc = crc32_tab[(crc ^ *data++) & 0xff] ^ (crc >> 8);
@@ -238,45 +238,45 @@ uint32_t suousb_update_crc(uint32_t crc, const uint8_t *data, size_t len)
         return crc;
 }
 
-static inline uint16_t suousb_get_u16(const uint8_t *buffer)
+static inline uint16_t suouart_get_u16(const uint8_t *buffer)
 {
         return (buffer[0]) | (buffer[1] << 8);
 }
 
-static inline uint32_t suousb_get_u32(const uint8_t *buffer)
+static inline uint32_t suouart_get_u32(const uint8_t *buffer)
 {
         return (buffer[0]) | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
 }
 
-static uint32_t suousb_get_update_addr(suousb_service_t *suousb)
+static uint32_t suouart_get_update_addr(suouart_service_t *suouart)
 {
         return 0;
 }
 
-static void suousb_notify_client_status(suousb_service_t *suousb, uint8_t status)
+static void suouart_notify_client_status(suouart_service_t *suouart, uint8_t status)
 {
         if (ext_notify_cb) {
-                ext_notify_cb(suousb_status_str[status]);
+                ext_notify_cb(suouart_status_str[status]);
         }
 }
 
-static suousb_error_t suousb_do_bl_ccc_write(suousb_service_t *suousb, uint16_t offset,
+static suouart_error_t suouart_do_bl_ccc_write(suouart_service_t *suouart, uint16_t offset,
         uint16_t length, const uint8_t *value)
 {
         if (offset) {
-                return SUOUSB_ERROR_ATTRIBUTE_NOT_LONG;
+                return SUOUART_ERROR_ATTRIBUTE_NOT_LONG;
         }
 
-        if (length != sizeof(suousb_external_status)) {
-                return SUOUSB_ERROR_APPLICATION_ERROR;
+        if (length != sizeof(suouart_external_status)) {
+                return SUOUART_ERROR_APPLICATION_ERROR;
         }
 
-        suousb_external_status = suousb_get_u16(value);
+        suouart_external_status = suouart_get_u16(value);
 
-        return SUOUSB_ERROR_OK;
+        return SUOUART_ERROR_OK;
 }
 
-bool suousb_safe_product_header_write(nvms_t ph_part, size_t offset, const uint8_t *ph, uint16_t ph_size)
+bool suouart_safe_product_header_write(nvms_t ph_part, size_t offset, const uint8_t *ph, uint16_t ph_size)
 {
         int retry_cnt;
         uint8_t *ph_read = malloc(ph_size);
@@ -307,7 +307,7 @@ bool suousb_safe_product_header_write(nvms_t ph_part, size_t offset, const uint8
         return retry_cnt < PH_WRITE_RETRY_TRIES_NUM;
 }
 
-static bool suousb_set_active_img_ptr(suousb_service_t *suota)
+static bool suouart_set_active_img_ptr(suouart_service_t *suota)
 {
         int written;
 
@@ -320,7 +320,7 @@ static bool suousb_set_active_img_ptr(suousb_service_t *suota)
         uint8_t *ph_buffer;
 
         /* Write FW header */
-        written = ad_nvms_write(suota->nvms, suousb_get_update_addr(suota), (uint8_t *) &suota->header, sizeof(suota->header));
+        written = ad_nvms_write(suota->nvms, suouart_get_update_addr(suota), (uint8_t *) &suota->header, sizeof(suota->header));
 
         if (written != sizeof(suota->header)) {
                 return false;
@@ -369,13 +369,13 @@ static bool suousb_set_active_img_ptr(suousb_service_t *suota)
         memcpy(&ph_buffer[ph_size - 2], &crc16, sizeof(crc16));
 
         /* Update backup product header */
-        if (!suousb_safe_product_header_write(product_header_partition, AD_FLASH_SECTOR_SIZE, ph_buffer, ph_size)) {
+        if (!suouart_safe_product_header_write(product_header_partition, AD_FLASH_SECTOR_SIZE, ph_buffer, ph_size)) {
                 free(ph_buffer);
                 return false;
         }
 
         /* Update primary product header */
-        if (!suousb_safe_product_header_write(product_header_partition, 0, ph_buffer, ph_size)) {
+        if (!suouart_safe_product_header_write(product_header_partition, 0, ph_buffer, ph_size)) {
                 free(ph_buffer);
                 return false;
         }
@@ -385,7 +385,7 @@ static bool suousb_set_active_img_ptr(suousb_service_t *suota)
 
 }
 
-static void suousb_prepare_flash(suousb_service_t *suota, size_t write_size)
+static void suouart_prepare_flash(suouart_service_t *suota, size_t write_size)
 {
         uint32_t* absolute_start_addr;
         uint32_t* absolute_end_addr;
@@ -424,44 +424,44 @@ static void suousb_prepare_flash(suousb_service_t *suota, size_t write_size)
         suota->flash_erase_addr++;
 }
 
-static void suousb_error_cb(suousb_service_t *suousb, suousb_status_t status)
+static void suouart_error_cb(suouart_service_t *suouart, suouart_status_t status)
 {
         OS_ASSERT(0);
 
-        suousb_notify_client_status(suousb, status);
-        suousb->state = SUOUSB_STATE_ERROR;
+        suouart_notify_client_status(suouart, status);
+        suouart->state = SUOUART_STATE_ERROR;
 }
 
-static void suousb_chunk_cb(suousb_service_t *suousb)
+static void suouart_chunk_cb(suouart_service_t *suouart)
 {
-        suousb_notify_client_status(suousb, SUOUSB_CMP_OK);
+        suouart_notify_client_status(suouart, SUOUART_CMP_OK);
 }
 
-static size_t suousb_pull_to_buffer(suousb_service_t *suousb, const uint8_t *data, size_t len,
+static size_t suouart_pull_to_buffer(suouart_service_t *suouart, const uint8_t *data, size_t len,
         size_t expected_len)
 {
         /* Caller guarantees that we'll pull data only up to buffer capacity */
-        OS_ASSERT(expected_len <= SUOUSB_BUFFER_SIZE);
+        OS_ASSERT(expected_len <= SUOUART_BUFFER_SIZE);
         /* We shall *never* have more than expected_len bytes of data in buffer */
-        OS_ASSERT(suousb->buffer_len <= expected_len);
+        OS_ASSERT(suouart->buffer_len <= expected_len);
 
         /* Required amount of data is already in buffer */
-        if (suousb->buffer_len >= expected_len) {
+        if (suouart->buffer_len >= expected_len) {
                 return 0;
         }
 
-        expected_len -= suousb->buffer_len;
+        expected_len -= suouart->buffer_len;
         if (expected_len > len) {
                 expected_len = len;
         }
 
-        memcpy(suousb->buffer + suousb->buffer_len, data, expected_len);
-        suousb->buffer_len += expected_len;
+        memcpy(suouart->buffer + suouart->buffer_len, data, expected_len);
+        suouart->buffer_len += expected_len;
 
         return expected_len;
 }
 
-static bool suousb_validate_img_hdr(suota_1_1_image_header_da1469x_t *hdr)
+static bool suouart_validate_img_hdr(suota_1_1_image_header_da1469x_t *hdr)
 {
         return (hdr->image_identifier[0] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B1 &&
                 hdr->image_identifier[1] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B2)
@@ -470,50 +470,50 @@ static bool suousb_validate_img_hdr(suota_1_1_image_header_da1469x_t *hdr)
                 ;
 }
 
-static uint32_t suousb_get_code_size(suota_1_1_image_header_da1469x_t *hdr)
+static uint32_t suouart_get_code_size(suota_1_1_image_header_da1469x_t *hdr)
 {
         return hdr->size;
 }
 
-static uint32_t suousb_get_exec_location(suota_1_1_image_header_da1469x_t *hdr)
+static uint32_t suouart_get_exec_location(suota_1_1_image_header_da1469x_t *hdr)
 {
         return hdr->pointer_to_ivt;
 }
 
-static bool suousb_validate_img_size(suousb_service_t *suota)
+static bool suouart_validate_img_size(suouart_service_t *suota)
 {
 
         /* SUOTA 1.1 header + header extension + application code */
-        return suousb_get_exec_location(&suota->header) + suousb_get_code_size(&suota->header) <= ad_nvms_get_size(suota->nvms);
+        return suouart_get_exec_location(&suota->header) + suouart_get_code_size(&suota->header) <= ad_nvms_get_size(suota->nvms);
 }
 
-static bool suousb_state_w4_header(suousb_service_t *suota)
+static bool suouart_state_w4_header(suouart_service_t *suota)
 {
         memcpy(&suota->header, suota->buffer, sizeof(suota->header));
 
-        if (!suousb_validate_img_hdr(&suota->header)) {
-                suota->error_cb(suota, SUOUSB_INVAL_IMG_HDR);
+        if (!suouart_validate_img_hdr(&suota->header)) {
+                suota->error_cb(suota, SUOUART_INVAL_IMG_HDR);
                 return false;
         }
 
 #if !dg_config_SUOTA_DATA_PART_FAILSAFE
         if (suota->header.image_identifier[0] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B1 &&
                 suota->header.image_identifier[1] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B2) {
-                if (NULL == (suota->nvms = suousb_open_suota_fw_partition(NULL))) {
-                        suota->error_cb(suota, SUOUSB_INVAL_IMG_BANK);
+                if (NULL == (suota->nvms = suouart_open_suota_fw_partition(NULL))) {
+                        suota->error_cb(suota, SUOUART_INVAL_IMG_BANK);
                         return true;
                 }
         } /* else if (suota->header.image_identifier[0] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B1 &&
                         suota->header.image_identifier[1] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B2) {
                 if (NULL == (suota->nvms = ad_nvms_open(suota->header.partition_identifier))) {
-                        suota->error_cb(suota, SUOUSB_INVAL_IMG_BANK);
+                        suota->error_cb(suota, SUOUART_INVAL_IMG_BANK);
                         return true;
                 }
         } */
 #endif /* dg_config_SUOTA_DATA_PART_FAILSAFE */
 
-        if (!suousb_validate_img_size(suota)) {
-                suota->error_cb(suota, SUOUSB_INVAL_IMG_SIZE);
+        if (!suouart_validate_img_size(suota)) {
+                suota->error_cb(suota, SUOUART_INVAL_IMG_SIZE);
                 return false;
         }
 
@@ -525,25 +525,25 @@ static bool suousb_state_w4_header(suousb_service_t *suota)
 //                 * it includes the header too. Since we are not writing the
 //                 * header in FLASH we cannot verify what is written
 //                 * with the CRC. This could be changed in future versions.*/
-//                suota->state = SUOUSB_STATE_W4_HEADER_EXT;
+//                suota->state = SUOUART_STATE_W4_HEADER_EXT;
 //                return true;
 //        }
 
         /* Erase flash for header, but don't write now - postpone until image is downloaded */
-        suousb_prepare_flash(suota, sizeof(suota->header));
+        suouart_prepare_flash(suota, sizeof(suota->header));
         suota->flash_write_addr += sizeof(suota->header);
 
-        suota->state = SUOUSB_STATE_W4_HEADER_EXT;
+        suota->state = SUOUART_STATE_W4_HEADER_EXT;
 
         return true;
 }
 
-static bool suousb_state_w4_header_ext(suousb_service_t *suota)
+static bool suouart_state_w4_header_ext(suouart_service_t *suota)
 {
         int written;
 
         /* Write header extension before image's data */
-        suousb_prepare_flash(suota, suota->buffer_len);
+        suouart_prepare_flash(suota, suota->buffer_len);
         written = ad_nvms_write(suota->nvms, suota->flash_write_addr, suota->buffer, suota->buffer_len);
         if (written < 0) {
                 return false;
@@ -552,19 +552,19 @@ static bool suousb_state_w4_header_ext(suousb_service_t *suota)
         suota->flash_write_addr += written;
         suota->recv_hdr_ext_len += written;
 
-        if (suota->recv_hdr_ext_len == suousb_get_exec_location(&suota->header) - sizeof(suota->header)) {
-                suota->state = SUOUSB_STATE_W4_IMAGE_DATA;
+        if (suota->recv_hdr_ext_len == suouart_get_exec_location(&suota->header) - sizeof(suota->header)) {
+                suota->state = SUOUART_STATE_W4_IMAGE_DATA;
         }
 
         return (written == suota->buffer_len);
 }
 
-static bool suousb_state_w4_image_data(suousb_service_t *suota)
+static bool suouart_state_w4_image_data(suouart_service_t *suota)
 {
         int write_count;
         int read_count;
 
-        suousb_prepare_flash(suota, suota->buffer_len);
+        suouart_prepare_flash(suota, suota->buffer_len);
 
         write_count = ad_nvms_write(suota->nvms, suota->flash_write_addr, suota->buffer, suota->buffer_len);
         if (write_count == suota->buffer_len) {
@@ -572,10 +572,10 @@ static bool suousb_state_w4_image_data(suousb_service_t *suota)
                 read_count = ad_nvms_read(suota->nvms, suota->flash_write_addr, suota->buffer, suota->buffer_len);
                 if (read_count == suota->buffer_len) {
                         suota->flash_write_addr += write_count;
-                        suota->image_crc = suousb_update_crc(suota->image_crc, suota->buffer, write_count);
+                        suota->image_crc = suouart_update_crc(suota->image_crc, suota->buffer, write_count);
                         suota->recv_image_len += write_count;
-                        if (suota->recv_image_len == suousb_get_code_size(&suota->header)) {
-                                suota->state = SUOUSB_STATE_DONE;
+                        if (suota->recv_image_len == suouart_get_code_size(&suota->header)) {
+                                suota->state = SUOUART_STATE_DONE;
                         }
                         return true;
                 }
@@ -584,7 +584,7 @@ static bool suousb_state_w4_image_data(suousb_service_t *suota)
         return false;
 }
 
-static bool suousb_process_patch_data(suousb_service_t *suousb, const uint8_t *data, size_t len, size_t *consumed)
+static bool suouart_process_patch_data(suouart_service_t *suouart, const uint8_t *data, size_t len, size_t *consumed)
 {
         size_t expected_len;
         bool ret = false;
@@ -594,35 +594,35 @@ static bool suousb_process_patch_data(suousb_service_t *suousb, const uint8_t *d
          * We will only fetch exactly the number of bytes required, this makes processing simpler.
          */
 
-        switch (suousb->state) {
-        case SUOUSB_STATE_W4_HEADER:
+        switch (suouart->state) {
+        case SUOUART_STATE_W4_HEADER:
                 expected_len = sizeof(suota_1_1_image_header_da1469x_t);
                 break;
-        case SUOUSB_STATE_W4_HEADER_EXT:
-                expected_len = suousb_get_exec_location(&suousb->header) - sizeof(suousb->header) - suousb->recv_hdr_ext_len;
-                if (expected_len > SUOUSB_BUFFER_SIZE) {
-                        expected_len = SUOUSB_BUFFER_SIZE;
+        case SUOUART_STATE_W4_HEADER_EXT:
+                expected_len = suouart_get_exec_location(&suouart->header) - sizeof(suouart->header) - suouart->recv_hdr_ext_len;
+                if (expected_len > SUOUART_BUFFER_SIZE) {
+                        expected_len = SUOUART_BUFFER_SIZE;
                 }
                 break;
-        case SUOUSB_STATE_W4_IMAGE_DATA:
+        case SUOUART_STATE_W4_IMAGE_DATA:
                 /* Fetch as much as possible, until expected end of image */
-                expected_len = suousb_get_code_size(&suousb->header) - suousb->recv_image_len;
-                if (expected_len > SUOUSB_BUFFER_SIZE) {
-                        expected_len = SUOUSB_BUFFER_SIZE;
+                expected_len = suouart_get_code_size(&suouart->header) - suouart->recv_image_len;
+                if (expected_len > SUOUART_BUFFER_SIZE) {
+                        expected_len = SUOUART_BUFFER_SIZE;
                 }
                 break;
-        case SUOUSB_STATE_DONE:
+        case SUOUART_STATE_DONE:
                 /* Just ignore any trailing data */
                 *consumed = len;
                 return true;
-        case SUOUSB_STATE_IDLE:
-        case SUOUSB_STATE_ERROR:
+        case SUOUART_STATE_IDLE:
+        case SUOUART_STATE_ERROR:
         default:
                 return false;
         }
 
-        *consumed = suousb_pull_to_buffer(suousb, data, len, expected_len);
-        if (suousb->buffer_len < expected_len) {
+        *consumed = suouart_pull_to_buffer(suouart, data, len, expected_len);
+        if (suouart->buffer_len < expected_len) {
                 return true;
         }
 
@@ -631,210 +631,210 @@ static bool suousb_process_patch_data(suousb_service_t *suousb, const uint8_t *d
          * data from buffer so we don't need to check for this.
          */
 
-        switch (suousb->state) {
-        case SUOUSB_STATE_W4_HEADER:
-                ret = suousb_state_w4_header(suousb);
+        switch (suouart->state) {
+        case SUOUART_STATE_W4_HEADER:
+                ret = suouart_state_w4_header(suouart);
                 break;
-        case SUOUSB_STATE_W4_HEADER_EXT:
-                if (suousb->header.image_identifier[0] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B1 &&
-                        suousb->header.image_identifier[1] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B2) {
-                        ret = suousb_state_w4_header_ext(suousb);
+        case SUOUART_STATE_W4_HEADER_EXT:
+                if (suouart->header.image_identifier[0] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B1 &&
+                        suouart->header.image_identifier[1] == SUOTA_1_1_IMAGE_DA1469x_HEADER_SIGNATURE_B2) {
+                        ret = suouart_state_w4_header_ext(suouart);
                 } else {
-                        suousb->state = SUOUSB_STATE_W4_IMAGE_DATA;
+                        suouart->state = SUOUART_STATE_W4_IMAGE_DATA;
                         ret = true;
                 }
                 break;
-        case SUOUSB_STATE_W4_IMAGE_DATA:
-                ret = suousb_state_w4_image_data(suousb);
+        case SUOUART_STATE_W4_IMAGE_DATA:
+                ret = suouart_state_w4_image_data(suouart);
                 break;
-        case SUOUSB_STATE_IDLE:
-        case SUOUSB_STATE_DONE:
-        case SUOUSB_STATE_ERROR:
+        case SUOUART_STATE_IDLE:
+        case SUOUART_STATE_DONE:
+        case SUOUART_STATE_ERROR:
                 /* We should never reach this since these states should already return above */
                 OS_ASSERT(0);
                 break;
         }
 
-        suousb->buffer_len = 0;
+        suouart->buffer_len = 0;
 
         return ret;
 }
 
-static bool suousb_handle_patch_data(suousb_service_t *suousb, const uint8_t *data, size_t recv_len)
+static bool suouart_handle_patch_data(suouart_service_t *suouart, const uint8_t *data, size_t recv_len)
 {
         size_t len = 0;
         bool ret;
 
-        if (!suousb->buffer) {
+        if (!suouart->buffer) {
                 return false;
         }
 
-        suousb->recv_total_len += recv_len;
+        suouart->recv_total_len += recv_len;
 
         do {
                 size_t consumed = 0;
 
-                ret = suousb_process_patch_data(suousb, data + len, recv_len - len, &consumed);
+                ret = suouart_process_patch_data(suouart, data + len, recv_len - len, &consumed);
                 len += consumed;
         } while (ret && len < recv_len);
 
-        if (suousb->chunk_cb) {
-                suousb->chunk_len += len;
+        if (suouart->chunk_cb) {
+                suouart->chunk_len += len;
 
-                while (suousb->chunk_len >= suousb->patch_len) {
-                        suousb->chunk_cb(suousb);
-                        suousb->chunk_len -= suousb->patch_len;
+                while (suouart->chunk_len >= suouart->patch_len) {
+                        suouart->chunk_cb(suouart);
+                        suouart->chunk_len -= suouart->patch_len;
                 }
         }
 
         return ret;
 }
 
-static suousb_error_t suousb_do_mem_dev_write(suousb_service_t *suousb, uint16_t offset,
+static suouart_error_t suouart_do_mem_dev_write(suouart_service_t *suouart, uint16_t offset,
                 uint16_t length, const uint8_t *value)
 {
         uint8_t cmd;
 
         if (offset) {
-                return SUOUSB_ERROR_ATTRIBUTE_NOT_LONG;
+                return SUOUART_ERROR_ATTRIBUTE_NOT_LONG;
         }
 
         if (length != sizeof(uint32_t)) {
-                return SUOUSB_ERROR_APPLICATION_ERROR;
+                return SUOUART_ERROR_APPLICATION_ERROR;
         }
 
-        cmd = suousb_get_u32(value) >> 24;
+        cmd = suouart_get_u32(value) >> 24;
 
-        if (cmd < SUOUSB_MEM_INVAL_DEV) {
-                suousb->flash_write_addr = suousb_get_update_addr(suousb);
-                suousb->flash_erase_addr = suousb->flash_write_addr;
+        if (cmd < SUOUART_MEM_INVAL_DEV) {
+                suouart->flash_write_addr = suouart_get_update_addr(suouart);
+                suouart->flash_erase_addr = suouart->flash_write_addr;
         }
 
         switch (cmd) {
-        case SUOUSB_IMG_SPI_FLASH:
-                if (!suousb->buffer)
-                        suousb->buffer = OS_MALLOC((sizeof(uint8_t) * SUOUSB_BUFFER_SIZE) + 2);
+        case SUOUART_IMG_SPI_FLASH:
+                if (!suouart->buffer)
+                        suouart->buffer = OS_MALLOC((sizeof(uint8_t) * SUOUART_BUFFER_SIZE) + 2);
 
-                if (!suousb->buffer) {
-                        suousb_notify_client_status(suousb, SUOUSB_SRV_EXIT);
-                        return SUOUSB_ERROR_OK;
+                if (!suouart->buffer) {
+                        suouart_notify_client_status(suouart, SUOUART_SRV_EXIT);
+                        return SUOUART_ERROR_OK;
                 }
 
 
-                suousb->recv_hdr_ext_len = 0;
+                suouart->recv_hdr_ext_len = 0;
 
-                suousb->buffer_len = 0;
-                suousb->state = SUOUSB_STATE_W4_HEADER;
-                suousb->chunk_len = 0;
-                suousb->recv_total_len = 0;
-                suousb->recv_image_len = 0;
-                suousb->image_crc = 0xFFFFFFFF;
+                suouart->buffer_len = 0;
+                suouart->state = SUOUART_STATE_W4_HEADER;
+                suouart->chunk_len = 0;
+                suouart->recv_total_len = 0;
+                suouart->recv_image_len = 0;
+                suouart->image_crc = 0xFFFFFFFF;
 
-                suousb_notify_client_status(suousb, SUOUSB_IMG_STARTED);
+                suouart_notify_client_status(suouart, SUOUART_IMG_STARTED);
 
                 break;
 
-        case SUOUSB_REBOOT:
+        case SUOUART_REBOOT:
                 hw_cpm_reboot_system();
 
                 break;
 
-        case SUOUSB_IMG_END:
-                suousb->image_crc ^= 0xFFFFFFFF;
-                if (suousb->image_crc != suousb->header.crc) {
-                        suousb_notify_client_status(suousb, SUOUSB_CRC_ERR);
+        case SUOUART_IMG_END:
+                suouart->image_crc ^= 0xFFFFFFFF;
+                if (suouart->image_crc != suouart->header.crc) {
+                        suouart_notify_client_status(suouart, SUOUART_CRC_ERR);
                 } else {
-//                        if (suousb->header.image_identifier[0] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B1 &&
-//                                suousb->header.image_identifier[1] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B2) {
-//                                suousb_notify_client_status(suousb, SUOUSB_CMP_OK);
+//                        if (suouart->header.image_identifier[0] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B1 &&
+//                                suouart->header.image_identifier[1] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B2) {
+//                                suouart_notify_client_status(suouart, SUOUART_CMP_OK);
 //                        } else {
-                                if (!suousb_set_active_img_ptr(suousb)) {
-                                        suousb_notify_client_status(suousb, SUOUSB_APP_ERROR);
-                                        return SUOUSB_ERROR_APPLICATION_ERROR;
+                                if (!suouart_set_active_img_ptr(suouart)) {
+                                        suouart_notify_client_status(suouart, SUOUART_APP_ERROR);
+                                        return SUOUART_ERROR_APPLICATION_ERROR;
                                 } else {
 #if dg_config_SUOTA_DATA_PART_FAILSAFE
-                                        if (suousb->header.image_identifier[0] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B1 &&
+                                        if (suouart->header.image_identifier[0] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B1 &&
                                                 suota->header.image_identifier[1] == SUOTA_1_1_PART_DATA_DA1469x_HEADER_SIGNATURE_B2) {
 
-                                                if (!suousb_apply_data_partition(suousb_get_update_addr(suousb))) {
-                                                        suousb_notify_client_status(suousb, SUOUSB_APP_ERROR);
-                                                        return SUOUSB_ERROR_APPLICATION_ERROR;
+                                                if (!suouart_apply_data_partition(suouart_get_update_addr(suouart))) {
+                                                        suouart_notify_client_status(suouart, SUOUART_APP_ERROR);
+                                                        return SUOUART_ERROR_APPLICATION_ERROR;
                                                 }
                                         }
 #endif /* dg_config_SUOTA_DATA_PART_FAILSAFE */
-                                        suousb_notify_client_status(suousb, SUOUSB_CMP_OK);
+                                        suouart_notify_client_status(suouart, SUOUART_CMP_OK);
                                 }
 //                        }
                 }
                 break;
 
-        case SUOUSB_MEM_SERVICE_EXIT:
-                if (suousb->buffer) {
-                        OS_FREE(suousb->buffer);
-                        suousb->buffer = NULL;
+        case SUOUART_MEM_SERVICE_EXIT:
+                if (suouart->buffer) {
+                        OS_FREE(suouart->buffer);
+                        suouart->buffer = NULL;
                 }
 
-                suousb_notify_client_status(suousb, SUOUSB_SRV_EXIT);
+                suouart_notify_client_status(suouart, SUOUART_SRV_EXIT);
                 break;
         }
 
-        return SUOUSB_ERROR_OK;
+        return SUOUART_ERROR_OK;
 }
 
-static suousb_error_t suousb_do_gpio_map_write(suousb_service_t *suousb, uint16_t offset,
+static suouart_error_t suouart_do_gpio_map_write(suouart_service_t *suouart, uint16_t offset,
                 uint16_t length, const uint8_t *value)
 {
         if (offset) {
-                return SUOUSB_ERROR_ATTRIBUTE_NOT_LONG;
+                return SUOUART_ERROR_ATTRIBUTE_NOT_LONG;
         }
 
         if (length != sizeof(uint32_t)) {
-                return SUOUSB_ERROR_APPLICATION_ERROR;
+                return SUOUART_ERROR_APPLICATION_ERROR;
         }
 
-        return SUOUSB_ERROR_OK;
+        return SUOUART_ERROR_OK;
 }
 
-static suousb_error_t suousb_do_patch_len_write(suousb_service_t *suousb, uint16_t offset, uint16_t length, const uint8_t *value)
+static suouart_error_t suouart_do_patch_len_write(suouart_service_t *suouart, uint16_t offset, uint16_t length, const uint8_t *value)
 {
         if (offset) {
-                return SUOUSB_ERROR_ATTRIBUTE_NOT_LONG;
+                return SUOUART_ERROR_ATTRIBUTE_NOT_LONG;
         }
 
-        if (length != sizeof(suousb->patch_len)) {
-                return SUOUSB_ERROR_APPLICATION_ERROR;
+        if (length != sizeof(suouart->patch_len)) {
+                return SUOUART_ERROR_APPLICATION_ERROR;
         }
 
         /* Client writes patch_len only in GATT mode, set proper callbacks here */
-        suousb->error_cb = suousb_error_cb;
-        suousb->chunk_cb = suousb_chunk_cb;
+        suouart->error_cb = suouart_error_cb;
+        suouart->chunk_cb = suouart_chunk_cb;
 
-        suousb->patch_len = suousb_get_u16(value);
+        suouart->patch_len = suouart_get_u16(value);
 
-        return SUOUSB_ERROR_OK;
+        return SUOUART_ERROR_OK;
 }
 
-static suousb_error_t suousb_do_patch_data_write(suousb_service_t *suousb, uint16_t offset, uint16_t length, const uint8_t *value)
+static suouart_error_t suouart_do_patch_data_write(suouart_service_t *suouart, uint16_t offset, uint16_t length, const uint8_t *value)
 {
         bool ret;
 
-        ret = suousb_handle_patch_data(suousb, value, length);
+        ret = suouart_handle_patch_data(suouart, value, length);
 
-        return ret ? SUOUSB_ERROR_OK : SUOUSB_ERROR_APPLICATION_ERROR;
+        return ret ? SUOUART_ERROR_OK : SUOUART_ERROR_APPLICATION_ERROR;
 }
 
-suousb_error_t suousb_read_req(suousb_write_request_t req, uint32_t *value)
+suouart_error_t suouart_read_req(suouart_write_request_t req, uint32_t *value)
 {
-        suousb_error_t status = SUOUSB_ERROR_READ_NOT_PERMITTED;
+        suouart_error_t status = SUOUART_ERROR_READ_NOT_PERMITTED;
 
         switch (req) {
-        case SUOUSB_READ_STATUS:
-                *value = suousb_external_status;
-                status = SUOUSB_ERROR_OK;
+        case SUOUART_READ_STATUS:
+                *value = suouart_external_status;
+                status = SUOUART_ERROR_OK;
                 break;
-        case SUOUSB_READ_MEMINFO:
+        case SUOUART_READ_MEMINFO:
                 *value = pSUoUSB_svc->recv_total_len;
-                status = SUOUSB_ERROR_OK;
+                status = SUOUART_ERROR_OK;
                 break;
         default:
                 break;
@@ -843,25 +843,25 @@ suousb_error_t suousb_read_req(suousb_write_request_t req, uint32_t *value)
         return status;
 }
 
-suousb_error_t suousb_write_req(suousb_write_request_t req, uint16_t offset, uint16_t length, const uint8_t *value)
+suouart_error_t suouart_write_req(suouart_write_request_t req, uint16_t offset, uint16_t length, const uint8_t *value)
 {
-        suousb_error_t status = SUOUSB_ERROR_ATTRIBUTE_NOT_FOUND;
+        suouart_error_t status = SUOUART_ERROR_ATTRIBUTE_NOT_FOUND;
 
         switch (req) {
-        case SUOUSB_WRITE_STATUS:
-                status = suousb_do_bl_ccc_write(pSUoUSB_svc, offset, length, value);
+        case SUOUART_WRITE_STATUS:
+                status = suouart_do_bl_ccc_write(pSUoUSB_svc, offset, length, value);
                 break;
-        case SUOUSB_WRITE_MEMDEV:
-                status = suousb_do_mem_dev_write(pSUoUSB_svc, offset, length, value);
+        case SUOUART_WRITE_MEMDEV:
+                status = suouart_do_mem_dev_write(pSUoUSB_svc, offset, length, value);
                 break;
-        case SUOUSB_WRITE_GPIO_MAP:
-                status = suousb_do_gpio_map_write(pSUoUSB_svc, offset, length, value);
+        case SUOUART_WRITE_GPIO_MAP:
+                status = suouart_do_gpio_map_write(pSUoUSB_svc, offset, length, value);
                 break;
-        case SUOUSB_WRITE_PATCH_LEN:
-                status = suousb_do_patch_len_write(pSUoUSB_svc, offset, length, value);
+        case SUOUART_WRITE_PATCH_LEN:
+                status = suouart_do_patch_len_write(pSUoUSB_svc, offset, length, value);
                 break;
-        case SUOUSB_WRITE_PATCH_DATA:
-                status = suousb_do_patch_data_write(pSUoUSB_svc, offset, length, value);
+        case SUOUART_WRITE_PATCH_DATA:
+                status = suouart_do_patch_data_write(pSUoUSB_svc, offset, length, value);
                 break;
         default:
                 break;
@@ -870,7 +870,7 @@ suousb_error_t suousb_write_req(suousb_write_request_t req, uint16_t offset, uin
         return status;
 }
 
-static nvms_t suousb_open_suota_fw_partition(uint32_t* product_header_address)
+static nvms_t suouart_open_suota_fw_partition(uint32_t* product_header_address)
 {
         nvms_t product_header_partition;
         nvms_t fw_partition1;
@@ -945,26 +945,26 @@ static nvms_t suousb_open_suota_fw_partition(uint32_t* product_header_address)
         }
 }
 
-static suousb_active_img_t get_active_img(nvms_t nvms)
+static suouart_active_img_t get_active_img(nvms_t nvms)
 {
-        return SUOUSB_ACTIVE_IMG_FIRST;
+        return SUOUART_ACTIVE_IMG_FIRST;
 }
 
-int suousb_init(suousb_notify_cb_t cb)
+int suouart_init(suouart_notify_cb_t cb)
 {
         nvms_t nvms = NULL;
-        suousb_active_img_t img;
+        suouart_active_img_t img;
 
         uint32_t product_header_address;
 
-        nvms = suousb_open_suota_fw_partition(&product_header_address);
+        nvms = suouart_open_suota_fw_partition(&product_header_address);
 
         if (!nvms) {
                 return 0;
         }
 
         img = get_active_img(nvms);
-        if (img == SUOUSB_ACTIVE_IMG_ERROR) {
+        if (img == SUOUART_ACTIVE_IMG_ERROR) {
                 return 0;
         }
 

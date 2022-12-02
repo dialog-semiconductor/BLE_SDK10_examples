@@ -21,7 +21,7 @@
 
 #define CONFIG_RETARGET
 
-#define dg_configSUOUSB_SUPPORT                 ( 1 )
+#define dg_configSUOUART_SUPPORT                 ( 1 )
 
 #define dg_configUSE_LP_CLK                     ( LP_CLK_32768 )
 #define dg_configEXEC_MODE                      MODE_IS_CACHED

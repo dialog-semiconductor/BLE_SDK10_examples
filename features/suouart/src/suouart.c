@@ -1,7 +1,7 @@
 /**
  ****************************************************************************************
  *
- * @file usb_cdc_suousb.c
+ * @file usb_cdc_suouart.c
  *
  * @brief USB CDC SUoUSB application implementation
  *
@@ -43,23 +43,23 @@
 #include "hw_rtc.h"
 
 /* Calculate CLI overhead:
-"SUOUSB_PATCH_DATA 0 %d %s\n", suotabuffsz, hexstringbuff
+"SUOUART_PATCH_DATA 0 %d %s\n", suotabuffsz, hexstringbuff
  xxxxxxxxxxxxxxxxxxx  x       20 chars for text
                      yy        4 chars for length
                      zz        2 chars for \n and CR
                                6 chars to make a round 32 */
 #define CLI_PATCH_DATA_CMD_SZ   32
 /* This is the size of the binary data we can shift in one go */
-#define SUOUSB_CHUNK_SIZE        2048
-/* The host app will probe for this figure (CMD:"getsuousbbuffsz") to decide what size chunks to transmit i.e. half that
+#define SUOUART_CHUNK_SIZE        2048
+/* The host app will probe for this figure (CMD:"getsuouartbuffsz") to decide what size chunks to transmit i.e. half that
 it knows it has to do 2 chunks per buffer - less failed */
-#define SUOUSB_BUFFER_SIZE       (SUOUSB_CHUNK_SIZE * 2)
+#define SUOUART_BUFFER_SIZE       (SUOUART_CHUNK_SIZE * 2)
 /* Should be big enough for any response we have */
 #define USB_CDC_TX_BUFF_SIZE    256
-#define USB_CDC_RX_BUFF_SIZE    (SUOUSB_BUFFER_SIZE + CLI_PATCH_DATA_CMD_SZ)
+#define USB_CDC_RX_BUFF_SIZE    (SUOUART_BUFFER_SIZE + CLI_PATCH_DATA_CMD_SZ)
 /* This is the size of the CLI command buffer we must have for SUOSB
 it can be less for other commands, but we expect to have to receive and work on whole
-RX buffer's worth when pulling in data for SUOUSB */
+RX buffer's worth when pulling in data for SUOUART */
 #define CLI_BUFF_SIZE           USB_CDC_RX_BUFF_SIZE
 
 /*********************************************************************
@@ -181,21 +181,21 @@ void usb_is_resumed(void)
 
 /**********************************************************************************************************************/
 #if (CONFIG_RETARGET_USB==0)
-static char *suousb_err_str(suousb_error_t err)
+static char *suouart_err_str(suouart_error_t err)
 {
         switch (err)
         {
-        case SUOUSB_ERROR_OK:
+        case SUOUART_ERROR_OK:
                 return "OK";
-        case SUOUSB_ERROR_READ_NOT_PERMITTED:
+        case SUOUART_ERROR_READ_NOT_PERMITTED:
                 return "READ_NOT_PERMITTED";
-        case SUOUSB_ERROR_REQUEST_NOT_SUPPORTED:
+        case SUOUART_ERROR_REQUEST_NOT_SUPPORTED:
                 return "REQUEST_NOT_SUPPORTED";
-         case SUOUSB_ERROR_ATTRIBUTE_NOT_FOUND:
+         case SUOUART_ERROR_ATTRIBUTE_NOT_FOUND:
                 return "ATTRIBUTE_NOT_FOUND";
-        case SUOUSB_ERROR_ATTRIBUTE_NOT_LONG:
+        case SUOUART_ERROR_ATTRIBUTE_NOT_LONG:
                 return "ATTRIBUTE_NOT_LONG";
-        case SUOUSB_ERROR_APPLICATION_ERROR:
+        case SUOUART_ERROR_APPLICATION_ERROR:
                 return "APPLICATION_ERROR";
         default:
                 return "UNKNOWN";
@@ -315,7 +315,7 @@ static void usb_cdc_suota_callback(const char *status)
         dialog_cdc_printfln("INFO %s", status);
 }
 
-static uint32_t usb_cdc_suousb_alloc_execution(char *argv, uint8_t **buf)
+static uint32_t usb_cdc_suouart_alloc_execution(char *argv, uint8_t **buf)
 {
         uint32_t size = atoi(argv);
 
@@ -338,14 +338,14 @@ static uint32_t usb_cdc_suousb_alloc_execution(char *argv, uint8_t **buf)
         return 0;
 }
 
-static void usb_cdc_suousb_fwupdate_execution(int32_t pkt_length, char *argv[10], uint8_t *buf, uint32_t buf_size)
+static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10], uint8_t *buf, uint32_t buf_size)
 {
         uint16_t offs;
         uint16_t size;
         uint32_t slen;
         uint8_t *src;
         uint8_t *dst;
-        suousb_error_t err;
+        suouart_error_t err;
         uint32_t value;
         bool read;
 
@@ -412,7 +412,7 @@ static void usb_cdc_suousb_fwupdate_execution(int32_t pkt_length, char *argv[10]
 
                         src = (uint8_t*)argv[3];
                         dst = buf;
-                        err = SUOUSB_ERROR_REQUEST_NOT_SUPPORTED;
+                        err = SUOUART_ERROR_REQUEST_NOT_SUPPORTED;
                         read = false;
 
                         /* convert hex string back to data */
@@ -423,33 +423,33 @@ static void usb_cdc_suousb_fwupdate_execution(int32_t pkt_length, char *argv[10]
                                 hex = ((hi << 4) | lo);
                                 dst[n] = hex;
                         }
-                        if (0 == strcmp(argv[0], "SUOUSB_WRITE_STATUS")) {
-                                printf("fwupdate: SUOUSB_WRITE_STATUS [%s]\r\n", argv[3]);
-                                err = suousb_write_req(SUOUSB_WRITE_STATUS, offs, size, buf);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_MEM_DEV")) {
-                                printf("fwupdate: SUOUSB_MEM_DEV [%s]\n", argv[3]);
-                                err = suousb_write_req(SUOUSB_WRITE_MEMDEV, offs, size, buf);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_GPIO_MAP")) {
-                                printf("fwupdate: SUOUSB_GPIO_MAP [%s]\r\n", argv[3]);
-                                err = suousb_write_req(SUOUSB_WRITE_GPIO_MAP, offs, size, buf);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_PATCH_LEN")) {
-                                printf("fwupdate: SUOUSB_PATCH_LEN [%s]\r\n", argv[3]);
-                                err = suousb_write_req(SUOUSB_WRITE_PATCH_LEN, offs, size, buf);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_PATCH_DATA")) {
-                                err = suousb_write_req(SUOUSB_WRITE_PATCH_DATA, offs, size, buf);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_READ_STATUS")) {
+                        if (0 == strcmp(argv[0], "SUOUART_WRITE_STATUS")) {
+                                printf("fwupdate: SUOUART_WRITE_STATUS [%s]\r\n", argv[3]);
+                                err = suouart_write_req(SUOUART_WRITE_STATUS, offs, size, buf);
+                        } else if (0 == strcmp(argv[0], "SUOUART_MEM_DEV")) {
+                                printf("fwupdate: SUOUART_MEM_DEV [%s]\n", argv[3]);
+                                err = suouart_write_req(SUOUART_WRITE_MEMDEV, offs, size, buf);
+                        } else if (0 == strcmp(argv[0], "SUOUART_GPIO_MAP")) {
+                                printf("fwupdate: SUOUART_GPIO_MAP [%s]\r\n", argv[3]);
+                                err = suouart_write_req(SUOUART_WRITE_GPIO_MAP, offs, size, buf);
+                        } else if (0 == strcmp(argv[0], "SUOUART_PATCH_LEN")) {
+                                printf("fwupdate: SUOUART_PATCH_LEN [%s]\r\n", argv[3]);
+                                err = suouart_write_req(SUOUART_WRITE_PATCH_LEN, offs, size, buf);
+                        } else if (0 == strcmp(argv[0], "SUOUART_PATCH_DATA")) {
+                                err = suouart_write_req(SUOUART_WRITE_PATCH_DATA, offs, size, buf);
+                        } else if (0 == strcmp(argv[0], "SUOUART_READ_STATUS")) {
                                 read = true;
-                                err = suousb_read_req(SUOUSB_READ_STATUS, &value);
-                                printf("fwupdate: SUOUSB_READ_STATUS [%04lx]\r\n", value);
-                        } else if (0 == strcmp(argv[0], "SUOUSB_READ_MEMINFO")) {
+                                err = suouart_read_req(SUOUART_READ_STATUS, &value);
+                                printf("fwupdate: SUOUART_READ_STATUS [%04lx]\r\n", value);
+                        } else if (0 == strcmp(argv[0], "SUOUART_READ_MEMINFO")) {
                                 read = true;
-                                err = suousb_read_req(SUOUSB_READ_MEMINFO, &value);
-                                printf("fwupdate: SUOUSB_READ_MEMINFO [%04lx]\r\n", value);
+                                err = suouart_read_req(SUOUART_READ_MEMINFO, &value);
+                                printf("fwupdate: SUOUART_READ_MEMINFO [%04lx]\r\n", value);
                         } else {
-                                err = SUOUSB_ERROR_REQUEST_NOT_SUPPORTED;
+                                err = SUOUART_ERROR_REQUEST_NOT_SUPPORTED;
                                 printf("fwupdate: what? [%s]\r\n", argv[0]);
                         }
-                        if (err == SUOUSB_ERROR_OK) {
+                        if (err == SUOUART_ERROR_OK) {
                                 if (read) {
                                         dialog_cdc_printfln("OK %d", value);
                                 } else {
@@ -467,11 +467,11 @@ static void usb_cdc_suousb_fwupdate_execution(int32_t pkt_length, char *argv[10]
                                         note about using len=n*20 where
                                         64<len<buffer in receiver is incomplete,
                                         so 240 is maximum chunk size. */
-                                        if (0 != strcmp(argv[0], "SUOUSB_PATCH_DATA"))
+                                        if (0 != strcmp(argv[0], "SUOUART_PATCH_DATA"))
                                                 dialog_cdc_printfln("OK");
                                 }
                         } else {
-                                dialog_cdc_printfln("ERROR %s", suousb_err_str(err));
+                                dialog_cdc_printfln("ERROR %s", suouart_err_str(err));
                         }
                 }
         }
@@ -489,7 +489,7 @@ void usb_cdc_task(void *params)
         /* register call back for status notifications from software update process
         also specify buffer size - but add 2 because do_patch_data_write() won't accept
         having written a full buffer */
-        suousb_init(usb_cdc_suota_callback);
+        suouart_init(usb_cdc_suota_callback);
 #endif
 
         USBD_Init();
@@ -543,10 +543,10 @@ void usb_cdc_task(void *params)
 
                         //interpret
                         if ((0 == strcmp(argv[0], "alloc")) && (argc == 2)) {
-                                qspibufsz = usb_cdc_suousb_alloc_execution(argv[1], &qspibuf);
+                                qspibufsz = usb_cdc_suouart_alloc_execution(argv[1], &qspibuf);
                         }
-                        else if ((0 == strcmp(argv[0], "getsuousbbuffsz")) && (argc == 1)) {
-                                dialog_cdc_printfln("OK %d", SUOUSB_BUFFER_SIZE);
+                        else if ((0 == strcmp(argv[0], "getsuouartbuffsz")) && (argc == 1)) {
+                                dialog_cdc_printfln("OK %d", SUOUART_BUFFER_SIZE);
                         }
                         else if ((0 == strcmp(argv[0], "fwupdate")) && (argc == 1)) {
 
@@ -556,7 +556,7 @@ void usb_cdc_task(void *params)
                                                 (CLI_BUFF_SIZE / 2));
                                 }
                                 dialog_cdc_printfln("OK");
-                                usb_cdc_suousb_fwupdate_execution(length, argv, qspibuf, qspibufsz);
+                                usb_cdc_suouart_fwupdate_execution(length, argv, qspibuf, qspibufsz);
                         }
                         else if ((0 == strcmp(argv[0], "readsdtparam")) && (argc == 1)) {
 
