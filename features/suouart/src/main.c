@@ -25,6 +25,7 @@
 # endif /* dg_configUSB_DMA_SUPPORT */
 
 #include "sys_usb.h"
+#include "suouart.h"
 
 #if (dg_configUSE_SYS_CHARGER == 1)
 #include "sys_charger.h"
@@ -105,7 +106,7 @@ static void system_init(void *pvParameters)
 # endif /* dg_configUSB_DMA_SUPPORT */
 #endif /* dg_configUSE_USB_ENUMERATION */
 
-        sys_usb_init();
+        suouart_start_task();
 
 #if (dg_configUSE_SYS_CHARGER == 1)
         sys_charger_init(&sys_charger_conf);

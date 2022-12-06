@@ -27,7 +27,7 @@
 #define dg_configEXEC_MODE                      MODE_IS_CACHED
 #define dg_configCODE_LOCATION                  NON_VOLATILE_IS_FLASH
 
-#define dg_configUSE_WDOG                       ( 1 )
+#define dg_configUSE_WDOG                       ( 0 )
 
 #define dg_configFLASH_CONNECTED_TO             (FLASH_CONNECTED_TO_1V8P)
 #define dg_configFLASH_POWER_DOWN               ( 1 )

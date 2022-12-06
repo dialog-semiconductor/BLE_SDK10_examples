@@ -24,6 +24,7 @@
 #include "sys_watchdog.h"
 #include "USB_CDC.h"
 #include "osal.h"
+#include "suouart.h"
 
 #define DEBUG_APP
 #include "suota.h"
@@ -34,7 +35,7 @@
 
 #include "ad_nvparam.h"
 #include "platform_nvparam.h"
-//#include "platform_devices.h"
+#include "platform_devices.h"
 
 #include "dlg_suouart.h"
 
@@ -53,7 +54,7 @@
 #define SUOUART_CHUNK_SIZE        2048
 /* The host app will probe for this figure (CMD:"getsuouartbuffsz") to decide what size chunks to transmit i.e. half that
 it knows it has to do 2 chunks per buffer - less failed */
-#define SUOUART_BUFFER_SIZE       (SUOUART_CHUNK_SIZE * 2)
+#define SUOUART_BUFFER_SIZE       (SUOUART_CHUNK_SIZE * 4)
 /* Should be big enough for any response we have */
 #define USB_CDC_TX_BUFF_SIZE    256
 #define USB_CDC_RX_BUFF_SIZE    (SUOUART_BUFFER_SIZE + CLI_PATCH_DATA_CMD_SZ)
@@ -71,23 +72,14 @@ RX buffer's worth when pulling in data for SUOUART */
 
 #define usb_main_TASK_PRIORITY              ( OS_TASK_PRIORITY_NORMAL )
 __RETAINED static OS_TASK usb_cdc_task_handle;
-__RETAINED_RW volatile static uint8 run_usb_task = 0;
-//static USB_HOOK UsbpHook;
-static USB_CDC_HANDLE usb_cdc_hInst; //no need to be __RETAINED. No Sleep when USB is plugged.
+__RETAINED_RW volatile static uint8 run_task = 0;
+
+ad_uart_handle_t uart_handle;
 #if (CONFIG_RETARGET_USB==0)
 static uint8_t cli_buffer[CLI_BUFF_SIZE];
 #endif
 
-extern void app_hibernate(void);
 
-/* USB Enumeration Information */
-static const USB_DEVICE_INFO _DeviceInfo = {
-        0x2DCF,                 // VendorId
-        0x6002,                 // ProductId
-        "Dialog Semiconductor", // VendorName
-        "DA1469x CDC",          // ProductName
-        "12345678"              // SerialNumber
-};
 
 __USED void dialog_printfln(const char *fmt, ...)
 {
@@ -130,29 +122,9 @@ __USED void dialog_cdc_printfln(const char *fmt, ...)
 
         memcpy(&buf[len], "\n\r", 2);
         len += 2;
-        USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)buf, len, 0);
-}
+        //USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)buf, len, 0);
+        ad_uart_write(uart_handle,buf, len);
 
-/*********************************************************************
- *
- *       _AddCDC
- *
- *  Function description
- *    Add communication device class to USB stack
- */
-static USB_CDC_HANDLE _AddCDC(void)
-{
-        static U8 _abOutBuffer[USB_MAX_PACKET_SIZE];
-        USB_CDC_INIT_DATA InitData;
-        USB_CDC_HANDLE hInst;
-
-        InitData.EPIn = USBD_AddEP(USB_DIR_IN, USB_TRANSFER_TYPE_BULK, 0, NULL, 0);
-        InitData.EPOut = USBD_AddEP(USB_DIR_OUT, USB_TRANSFER_TYPE_BULK, 0, _abOutBuffer,
-                USB_MAX_PACKET_SIZE);
-        InitData.EPInt = USBD_AddEP(USB_DIR_IN, USB_TRANSFER_TYPE_INT, 8, NULL, 0);
-        hInst = USBD_CDC_Add(&InitData);
-
-        return hInst;
 }
 
 /*********************************************************************
@@ -212,7 +184,7 @@ static char *suouart_err_str(suouart_error_t err)
  */
 static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
 {
-        uint8_t c;
+        char c = 0;
         uint8_t *start = buf;
         int32_t len;
         int ret = -1;
@@ -220,8 +192,9 @@ static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
         *start = 0; /* ensure kill old buffer */
 
         do {
-                ret = USBD_CDC_Receive(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
-                if (run_usb_task == 0) {
+                ret = ad_uart_read(uart_handle, &c, 1, 0);
+                //ret = USBD_CDC_Receive(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
+                if (run_task == 0) {
                         return 0;
                 }
 
@@ -234,9 +207,10 @@ static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
                 /* Terminals doing different things, so will recreate 'whatever' as CRLF */
                 if (echo) {
                         if ((c != '\n') && (c != '\r')) {
-                                ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
+                                ret = ad_uart_write(uart_handle, &c, 1);
+                                //ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
                                 if (ret < 0) {
-                                        printf("cdc_readline: usb_cdc_tx_data1 returned 0 [%d]\r\n", ret);
+                                        //printf("cdc_readline: ad_uart_write_data1 returned 0 [%d]\r\n", ret);
                                         continue;
                                 }
                         }
@@ -247,14 +221,16 @@ static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
                         size++;
                         /* overwrite old character */
                         if (echo) {
-                                ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)" ", 1, 0);
+                                ret = ad_uart_write(uart_handle,(char*)" ", 1);
+                                //ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)" ", 1, 0);
                                 if (ret < 0) {
-                                        printf(("cdc_readline: usb_cdc_tx_data2 returned 0\r\n"));
+                                        //printf(("cdc_readline: ad_uart_write_data2 returned 0\r\n"));
                                         return 0;
                                 }
-                                ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
+                                ret = ad_uart_write(uart_handle,&c, 1);
+                                //ret = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
                                 if (ret < 0) {
-                                        printf(("cdc_readline: usb_cdc_tx_data3 returned 0\r\n"));
+                                        //printf(("cdc_readline: ad_uart_write_data3 returned 0\r\n"));
                                         return 0;
                                 }
                         }
@@ -269,7 +245,8 @@ static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
         if (size == 1) {
                 *start = 0; /* empty string */
                 do {
-                        ret = USBD_CDC_Receive(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
+                        ret = ad_uart_read(uart_handle, &c, 1, 0);
+                        //ret = USBD_CDC_Receive(usb_cdc_hInst, (uint8_t*)&c, 1, 0);
                         if (ret != 1)
                                 return 0;
                 } while ((c != '\n') && (c != '\r')); /* wait for CR/LF */
@@ -280,7 +257,8 @@ static inline int32_t cdc_readline(uint8_t *buf, size_t size, bool echo)
         len = strlen((char*)start);
 
         if (!len) {
-                printf("cdc_readline: strlen returned 0\r\n");
+                //printf("cdc_readline: strlen returned 0\r\n");
+                //ad_uart_write(uart_handle, (uint8_t*)&c, 1);
         }
         return len;
 }
@@ -352,8 +330,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
         /* keep going until get an empty line */
         while (pkt_length > 0)
         {
-                pkt_length = cdc_readline(cli_buffer, sizeof(cli_buffer),
-                        false) ? true : false;
+                pkt_length = cdc_readline(cli_buffer, sizeof(cli_buffer), false) ? true : false;
 
                 if (pkt_length > 0) {
                         uint32_t len = strlen((char*)cli_buffer);
@@ -363,6 +340,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
                         cli_buffer[len] = 0;
                 }
 
+                uint32_t my_len = 0;
                 /* work as a CLI */
                 if ((pkt_length > 0) && (cli_buffer[0] != 0)) {
                         uint32_t len = strlen((char*)cli_buffer);
@@ -371,6 +349,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
                         uint32_t n = 0;
                         uint8_t *p = cli_buffer;
 
+                        my_len = len;
                         /* pseudo-strtok */
                         while ((n < len) && (argc < 10)) {
                                 argv[argc++] = (char*)&p[n];
@@ -384,7 +363,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
 
                         /* process valid requests */
                         if (argc != 4) {
-                                dialog_cdc_printfln("ERROR wrong number of parameters!");
+                                dialog_cdc_printfln("ERROR wrong number of parameters! argc=%d. len=%d", argc, my_len);
                                 return;
                         }
 
@@ -405,7 +384,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
                         }
 
                         if ((size * 2) != slen) {
-                                dialog_cdc_printfln("ERROR size != string given");
+                                dialog_cdc_printfln("ERROR size[%d] != string given[slen=%d]", size, slen);
                                 return;
                         }
 
@@ -479,7 +458,7 @@ static void usb_cdc_suouart_fwupdate_execution(int32_t pkt_length, char *argv[10
 }
 #endif
 
-void usb_cdc_task(void *params)
+void suouart_task(void *params)
 {
 #if (CONFIG_RETARGET_USB==0)
         int32_t length;
@@ -491,23 +470,17 @@ void usb_cdc_task(void *params)
         having written a full buffer */
         suouart_init(usb_cdc_suota_callback);
 #endif
+       run_task = 1;
 
-        USBD_Init();
-        USBD_CDC_Init();
-        usb_cdc_hInst = _AddCDC();
-        USBD_SetDeviceInfo(&_DeviceInfo);
-        USBD_Start();
+       uart_handle = ad_uart_open(&uart1_uart_conf);                               /* Open the UART with the desired configuration    */
+       ASSERT_ERROR(uart_handle != NULL);                                          /* Check if the UART1 opened OK */
 
-        printf("usb_flash_task: enter (%s %s)\r\n", __DATE__, __TIME__);
+        while(run_task == 1) {
 
-        while(run_usb_task == 1) {
-                while ((USBD_GetState() & (USB_STAT_CONFIGURED | USB_STAT_SUSPENDED))
-                        != USB_STAT_CONFIGURED) {
-                        USB_OS_Delay(50);
-                }
 #if (CONFIG_RETARGET_USB==0)
-                printf(("usb_flash_task: prompt\r\n"));
-                USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)">", 1, 0);
+                //USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)">", 1, 0);
+                ad_uart_write(uart_handle, (char*)">", 1);
+
                 length = cdc_readline(cli_buffer, sizeof(cli_buffer), true);
 
                 if (length > 0) {
@@ -517,18 +490,20 @@ void usb_cdc_task(void *params)
                                 len--;
                         cli_buffer[len] = 0;
                         /* proper CRLF before new prompt */
-                        length = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)"\r\n", 2, 0);
+                        ad_uart_write(uart_handle, (char*)"\r\n", 2);
+                        //length = USBD_CDC_Write(usb_cdc_hInst, (uint8_t*)"\r\n", 2, 0);
                 }
 
                 /* work as a CLI */
                 if ((length > 0) && (cli_buffer[0] != 0)) {
+
                         uint32_t len = strlen((char*)cli_buffer);
                         char *argv[10];
                         uint32_t argc = 0;
                         uint32_t n = 0;
                         uint8_t *p = cli_buffer;
 
-                        printf("usb_flash_task: action [%s]\r\n", cli_buffer);
+                        //printf("usb_flash_task: action [%s]\r\n", cli_buffer);
 
                         //pseudo-strtok
                         while ((n < len) && (argc < 10)) {
@@ -546,7 +521,7 @@ void usb_cdc_task(void *params)
                                 qspibufsz = usb_cdc_suouart_alloc_execution(argv[1], &qspibuf);
                         }
                         else if ((0 == strcmp(argv[0], "getsuouartbuffsz")) && (argc == 1)) {
-                                dialog_cdc_printfln("OK %d", SUOUART_BUFFER_SIZE);
+                                dialog_cdc_printfln("OK %d", 4096);
                         }
                         else if ((0 == strcmp(argv[0], "fwupdate")) && (argc == 1)) {
 
@@ -572,42 +547,21 @@ void usb_cdc_task(void *params)
                         else if ((0 == strcmp(argv[0], "readbatt")) && (argc == 1)) {
 
                                 uint16_t batt_mv = 0;
-//                                uint16_t value;
-//                                ad_gpadc_handle_t handle;
-//                                handle = ad_gpadc_open(&BATTERY_LEVEL);
-//                                ad_gpadc_read(handle, &value);
-//                                batt_mv = ad_gpadc_conv_to_batt_mvolt(BATTERY_LEVEL.drv, value);
-//                                ad_gpadc_close(handle, false);
                                 dialog_cdc_printfln("Battery voltage is %d mv",batt_mv);
                         }
-                        else if ((0 == strcmp(argv[0], "setsleep")) && (argc == 1)) {
+                        //else if ((0 == strcmp(argv[0], "setsleep")) && (argc == 1)) {
 
 //                                app_hibernate();
-                        }
+                        //}
                         else if ((0 == strcmp(argv[0], "readtimeonbump")) && (argc == 1)) {
 
                                 //uint32_t timeofbump = 0;
                                 hw_rtc_time_t rtc_time_bump;
                                 hw_rtc_calendar_t rtc_cal;
 
-                                /*Use RTC API to unpack BCD date/time into convenient formats.*/
+                                //Use RTC API to unpack BCD date/time into convenient formats.
                                 hw_rtc_get_time_clndr(&rtc_time_bump,  &rtc_cal);
-/*
-                                rtc_time rtc_time_bump= {
-                                        .hour   = RTC_TIME_HOUR,
-                                        .minute = RTC_TIME_MINUTE,
-                                        .sec    = RTC_TIME_SECOND,
-                                        .hsec   = 0,
-                                        .hour_mode = RTC_24H_CLK
-                                };
-                                rtc_calendar rtc_cal= {
-                                        .year   = RTC_CALENDAR_YEAR,
-                                        .month  = RTC_CALENDAR_MONTH,
-                                        .mday   = RTC_CALENDAR_MONTH_DAY,
-                                        .wday   = RTC_CALENDAR_WEEK_DAY
-                                };
-*/
-//                                timeofbump = hw_rtc_get_time_bcd();
+
                                 hw_rtc_get_time_clndr(&rtc_time_bump, &rtc_cal);
 
                                 dialog_cdc_printfln("Current Time is Time/Date = %u:%u:%u.%u / %u-%u-%u \n ",
@@ -623,16 +577,22 @@ void usb_cdc_task(void *params)
                                         dialog_cdc_printfln("ERROR argument %d = [%s]", n, argv[n]);
                         }
                 }
+                else
+                {
+                    //dialog_cdc_printfln("after cdc_readline. len=%d, cli_buffer[0]=%d", length, cli_buffer[0]);
+                }
+
 
                 if (length <= 0) {
                         printf(("disconnected"));
                 }
+
 #else
                 break;
 #endif
         }
 
-        run_usb_task = 0;
+        run_task = 0;
 
         OS_TASK_DELETE(NULL);
 }
@@ -649,18 +609,18 @@ void usb_cdc_task(void *params)
  *          call-backs may be called before the application task is started.
  *          The application code should handle this case, if need be.
  */
-void sys_usb_ext_hook_begin_enumeration(void)
+void suouart_start_task(void)
 {
-        if (run_usb_task == 0) {
-                run_usb_task = 1;
+        if (run_task == 0) {
+                run_task = 1;
                 OS_BASE_TYPE status;
 
                 /* Start the USB CDC application task. */
-                status = OS_TASK_CREATE("UsbCdcTask",   /* The text name assigned to the task, for
+                status = OS_TASK_CREATE("SuoUartTask",   /* The text name assigned to the task, for
                                                            debug only; not used by the kernel. */
-                                usb_cdc_task,           /* The function that implements the task. */
+                                suouart_task,           /* The function that implements the task. */
                                 NULL,                   /* The parameter passed to the task. */
-                                8192,                    /* The number of bytes to allocate to the
+                                16000,                    /* The number of bytes to allocate to the
                                                            stack of the task. */
                                 usb_main_TASK_PRIORITY, /* The priority assigned to the task. */
                                 usb_cdc_task_handle);   /* The task handle. */
@@ -676,29 +636,3 @@ void sys_usb_ext_hook_begin_enumeration(void)
 extern OS_TASK  led_task_h;
 #endif
 
-/*********************************************************************
- *
- *       usb_detach_cb
- *
- *  Function description
- *    Event callback called from the USB charger task to notify
- *    the application that a detach of the USB cable was detected.
- *
- *    Note: The USB charger task is started before the application task. Thus, these
- *          call-backs may be called before the application task is started.
- *          The application code should handle this case, if need be.
- */
-void  sys_usb_ext_hook_detach(void)
-{
-        run_usb_task = 0;
-        USBD_Stop();
-        USBD_DeInit();
-
-
-#if (ENABLE_VISUAL_PROMPTS==1)
-        if (led_task_h != NULL && OS_GET_TASK_STATE(led_task_h) != eDeleted) OS_TASK_NOTIFY(led_task_h, LED_IDLE_NOTIFY, OS_NOTIFY_SET_BITS);
-#endif
-
-        printf("USB un-plugged");
-
-}

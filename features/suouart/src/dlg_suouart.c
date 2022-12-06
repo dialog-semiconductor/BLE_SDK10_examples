@@ -426,7 +426,7 @@ static void suouart_prepare_flash(suouart_service_t *suota, size_t write_size)
 
 static void suouart_error_cb(suouart_service_t *suouart, suouart_status_t status)
 {
-        OS_ASSERT(0);
+        //OS_ASSERT(0);
 
         suouart_notify_client_status(suouart, status);
         suouart->state = SUOUART_STATE_ERROR;
@@ -795,6 +795,8 @@ static suouart_error_t suouart_do_gpio_map_write(suouart_service_t *suouart, uin
         return SUOUART_ERROR_OK;
 }
 
+#include "suouart.h"
+
 static suouart_error_t suouart_do_patch_len_write(suouart_service_t *suouart, uint16_t offset, uint16_t length, const uint8_t *value)
 {
         if (offset) {
@@ -810,6 +812,8 @@ static suouart_error_t suouart_do_patch_len_write(suouart_service_t *suouart, ui
         suouart->chunk_cb = suouart_chunk_cb;
 
         suouart->patch_len = suouart_get_u16(value);
+
+        //dialog_cdc_printfln("THIS IS THE PATCH LEN: %d", suouart->patch_len);
 
         return SUOUART_ERROR_OK;
 }
@@ -960,12 +964,12 @@ int suouart_init(suouart_notify_cb_t cb)
         nvms = suouart_open_suota_fw_partition(&product_header_address);
 
         if (!nvms) {
-                return 0;
+                OS_ASSERT(0);
         }
 
         img = get_active_img(nvms);
         if (img == SUOUART_ACTIVE_IMG_ERROR) {
-                return 0;
+                OS_ASSERT(0);
         }
 
         pSUoUSB_svc = &SUoUSB;
