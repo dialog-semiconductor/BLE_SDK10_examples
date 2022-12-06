@@ -153,14 +153,7 @@ int configure_serial(void)
         dcb.StopBits = ONESTOPBIT;
         dcb.Parity = NOPARITY;
 
-        //flow control
-        /*dcb.fDtrControl = DTR_CONTROL_ENABLE;  
-        dcb.fOutxDsrFlow = TRUE;
-        dcb.fRtsControl = RTS_CONTROL_ENABLE;
-        dcb.fOutxCtsFlow = FALSE; */   //doesn't exist on CDC spec (uses NACK?), so what's to monitor?
-        
-        // TOODO PROVIDE FLOW CONTROL OPTION
-
+        // No Flow Control
         dcb.fDtrControl = DTR_CONTROL_DISABLE;  
         dcb.fOutxDsrFlow = FALSE;
         dcb.fRtsControl = RTS_CONTROL_DISABLE;
@@ -949,41 +942,33 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
                 }
         }
 
-        printf_verbose("do_firmware_update: sending %d bytes in %d chunks\n", size, chunksz);
+        printf_verbose("do_firmware_update: sending %d bytes in %d blocks\n", size, chunksz);
         //Perform main bulk of update
-        while ((size - xfered) > suouartbuffsz) {
+        while ((size - xfered) > chunksz) {
                 int n, m;
                 int retries;
 
                 retries = 30; //3 second timeout for the write of each block
                 
-
-                for (n = 0; !error && (n < (suouartbuffsz / chunksz)); n++) {
-                        printf_verbose("do_firmware_update: send %d byte block (%d * %d chunks) @ %d\n",
-                                        chunksz, 1, chunksz, xfered);
-                        //SUOUART_PATCH_DATA * X
-                        for (m = 0; m < chunksz; m++) {
-                                uint8_t c = imagebuf[xfered + m];
-                                hexbuff[(m * 2) + 0] = nibble2asciibyte(c >> 4);
-                                hexbuff[(m * 2) + 1] = nibble2asciibyte(c & 0xF);
-                        }
-                        hexbuff[chunksz * 2] = 0;
-                        sprintf(strbuff, "SUOUART_PATCH_DATA 0 %d %s\n", chunksz, hexbuff);
-                        error = (strlen(strbuff) == write_buff(strbuff, strlen(strbuff))) ? false : true;
-                        if (error) {
-                               break;
-                        }
-                        xfered += chunksz;
-                        error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 300, buff, &len);
-                        if (error) {
-                              break;
-                        }
+                printf_verbose("do_firmware_update: send %d byte block @ %d\n",
+                                chunksz, xfered);
+                //SUOUART_PATCH_DATA * X
+                for (m = 0; m < chunksz; m++) {
+                        uint8_t c = imagebuf[xfered + m];
+                        hexbuff[(m * 2) + 0] = nibble2asciibyte(c >> 4);
+                        hexbuff[(m * 2) + 1] = nibble2asciibyte(c & 0xF);
                 }
-                //error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 3000, buff,
-                //        &len);
-                //if (error) {
-                //      break;
-                //}
+                hexbuff[chunksz * 2] = 0;
+                sprintf(strbuff, "SUOUART_PATCH_DATA 0 %d %s\n", chunksz, hexbuff);
+                error = (strlen(strbuff) == write_buff(strbuff, strlen(strbuff))) ? false : true;
+                if (error) {
+                        break;
+                }
+                xfered += chunksz;
+                error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 300, buff, &len);
+                if (error) {
+                        break;
+                }
         }
 
         printf_verbose("do_firmware_update: end %d byte block processing - %s - remainder:%d\n",
@@ -1226,7 +1211,7 @@ int main(int argc, char **argv)
         free(buf);
 
 #ifdef _WIN32
-        for (int i=5; i>0; i--){
+        for (int i=5; i>=0; i--){
             printf("Closing window in %d sec\r", i);
             Sleep(1000);
         }
