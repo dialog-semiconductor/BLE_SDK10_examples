@@ -615,13 +615,8 @@ DWORD read_line(char *buff, DWORD len)
                                 TempChar = 0; //avoid exit over CRLF detritus at start of line
                         }
                 }
-                //else
-                //{
-                //    printf_verbose("HOST=[read_line: Could not read. NoBytesRead==%d]\n", NoBytesRead);
-                //}
         } while ((NoBytesRead > 0) && (i < len) && (TempChar != '\n') && (TempChar != '\r'));
 
-        //printf_verbose("HOST=[read_line: Exit] Len=%d, buff=%s\n", NoBytesRead, buff);
         return i;
 }
 
@@ -842,7 +837,7 @@ bool wait_for_specific_response_or_abort(char *response, int retrycount, char *b
 }
 
 /**
- * Brief:  Given an ASCII character, returns hex nibble value
+ * Brief:  Given a hex nibble, returns ASCII character value
  * Param:  Value 0x0 to 0x0F
  * Return: '0'-'9', or 'A'-'F')
  */
@@ -863,7 +858,7 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
         char *strbuff;
         char *hexbuff;
 
-        uint32_t chunksz = (suouartbuffsz / 2); //two chunks per buffer (had problem with one chunk per buffer)
+        uint32_t chunksz = (suouartbuffsz / 2); // For every byte of code, we transfer 2 bytes over the serial port
 
         /*
          Table 3: SUOUART_MEM_DEV definition for SUOUART mode
@@ -946,10 +941,8 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
         if ((size - xfered) > suouartbuffsz) {
                 //SUOUART_PATCH_LEN      Initiator defines the length of the Block size to be applied
                 //                      Receiver stores the transmitted Length in a temporary variable
-                printf_verbose("Setting patch len main update SUOUART_PATCH_LEN 0 2 %02x%02x\n", ((suouartbuffsz/2) & 0xFF),
-                                                                                                    (((suouartbuffsz/2) >> 8) & 0xFF));
-                sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n", ((suouartbuffsz/2) & 0xFF),
-                        (((suouartbuffsz/2) >> 8) & 0xFF));
+                sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n", (chunksz & 0xFF),
+                        ((chunksz >> 8) & 0xFF));
                 error = issue_command_get_ok(suouart_patch_len, buff, &len);
                 if (error) {
                        printf_err("Error in issue_command_get_ok\n");
@@ -957,16 +950,18 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
                 }
         }
 
+        printf_verbose("do_firmware_update: sending %d bytes in %d chunks\n", size, chunksz);
         //Perform main bulk of update
         while ((size - xfered) > suouartbuffsz) {
                 int n, m;
                 int retries;
 
                 retries = 30; //3 second timeout for the write of each block
-                printf_verbose("do_firmware_update: send %d byte block (%d * %d chunks) @ %d\n",
-                                suouartbuffsz, (suouartbuffsz / chunksz), chunksz, xfered);
+                
 
                 for (n = 0; !error && (n < (suouartbuffsz / chunksz)); n++) {
+                        printf_verbose("do_firmware_update: send %d byte block (%d * %d chunks) @ %d\n",
+                                        chunksz, 1, chunksz, xfered);
                         //SUOUART_PATCH_DATA * X
                         for (m = 0; m < chunksz; m++) {
                                 uint8_t c = imagebuf[xfered + m];
@@ -975,18 +970,15 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
                         }
                         hexbuff[chunksz * 2] = 0;
                         sprintf(strbuff, "SUOUART_PATCH_DATA 0 %d %s\n", chunksz, hexbuff);
-                        printf_verbose("SUOUART_PATCH_DATA 0 %d %s\n", chunksz, hexbuff);
                         error = (strlen(strbuff) == write_buff(strbuff, strlen(strbuff))) ? false : true;
                         if (error) {
                                break;
                         }
                         xfered += chunksz;
-                        // /Sleep(1000);
                         error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 300, buff, &len);
                         if (error) {
                               break;
                         }
-                        //wait_for_specific_response_or_abort("INFO SUOUART_IMG_STARTED", 30, buff, &len);
                 }
                 //error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 3000, buff,
                 //        &len);
@@ -1008,8 +1000,6 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
 
                 //SUOUART_PATCH_LEN      Initiator defines the length of the Last Block size (if different) to be applied
                 //                      Receiver stores the new block size
-                printf_verbose("Setting remainder patch len SUOUART_PATCH_LEN 0 2 %02x%02x\n",
-                        (((size - xfered)) & 0xFF), ((((size - xfered)) >> 8) & 0xFF));
                 sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n",
                         (((size - xfered)) & 0xFF), ((((size - xfered)) >> 8) & 0xFF));
 
@@ -1237,7 +1227,7 @@ int main(int argc, char **argv)
         free(buf);
 
 #ifdef _WIN32
-        for (int i=0; i<5; i++){
+        for (int i=5; i>0; i--){
             printf("Closing window in %d sec\r", i);
             Sleep(1000);
         }
@@ -1245,7 +1235,7 @@ int main(int argc, char **argv)
         close_serial_port(hComm);
 
 RESULT:
-        printf_err("Result:%s\n", (exitCode == 0) ? "Pass" : "Fail");
+        printf_err("\nResult:%s\n", (exitCode == 0) ? "Pass" : "Fail");
 #ifdef HOST_USB_UPDATER_LOG
         if (verbose_output != NULL) {
                 fclose(verbose_output);

@@ -521,7 +521,7 @@ void suouart_task(void *params)
                                 qspibufsz = usb_cdc_suouart_alloc_execution(argv[1], &qspibuf);
                         }
                         else if ((0 == strcmp(argv[0], "getsuouartbuffsz")) && (argc == 1)) {
-                                dialog_cdc_printfln("OK %d", 4096);
+                                dialog_cdc_printfln("OK %d", SUOUART_BUFFER_SIZE);
                         }
                         else if ((0 == strcmp(argv[0], "fwupdate")) && (argc == 1)) {
 
