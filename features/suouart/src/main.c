@@ -20,17 +20,7 @@
 #include "sys_clock_mgr.h"
 #include "sys_power_mgr.h"
 #include "sys_watchdog.h"
-# if (dg_configUSB_DMA_SUPPORT == 1)
-#include "hw_dma.h"
-# endif /* dg_configUSB_DMA_SUPPORT */
-
-#include "sys_usb.h"
 #include "suouart.h"
-
-#if (dg_configUSE_SYS_CHARGER == 1)
-#include "sys_charger.h"
-#include "custom_charging_profile.h"
-#endif /* dg_configUSE_SYS_CHARGER */
 
 #if dg_configUSE_WDOG
 __RETAINED_RW int8_t idle_task_wdog_id = -1;
@@ -74,43 +64,7 @@ static void system_init(void *pvParameters)
         pm_set_wakeup_mode(true);
         pm_sleep_mode_set(pm_mode_extended_sleep);
 
-#if (dg_configUSE_USB_ENUMERATION == 1)
-# if (dg_configUSB_DMA_SUPPORT == 1)
-        sys_usb_driver_conf_t cfg;
-
-        /* Set the desired DMA channels and parameters
-         * to be used with USB DATA interface.
-         * The USB subsystem will try to use these resources on
-         * every plug-in.
-         * However, if the DMA resources are not available
-         * when the USB plug-in event occurs, then it will
-         * automatically fallback to USB operation in interrupt
-         * mode to ensure that the USB will be functional.
-         */
-
-        cfg.usb.use_dma = true; /* enable the use of DMA with USB */
-        cfg.usb.rx_dma_channel = HW_DMA_CHANNEL_0; /* Select the DMA channel for USB RX.
-                                                    * Avoid channel 7 which is the only
-                                                    * way to write the keys to Crypto Engine
-                                                    */
-        cfg.usb.tx_dma_channel = HW_DMA_CHANNEL_1; /* Select the DMA channel for USB RX.
-                                                    * Avoid channel 7 which is the only
-                                                    * way to write the keys to Crypto Engine
-                                                    */
-        cfg.usb.rx_dma_prio = HW_DMA_PRIO_4;       /* Set the priority of the RX DMA */
-        cfg.usb.tx_dma_prio = HW_DMA_PRIO_5;       /* Set the priority of the TX DMA */
-
-        sys_usb_cfg(&cfg);                         /* Apply the configuration.
-                                                    * Call this before the sys_usb_init()
-                                                    */
-# endif /* dg_configUSB_DMA_SUPPORT */
-#endif /* dg_configUSE_USB_ENUMERATION */
-
         suouart_start_task();
-
-#if (dg_configUSE_SYS_CHARGER == 1)
-        sys_charger_init(&sys_charger_conf);
-#endif /* dg_configUSE_SYS_CHARGER */
 
         /* the work of the SysInit task is done */
         OS_TASK_DELETE(OS_GET_CURRENT_TASK());
@@ -119,11 +73,6 @@ static void system_init(void *pvParameters)
 
 static void periph_init(void)
 {
-        /* USB data pin configuration */
-        hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_14, HW_GPIO_MODE_INPUT,
-                                 HW_GPIO_FUNC_USB);
-        hw_gpio_set_pin_function(HW_GPIO_PORT_0, HW_GPIO_PIN_15, HW_GPIO_MODE_INPUT,
-                                 HW_GPIO_FUNC_USB);
 }
 
 

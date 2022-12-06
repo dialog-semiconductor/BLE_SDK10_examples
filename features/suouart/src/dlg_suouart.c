@@ -3,7 +3,7 @@
  *
  * @file dlg_suouart.c
  *
- * @brief Dialog SUOUART service implementation
+ * @brief SUOUART service implementation API
  *
  * Copyright (C) 2016-2017 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
@@ -175,8 +175,8 @@ typedef struct {
 } client_status_notif_t;
 
 
-static suouart_service_t SUoUSB;
-static suouart_service_t *pSUoUSB_svc;
+static suouart_service_t SUoUART;
+static suouart_service_t *pSUoUART_svc;
 
 static suouart_notify_cb_t ext_notify_cb;
 
@@ -813,8 +813,6 @@ static suouart_error_t suouart_do_patch_len_write(suouart_service_t *suouart, ui
 
         suouart->patch_len = suouart_get_u16(value);
 
-        //dialog_cdc_printfln("THIS IS THE PATCH LEN: %d", suouart->patch_len);
-
         return SUOUART_ERROR_OK;
 }
 
@@ -837,7 +835,7 @@ suouart_error_t suouart_read_req(suouart_write_request_t req, uint32_t *value)
                 status = SUOUART_ERROR_OK;
                 break;
         case SUOUART_READ_MEMINFO:
-                *value = pSUoUSB_svc->recv_total_len;
+                *value = pSUoUART_svc->recv_total_len;
                 status = SUOUART_ERROR_OK;
                 break;
         default:
@@ -853,19 +851,19 @@ suouart_error_t suouart_write_req(suouart_write_request_t req, uint16_t offset, 
 
         switch (req) {
         case SUOUART_WRITE_STATUS:
-                status = suouart_do_bl_ccc_write(pSUoUSB_svc, offset, length, value);
+                status = suouart_do_bl_ccc_write(pSUoUART_svc, offset, length, value);
                 break;
         case SUOUART_WRITE_MEMDEV:
-                status = suouart_do_mem_dev_write(pSUoUSB_svc, offset, length, value);
+                status = suouart_do_mem_dev_write(pSUoUART_svc, offset, length, value);
                 break;
         case SUOUART_WRITE_GPIO_MAP:
-                status = suouart_do_gpio_map_write(pSUoUSB_svc, offset, length, value);
+                status = suouart_do_gpio_map_write(pSUoUART_svc, offset, length, value);
                 break;
         case SUOUART_WRITE_PATCH_LEN:
-                status = suouart_do_patch_len_write(pSUoUSB_svc, offset, length, value);
+                status = suouart_do_patch_len_write(pSUoUART_svc, offset, length, value);
                 break;
         case SUOUART_WRITE_PATCH_DATA:
-                status = suouart_do_patch_data_write(pSUoUSB_svc, offset, length, value);
+                status = suouart_do_patch_data_write(pSUoUART_svc, offset, length, value);
                 break;
         default:
                 break;
@@ -972,11 +970,11 @@ int suouart_init(suouart_notify_cb_t cb)
                 OS_ASSERT(0);
         }
 
-        pSUoUSB_svc = &SUoUSB;
+        pSUoUART_svc = &SUoUART;
 
         ext_notify_cb = cb;
-        pSUoUSB_svc->active_img = img;
-        pSUoUSB_svc->product_header_address = product_header_address;
+        pSUoUART_svc->active_img = img;
+        pSUoUART_svc->product_header_address = product_header_address;
 
 
         return 1;

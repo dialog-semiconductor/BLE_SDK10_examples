@@ -823,7 +823,6 @@ bool wait_for_specific_response_or_abort(char *response, int retrycount, char *b
         bool error = wait_response(retrycount, buff, len);
         if (!error) {
                 if (0 == strncmp(buff, response, strlen(response))) {
-                    printf_verbose("wait_for_specific_response_or_abort: Success=[%s]\n", buff);
                 } else {
                         printf_err("wait_for_specific_response_or_abort: FAIL=[%s]\n", buff);
                         write_buff(suouart_mem_dev_abort, strlen(suouart_mem_dev_abort));

@@ -3,7 +3,7 @@
  *
  * @file dlg_suouart.h
  *
- * @brief Dialog SUoUSB service implementation API
+ * @brief SUOUART service implementation API
  *
  * Copyright (C) 2016-2017 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
@@ -14,6 +14,7 @@
 
 #ifndef DLG_SUOUART_H_
 #define DLG_SUOUART_H_
+
 #if (dg_configSUOUART_SUPPORT == 1)
 #include <stdint.h>
 

@@ -36,7 +36,7 @@
 #define dg_configPOWER_1V8_ACTIVE               ( 0 )
 #define dg_configPOWER_1V8_SLEEP                ( 0 )
 
-#define dg_configUSE_SYS_CHARGER                ( 1 )
+#define dg_configUSE_SYS_CHARGER                ( 0 )
 
 #define dg_configUSE_HW_TRNG                    ( 1 )
 

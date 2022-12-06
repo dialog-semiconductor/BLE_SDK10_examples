@@ -1,14 +1,19 @@
-/*
- * suouart.h
+/**
+ ****************************************************************************************
  *
- *  Created on: Dec 5, 2022
- *      Author: a5137667
+ * @file suouart.h
+ *
+ * Software Update over UART (SUOUART) application implementation
+ *
+ * Copyright (C) 2016-2017 Dialog Semiconductor.
+ * This computer program includes Confidential, Proprietary Information
+ * of Dialog Semiconductor. All Rights Reserved.
+ *
+ ****************************************************************************************
  */
-
 #ifndef SUOUART_H_
 #define SUOUART_H_
 
 void suouart_start_task(void);
-__USED void dialog_cdc_printfln(const char *fmt, ...);
 
 #endif /* SUOUART_H_ */
