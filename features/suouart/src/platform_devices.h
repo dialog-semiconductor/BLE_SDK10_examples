@@ -21,25 +21,13 @@
 extern "C" {
 #endif
 
-#if (dg_configGPADC_ADAPTER == 1)
-
-
-/*
- * Define sources connected to GPADC
- */
-
-const ad_gpadc_controller_conf_t BATTERY_LEVEL;
-#endif
-
-
-#endif /* dg_configGPADC_ADAPTER */
-
 #if (dg_configUART_ADAPTER == 1)
 #include "ad_uart.h"
 const ad_uart_controller_conf_t uart_conf;
-const ad_uart_controller_conf_t uart2_uart_conf;
 #endif
 
 #ifdef __cplusplus
 }
 #endif /* PLATFORM_DEVICES_H_ */
+
+#endif
