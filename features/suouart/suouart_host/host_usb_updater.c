@@ -946,8 +946,10 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
         if ((size - xfered) > suouartbuffsz) {
                 //SUOUART_PATCH_LEN      Initiator defines the length of the Block size to be applied
                 //                      Receiver stores the transmitted Length in a temporary variable
-                sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n", (suouartbuffsz & 0xFF),
-                        ((suouartbuffsz >> 8) & 0xFF));
+                printf_verbose("Setting patch len main update SUOUART_PATCH_LEN 0 2 %02x%02x\n", ((suouartbuffsz/2) & 0xFF),
+                                                                                                    (((suouartbuffsz/2) >> 8) & 0xFF));
+                sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n", ((suouartbuffsz/2) & 0xFF),
+                        (((suouartbuffsz/2) >> 8) & 0xFF));
                 error = issue_command_get_ok(suouart_patch_len, buff, &len);
                 if (error) {
                        printf_err("Error in issue_command_get_ok\n");
@@ -979,14 +981,18 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
                                break;
                         }
                         xfered += chunksz;
-                        Sleep(1000);
+                        // /Sleep(1000);
+                        error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 300, buff, &len);
+                        if (error) {
+                              break;
+                        }
                         //wait_for_specific_response_or_abort("INFO SUOUART_IMG_STARTED", 30, buff, &len);
                 }
-                error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 3000, buff,
-                        &len);
-                if (error) {
-                      break;
-                }
+                //error = wait_for_specific_response_or_abort("INFO SUOUART_CMP_OK", 3000, buff,
+                //        &len);
+                //if (error) {
+                //      break;
+                //}
         }
 
         printf_verbose("do_firmware_update: end %d byte block processing - %s - remainder:%d\n",
@@ -1002,8 +1008,10 @@ bool do_firmware_update(unsigned char *imagebuf, uint32_t size, uint32_t suouart
 
                 //SUOUART_PATCH_LEN      Initiator defines the length of the Last Block size (if different) to be applied
                 //                      Receiver stores the new block size
+                printf_verbose("Setting remainder patch len SUOUART_PATCH_LEN 0 2 %02x%02x\n",
+                        (((size - xfered)) & 0xFF), ((((size - xfered)) >> 8) & 0xFF));
                 sprintf(suouart_patch_len, "SUOUART_PATCH_LEN 0 2 %02x%02x\n",
-                        ((size - xfered) & 0xFF), (((size - xfered) >> 8) & 0xFF));
+                        (((size - xfered)) & 0xFF), ((((size - xfered)) >> 8) & 0xFF));
 
                 error = issue_command_get_ok(suouart_patch_len, buff, &len);
                 if (error) {
