@@ -54,7 +54,7 @@
 #define SUOUART_CHUNK_SIZE        2048
 /* The host app will probe for this figure (CMD:"getsuouartbuffsz") to decide what size chunks to transmit i.e. half that
 it knows it has to do 2 chunks per buffer - less failed */
-#define SUOUART_BUFFER_SIZE       (SUOUART_CHUNK_SIZE * 4)
+#define SUOUART_BUFFER_SIZE       (SUOUART_CHUNK_SIZE * 2)
 /* Should be big enough for any response we have */
 #define USB_CDC_TX_BUFF_SIZE    256
 #define USB_CDC_RX_BUFF_SIZE    (SUOUART_BUFFER_SIZE + CLI_PATCH_DATA_CMD_SZ)
