@@ -397,12 +397,8 @@ static void prvAES_CBC_128_NON_FRAG_DATA( void *pvParameters )
                 hw_aes_set_mode(HW_AES_MODE_CBC);
                 hw_aes_set_key_size(HW_AES_KEY_SIZE_128);
 
-#if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_otp_keys_load(HW_AES_128, key_otp);
-#else
                 hw_aes_set_key_expansion(HW_AES_KEY_EXPAND_BY_HW);
                 hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_128, HW_AES_KEY_EXPAND_BY_HW);
-#endif //#if (dg_configAES_USE_OTP_KEYS == 1)
 
                 /* ------------------------------------------------------ Encryption process ------------------------------------------------- */
 
@@ -513,12 +509,8 @@ static void prvAES_CBC_256_NON_FRAG_DATA(void *pvParameters)
                 hw_aes_set_key_size(HW_AES_KEY_SIZE_256);
 
                 /* Store the base key in AES/HASH engine memory and configure engine to perform key expansion, as well */
-#if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_otp_keys_load(HW_AES_256, key_otp);
-#else
                 hw_aes_set_key_expansion(HW_AES_KEY_EXPAND_BY_HW);
                 hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_256, HW_AES_KEY_EXPAND_BY_HW);
-#endif //#if (dg_configAES_USE_OTP_KEYS == 1)
                 /* ------------------------------------------------------ Encryption process ------------------------------------------------- */
 
                 /*
@@ -637,12 +629,8 @@ static void prvAES_CTR_192_FRAG_DATA( void *pvParameters )
                  * must be the base key only. Key expansion bit is cleared after each AES/HASH operation, thus it must be redifined at each operation.
                  */
 
-               #if (dg_configAES_USE_OTP_KEYS == 1)
-                hw_aes_otp_keys_load(HW_AES_192, key_otp);
-#else
                 hw_aes_set_key_expansion(HW_AES_KEY_EXPAND_BY_HW);
                 hw_aes_load_keys((uint32_t)key_otp, HW_AES_KEY_SIZE_192, HW_AES_KEY_EXPAND_BY_HW);
-#endif //#if (dg_configAES_USE_OTP_KEYS == 1)
 
                 /* --------------------------------------------- Encryption process ---------------------------------------------------- */
 
