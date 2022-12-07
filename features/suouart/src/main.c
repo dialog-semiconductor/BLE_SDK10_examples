@@ -3,7 +3,7 @@
  *
  * @file main.c
  *
- * @brief USB CDC
+ * @brief Software update over UART Example
  *
  * Copyright (C) 2016-2022 Dialog Semiconductor.
  * This computer program includes Confidential, Proprietary Information
