@@ -81,7 +81,7 @@ tgt -> ht: OK
 ht -> tgt: SUOUART_PATCH_DATA 0 1076 <1076 Bytes of data>
 note left
 Transfer the final block
-note end
+end note
 
 tgt -> ht: INFO SUOUART_CMP_OK
 
@@ -104,6 +104,5 @@ will run.
 end note
 tgt -> ht: SUOUART_CMP_OK
 
-
-
+...DA1469x resets and loas new firmware image...
 @enduml
