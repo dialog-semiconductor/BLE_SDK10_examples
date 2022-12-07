@@ -104,5 +104,5 @@ will run.
 end note
 tgt -> ht: SUOUART_CMP_OK
 
-...DA1469x resets and loas new firmware image...
+...DA1469x resets and loads new firmware image...
 @enduml
