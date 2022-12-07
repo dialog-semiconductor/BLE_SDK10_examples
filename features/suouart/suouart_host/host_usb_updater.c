@@ -27,12 +27,14 @@
 //*************
 //
 // Build with:
-//      "C:\Program Files (x86)\Dialog Semiconductor\SmartSnippets\CDT\Other\MinGW\bin\gcc.exe" -o host_usb_updater host_usb_updater.c
+//      "C:\Program Files (x86)\Dialog Semiconductor\SmartSnippets\CDT\Other\MinGW\bin\gcc.exe" -o host_usb host_usb_updater.c
 // or:
-//      C:\DiaSemi\SmartSnippetsStudio\Tools\mingw64_targeting32\bin\gcc.exe -o host_usb_updater host_usb_updater.c
+//      C:\DiaSemi\SmartSnippetsStudio\Tools\mingw64_targeting32\bin\gcc.exe -o host_usb host_usb_updater.c
+//
+// Note calling .exe file "host_usb_updater.exe" is forcing admin privileges for the file so using "host_usb.exe" instead
 //
 // Run example:
-//      host_usb_updater.exe 24 ..\..\..\..\..\projects\dk_apps\demos\pxp_reporter\Release_QSPI_SUOUSB\pxp_reporter.1.0.0.1.img -verbose
+//      host_usb.exe 24 <path_to_img>/pxp_reporter.1.0.0.1.img -verbose
 //
 //***********
 //** Linux **
