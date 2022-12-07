@@ -2,6 +2,7 @@
 participant Host as ht
 participant DA1469x as tgt
 
+activate ht
 ht -> ht: check for '>'
 ht -> tgt: '\\n'
 note left
@@ -11,6 +12,7 @@ end note
 ht -> ht : check for '>'
 ht -> tgt: '\\n'
 tgt -> ht: '>'
+activate tgt
 ht -> ht: check for '>'
 
 ht -> tgt: getsuouartbuffsz
@@ -103,6 +105,8 @@ Instruct the DA1469x to reset. Once it does, the new image
 will run.
 end note
 tgt -> ht: SUOUART_CMP_OK
+deactivate ht
+deactivate tgt
 
 ...DA1469x resets and loads new firmware image...
 @enduml
