@@ -42,17 +42,17 @@ and open a command prompt.
 To run the script call: 
 
 ```
-> python mkimage.py <path_to_build_configuration>/<binary> <path_to_build_configuration>/<output_img>
+> python mkimage.py <path_to_build_configuration>/<binary> <path_to_build_configuration>/<output_img> -p DA1469x-00
 ```
 
 For example, to run the script with the binary created in [Create a binary that will be used to udpate firmware](#create-a-binary-that-will-be-used-to-udpate-firmware) call:
 
 ```
-> python mkimage.py ../../../../projects/dk_apps/demos/pxp_reporter/DA1469x-00-Release_QSPI_SUOTA/pxp_reporter.bin ../../../../projects/dk_apps/demos/pxp_reporter/DA1469x-00-Release_QSPI_SUOTA/pxp_reporter.img
+> python mkimage.py ../../../../projects/dk_apps/demos/pxp_reporter/DA1469x-00-Release_QSPI_SUOTA/pxp_reporter.bin ../../../../projects/dk_apps/demos/pxp_reporter/DA1469x-00-Release_QSPI_SUOTA/pxp_reporter.img -p DA1469x-00
 ```
 Note above assumes you built the `DA1469x-00-Release_QSPI_SUOTA` build configuration.
 
-The output is an image file such as `pxp_reporter.1.0.0.1.img`. The file name contains a version number taken from `sw_version.h`.
+The output is an image file such as `pxp_reporter.img`.
 
 ### Run the host update script 
 
