@@ -73,9 +73,9 @@ usb_flash_task: prompt
 
 - Open a command prompt at `<path_on_your_machine>/suousb/suousb_host`. The executable `host_usb.exe` is provided to run with the example.
 
-- Run `host_usb.exe 40 <path_to_image_file>/pxp_reporter.1.0.0.1.img -verbose`.
+- Run `host_usb.exe 40 <path_to_image_file>/pxp_reporter.img -verbose`.
 	- Where `40` is the COM port associated with the USB port of the Pro DK daughterboard.
-    - `<path_to_image_file>/pxp_reporter.1.0.0.1.img` is the path to the image file you created above
+    - `<path_to_image_file>/pxp_reporter.img` is the path to the image file you created above
 	- Debug message can be enabled with the `-verbose` option.
 
 - Once the script finishes it will indicate the result (e.g Result: Pass): 
