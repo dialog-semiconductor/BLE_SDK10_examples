@@ -86,7 +86,7 @@ Once the update process has completed successfully, the DA1469x will reset and s
 
 ![pxp_reporter](assets/pxp_reporter.png)
 
-Please note the pxp_reporter built above did not include a `suousb` implementation, so the `host_usb.exe` script cannot be run again once pxp_reporter has been downloaded. To enable updating with `suousb` once your image is donwloaded, the `suousb` code must be integrated into your project.
+Please note the `pxp_reporter` built above did not include a `suousb` implementation, so the `host_usb.exe` script cannot be run again once `pxp_reporter` has been downloaded. To enable updating with `suousb` once your image is donwloaded, the `suousb` code must be integrated into your project.
 
 ### Command Flow Overview
 
