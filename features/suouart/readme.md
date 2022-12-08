@@ -33,7 +33,7 @@ Please note only Windows has been tested at this time.
 
 	The build configurations for SUOTA `DA1469x-00-Release_QSPI_SUOTA` and `DA1469x-00-Debug_QSPI_SUOTA` have the defines already. They can be used without any changes. 
 
-3. Build this project with a QSPI configuration with the above define included such as `DA1469x-00-Release_QSPI` or `DA1469x-00-Debug_QSPI`, or use `DA1469x-00-Release_QSPI_SUOTA` or `DA1469x-00-Debug_QSPI_SUOTA`.
+3. Build this project with a QSPI configuration such as `DA1469x-00-Release_QSPI`, `DA1469x-00-Debug_QSPI`, `DA1469x-00-Release_QSPI_SUOTA` or `DA1469x-00-Debug_QSPI_SUOTA`.
 
 ### Add an image header to the binary
 
