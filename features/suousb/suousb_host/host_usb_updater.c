@@ -27,21 +27,23 @@
 //*************
 //
 // Build with:
-//      "C:\Program Files (x86)\Dialog Semiconductor\SmartSnippets\CDT\Other\MinGW\bin\gcc.exe" -o host_usb_updater host_usb_updater.c
+//      "C:\Program Files (x86)\Dialog Semiconductor\SmartSnippets\CDT\Other\MinGW\bin\gcc.exe" -o host_usb host_usb_updater.c
 // or:
-//      C:\DiaSemi\SmartSnippetsStudio\Tools\mingw64_targeting32\bin\gcc.exe -o host_usb_updater host_usb_updater.c
+//      C:\DiaSemi\SmartSnippetsStudio\Tools\mingw64_targeting32\bin\gcc.exe -o host_usb host_usb_updater.c
+//
+//  Note calling .exe file "host_usb_updater.exe" is forcing admin privileges for the file so using "host_usb.exe" instead
 //
 // Run example:
-//      host_usb_updater.exe 24 ..\..\..\..\..\projects\dk_apps\demos\pxp_reporter\Release_QSPI_SUOUSB\pxp_reporter.1.0.0.1.img -verbose
+//      host_usb.exe 24 ..\..\..\..\..\projects\dk_apps\demos\pxp_reporter\Release_QSPI_SUOUSB\pxp_reporter.1.0.0.1.img -verbose
 //
 //***********
 //** Linux **
 //***********
 //
-// Build with: "gcc -o host_usb_updater host_usb_updater.c"
+// Build with: "gcc -o host_usb host_usb_updater.c"
 //
 // Run example:
-//      sudo ./host_usb_updater.exe /dev/ttyACM0 ../../../../../projects/dk_apps/demos/pxp_reporter/Release_QSPI_SUOUSB/pxp_reporter.1.0.0.1.img -verbose
+//      sudo ./host_usb.exe /dev/ttyACM0 ../../../../../projects/dk_apps/demos/pxp_reporter/Release_QSPI_SUOUSB/pxp_reporter.1.0.0.1.img -verbose
 //
 
 //These are just to make the view in my editor accurate :-)
@@ -1212,7 +1214,7 @@ int main(int argc, char **argv)
         free(buf);
 
 #ifdef _WIN32
-        for (int i=0; i<5; i++){
+        for (int i=5; i>=0; i--){
             printf("Closing window in %d sec\r", i);
             Sleep(1000);
         }
@@ -1220,7 +1222,7 @@ int main(int argc, char **argv)
         close_serial_port(hComm);
 
 RESULT:
-        printf_err("Result:%s\n", (exitCode == 0) ? "Pass" : "Fail");
+        printf_err("\nResult:%s\n", (exitCode == 0) ? "Pass" : "Fail");
 #ifdef HOST_USB_UPDATER_LOG
         if (verbose_output != NULL) {
                 fclose(verbose_output);
