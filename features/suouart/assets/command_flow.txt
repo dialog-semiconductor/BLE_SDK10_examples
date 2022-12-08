@@ -68,7 +68,7 @@ received without issue.
 end note
 tgt -> ht: INFO SUOUART_CMP_OK
 
-...Keep sending blocks of 2048 until less than 2048 bytes left to send...
+== Keep sending blocks of 2048 until less than 2048 bytes left to send ==
 
 ht -> tgt: SUOUART_PATCH_LEN 0 2 3404
 note left
