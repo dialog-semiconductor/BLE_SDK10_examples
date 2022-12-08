@@ -426,8 +426,6 @@ static void suousb_prepare_flash(suousb_service_t *suota, size_t write_size)
 
 static void suousb_error_cb(suousb_service_t *suousb, suousb_status_t status)
 {
-        OS_ASSERT(0);
-
         suousb_notify_client_status(suousb, status);
         suousb->state = SUOUSB_STATE_ERROR;
 }

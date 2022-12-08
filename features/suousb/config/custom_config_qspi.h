@@ -58,6 +58,8 @@
 #define dg_configUSE_USB_ENUMERATION            ( 1 )
 #define dg_configUSB_DMA_SUPPORT                ( 0 )
 
+#define USE_PARTITION_TABLE_4MB_WITH_SUOTA      ( 1 )
+
 /* Include bsp default values */
 #include "bsp_defaults.h"
 /* Include middleware default values */
