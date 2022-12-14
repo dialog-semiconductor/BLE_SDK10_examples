@@ -29,7 +29,7 @@ You can apply the modification to the SDK in order to support the ADF feature by
 
 ```console
   > cd <SDKROOT>
-  > patch -p1 < <SDK_EXAMPLE_ROOT>/features/features/dlg_reset_info/sdk.patch 
+  > patch -p1 < <SDK_EXAMPLE_ROOT>/features/features/armv8_stack_overflowguards/sdk.patch 
 ```
 
 Alternatively you can apply the modification manually
@@ -79,41 +79,44 @@ Alternatively you can apply the modification manually
  ```c
 
   #if dg_configARMV8_USE_STACK_GUARDS == 1
-              .align  2
-              .thumb
-              .thumb_func
-              .globl  UsageFault_Handler
-              .type   UsageFault_Handler, %function
-  UsageFault_Handler:
-  /*
-  * We need special handling for the UsageFault_Handler with the use of the MSPLIM register set.  First we check to 
-  * see if the MSPLIM or the PSPLIM registers equal the msp or psp and set the stack pointer mask respectively.  
-  * If the MSPLIM register triggered the usagefault, then we must move the MSPLIM back below the padding to allow for the
-  * UsageFault_HandlerC to push to the stack if needed.  If the MSPLIM is not moved, then a push to the stack can cause
-  * nested UsageFaults and circular exceptions
-  */
-        ldr		r2,=UsageFault_HandlerC
-        mrs		r1, msp
-        mrs		r0, MSPLIM
-        cmp		r0, r1
-        beq		UsageFault_with_MSP_Overflow
-        mrs		r1, psp
-        mrs		r0, PSPLIM
-        cmp		r0, r1
-        beq 	UsageFault_with_PSP_Overflow
-        mov		r0, #0
-        bx		r1
+#if (dg_configCODE_LOCATION == NON_VOLATILE_IS_FLASH)
+            .section text_retained
+#endif
+             .align  2
+             .thumb
+             .thumb_func
+             .globl  UsageFault_Handler
+             .type   UsageFault_Handler, %function
+ UsageFault_Handler:
+ /*
+	 * We need special handling for the UsageFault_Handler with the use of the MSPLIM register set.  First we check to
+	 * see if the MSPLIM or the PSPLIM registers equal the msp or psp and set the stack pointer mask respectively.
+	 * If the MSPLIM register triggered the usagefault, then we must move the MSPLIM back below the padding to allow for the
+	 * UsageFault_HandlerC to push to the stack if needed.  If the MSPLIM is not moved, then a push to the stack can cause
+	 * nested UsageFaults and circular exceptions
+	 */
+		       ldr		r2,=UsageFault_HandlerC
+		       mrs		r1, msp
+		       mrs		r0, MSPLIM
+		       cmp		r0, r1
+		       beq		UsageFault_with_MSP_Overflow
+		       mrs		r1, psp
+		       mrs		r0, PSPLIM
+		       cmp		r0, r1
+		       beq 		UsageFault_with_PSP_Overflow
+		       mov		r0, #0
+		       bx		r1
 
-  UsageFault_with_PSP_Overflow:
-        mov r0, #2
-        bx	r2
+ UsageFault_with_PSP_Overflow:
+		       mov 		r0, #2
+		       bx		r2
 
-  UsageFault_with_MSP_Overflow:
-        ldr 	r1, =__StackLimit
-        msr		MSPLIM, r1
-        mov		r0, #1
-        bx		r2
-  #endif
+ UsageFault_with_MSP_Overflow:
+		       ldr 		r1, =__StackLimit
+		       msr		MSPLIM, r1
+		       mov		r0, #1
+		       bx		r2
+ #endif
 
   ```
 
