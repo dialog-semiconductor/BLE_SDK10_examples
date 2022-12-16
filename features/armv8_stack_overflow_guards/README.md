@@ -1,5 +1,8 @@
 # ARMV8 STACK OVERFLOW GUARDS
-This example illustrates how to use the armv8 MSP and PSP limit registers to use hardware to protect against stack overflows.
+This example illustrates how to use the armv8 MSP and PSP limit registers to use hardware to protect against stack overflows, [ARMv8 Register Summary](https://developer.arm.com/documentation/100230/0004/functional-description/programmers-model/processor-core-registers-summary)
+
+---
+
 
 Historically, stack overflows have plagued the embedded development process and have wasted engineering hours trying to root causing the stack overflow itself. Software solutions have been implemented to detect these conditions, but still fall short of detecting all stack overflows, under all conditions.
 
@@ -8,6 +11,8 @@ FreeRTOS utilizes the 'magic number' approach.  They write a signature to each t
 1.  FreeRTOS only checks the watermark on a context switch.  This means, if a thread overflows the stack, and isn't yielding, i.e. causing a context switch, it can corrupt memory, access null pointers, etc.  These errors will manifest in many different fashions.  
 
 2.  FreeRTOS does not do any checking on the MSP.  Meaning, that you can overflow the stack when in an exception or interrupt context, without any detection. 
+
+3. FreeRTOS does not recommend using this feature in production environments because of the context switch overhead: [FreeRTOS Stack and Overflow Checking](https://www.freertos.org/Stacks-and-stack-overflow-checking.html)
 
 With the changes and patches below, we can use hardware available in the M33F to protect both the MSP and PSP.
 
@@ -20,12 +25,12 @@ To learn more about the MSP, PSP and FreeRTOS context switcher, please reference
   - This example runs on a DA1469x Bluetooth Smart SoC.
   - A DA1469x Pro Development Kit or USB kit is needed for this example (KEY1_PORT and KEY1_PIN should be modified for USB Kit functionality).
 - **Software Configurations**
-  - Download the latest SDK version for the DA1469x family of devices (10.0.10.x)
+  - Download the latest SDK version for the DA1469x family of devices (10.0.12.x)
   - **SEGGER's J-Link** tools should be downloaded and installed.
 
 ## SDK Modifications
 
-You can apply the modification to the SDK in order to support the ADF feature by using the following command:
+You can apply the modification to the SDK in order to support the MSP/PSP Overflow feature by using the following command:
 
 ```console
   > cd <SDKROOT>
@@ -105,7 +110,7 @@ Alternatively you can apply the modification manually
 		       cmp		r0, r1
 		       beq 		UsageFault_with_PSP_Overflow
 		       mov		r0, #0
-		       bx		r1
+		       bx		r2
 
  UsageFault_with_PSP_Overflow:
 		       mov 		r0, #2
