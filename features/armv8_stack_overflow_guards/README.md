@@ -34,7 +34,7 @@ You can apply the modification to the SDK in order to support the MSP/PSP Overfl
 
 ```console
   > cd <SDKROOT>
-  > patch -p1 < <SDK_EXAMPLE_ROOT>/features/features/armv8_stack_overflowguards/armv8_stack_overflow_guards.patch 
+  > patch -p2 < <SDK_EXAMPLE_ROOT>/features/features/armv8_stack_overflowguards/armv8_stack_overflow_guards.patch 
 ```
 
 Alternatively you can apply the modification manually

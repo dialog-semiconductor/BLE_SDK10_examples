@@ -12,7 +12,7 @@ index 838e45c..058e372 100644
          volatile uint16_t usage_fault_status_reg __UNUSED;
  
 diff --git a/SDK_10.0.12.146/sdk/bsp/startup/DA1469x/GCC/exception_handlers.S b/SDK_10.0.12.146/sdk/bsp/startup/DA1469x/GCC/exception_handlers.S
-index c42fb66..56e9bab 100644
+index c42fb66..4e83786 100644
 --- a/SDK_10.0.12.146/sdk/bsp/startup/DA1469x/GCC/exception_handlers.S
 +++ b/SDK_10.0.12.146/sdk/bsp/startup/DA1469x/GCC/exception_handlers.S
 @@ -45,6 +45,16 @@
@@ -81,7 +81,7 @@ index c42fb66..56e9bab 100644
 +		       cmp		r0, r1
 +		       beq 		UsageFault_with_PSP_Overflow
 +		       mov		r0, #0
-+		       bx		r1
++		       bx		r2
 +
 + UsageFault_with_PSP_Overflow:
 +		       mov 		r0, #2
