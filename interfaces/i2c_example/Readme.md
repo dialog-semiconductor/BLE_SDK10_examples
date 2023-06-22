@@ -37,8 +37,8 @@ Both request and response are printed on the UART terminal by the I2C master.
         | DA1469x     |             |
         |:-----------:|:-----------:|
         | Master      | Slave       |
-        | P0_31 (SDA) | P0_19  (SDA) |
-        | P0_30 (SCL) | P0_18  (SCL) |
+        | P0_29 (SDA) | P0_19  (SDA) |
+        | P0_28 (SCL) | P0_18  (SCL) |
 
 
                                     MASTER          SLAVE (loopback) 

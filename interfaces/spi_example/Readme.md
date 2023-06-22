@@ -30,11 +30,11 @@ The consumer task (SPI slave) initiates a read of **consumer_SPI_RCV_CB** bytes 
 
 
         **The following wiring / pairs (loopback wiring from MASTER to SLAVE) are needed before starting the app. The pins settings are located in `peripheral_setup.h`**
-
+    
         | DA1469x     |             |
         |:-----------:|:-----------:|
         | Master      | Slave       |
-        | P0_30 (CLK) | P0_24 (CLK) |
+        | P0_28 (CLK) | P0_24 (CLK) |
         | P0_31 (CS)  | P0_25 (CS)  |
         | P0_20 (DI)  | P0_26 (DO)  |
         | P0_21 (DO)  | P0_27 (DI)  |                                   

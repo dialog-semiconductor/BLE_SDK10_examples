@@ -146,11 +146,11 @@ static void prvSetupHardware( void )
         pm_system_init(periph_init);
         ad_spi_io_config(((ad_spi_controller_conf_t *)SPI_MASTER_DEVICE)->id,
                         ((ad_spi_controller_conf_t *)SPI_MASTER_DEVICE)->io,
-                        AD_IO_CONF_ON);
+                        AD_IO_CONF_OFF);
 
         ad_spi_io_config(((ad_spi_controller_conf_t *)SPI_SLAVE_DEVICE)->id,
                         ((ad_spi_controller_conf_t *)SPI_SLAVE_DEVICE)->io,
-                        AD_IO_CONF_ON);
+                        AD_IO_CONF_OFF);
 }
 
 /**

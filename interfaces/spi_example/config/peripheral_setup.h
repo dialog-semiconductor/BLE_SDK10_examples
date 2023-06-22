@@ -22,7 +22,7 @@
 
 #define SPI_PORT                        HW_GPIO_PORT_0
 
-#define SPI_MASTER_CLK_PIN              HW_GPIO_PIN_30
+#define SPI_MASTER_CLK_PIN              HW_GPIO_PIN_28
 #define SPI_MASTER_CS_PIN               HW_GPIO_PIN_31
 #define SPI_MASTER_DI_PIN               HW_GPIO_PIN_20
 #define SPI_MASTER_DO_PIN               HW_GPIO_PIN_21

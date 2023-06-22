@@ -40,12 +40,12 @@
 #define PDM_DATA_PIN     HW_GPIO_PIN_0
 
 #define PDM_MIC_PE_PORT      HW_GPIO_PORT_1
-#define PDM_MIC_PE_PIN       HW_GPIO_PIN_19
+#define PDM_MIC_PE_PIN       HW_GPIO_PIN_10
 
 /* I2C */
 #define CODEC_I2C_PORT    HW_GPIO_PORT_0
-#define CODEC_I2C_SCL_PIN     HW_GPIO_PIN_30
-#define CODEC_I2C_SDA_PIN     HW_GPIO_PIN_31
+#define CODEC_I2C_SCL_PIN     HW_GPIO_PIN_28
+#define CODEC_I2C_SDA_PIN     HW_GPIO_PIN_29
 
 #define CODEC_I2C_ADDRESS    ( 0x1A )
 
