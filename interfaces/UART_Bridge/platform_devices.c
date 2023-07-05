@@ -33,12 +33,12 @@ const ad_uart_io_conf_t uart2_io_conf = {
                 {
                         .mode = HW_GPIO_MODE_INPUT,
                         .function = HW_GPIO_FUNC_UART2_RX,
-                        .high = true,
+                        .high = false,
                 },
                 /* RX pin configuration when device is in sleep ('Off') */
                 {
                         .mode = HW_GPIO_MODE_INPUT,
-                        .function = HW_GPIO_FUNC_UART2_RX,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -51,52 +51,12 @@ const ad_uart_io_conf_t uart2_io_conf = {
                 {
                         .mode = HW_GPIO_MODE_OUTPUT,
                         .function = HW_GPIO_FUNC_UART2_TX,
-                        .high = true,
+                        .high = false,
                 },
                 /* TX pin configuration when device is in sleep ('Off') */
                 {
-                        .mode = HW_GPIO_MODE_OUTPUT,
-                        .function = HW_GPIO_FUNC_UART2_TX,
-                        .high = true,
-                },
-        },
-        /* RTSN */
-        /* is needed only when .auto_flow_control = 1
-         * do not include it in case CTS/RTS is not used to save some GPIOS
-         * for other purpose */
-        .rtsn = {
-                .port = HW_GPIO_PORT_1,
-                .pin = HW_GPIO_PIN_17,
-                /* RSTN pin configuration when device is active ('On') */
-                {
-                        .mode = HW_GPIO_MODE_OUTPUT,
-                        .function = HW_GPIO_FUNC_UART2_RTSN,
-                        .high = true,
-                },
-                /* RSTN pin configuration when device is in sleep ('Off') */
-                {
-                        .mode = HW_GPIO_MODE_OUTPUT,
-                        .function = HW_GPIO_FUNC_UART2_RTSN,
-                        .high = true,
-                },
-        },
-        /* CTSN */
-        /* is needed only when .auto_flow_control = 1
-         * do not include it in case CTS/RTS is not used to save some GPIOS
-         * for other purpose */
-        .ctsn = {
-                .port = HW_GPIO_PORT_1,
-                .pin = HW_GPIO_PIN_8,
-                /* CSTN pin configuration when device is active ('On') */
-                {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
-                        .function = HW_GPIO_FUNC_UART2_CTSN,
-                        .high = true,
-                },
-                /* CSTN pin configuration when device is in sleep ('Off') */
-                {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
-                        .function = HW_GPIO_FUNC_UART2_CTSN,
+                        .mode = HW_GPIO_MODE_INPUT,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -106,11 +66,11 @@ const ad_uart_io_conf_t uart2_io_conf = {
 
 const ad_uart_driver_conf_t uart2_uart_driver_conf = {
         {
-                .baud_rate = HW_UART_BAUDRATE_1000000,   /* Select the baud rate */
+                .baud_rate = HW_UART_BAUDRATE_115200,   /* Select the baud rate */
                 .data = HW_UART_DATABITS_8,             /* Select the data bits  */
                 .parity = HW_UART_PARITY_NONE,          /* select the Parity    */
                 .stop = HW_UART_STOPBITS_1,             /* Select the number of Stop Bits */
-                .auto_flow_control = 1,                 /* Enable/Disable the HW flow control.
+                .auto_flow_control = 0,                 /* Enable/Disable the HW flow control.
                                                          * 0 - Disable the use of RTS/CTS flow control.
                                                          * 1 - Enable the use of RTS/CTS flow control.
                                                          *
@@ -144,14 +104,14 @@ const ad_uart_io_conf_t uart3_io_conf = {
                 .pin = HW_GPIO_PIN_8,
                 /* RX pin configuration when device is active ('On') */
                 {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
+                        .mode = HW_GPIO_MODE_INPUT,
                         .function = HW_GPIO_FUNC_UART3_RX,
-                        .high = true,
+                        .high = false,
                 },
                 /* RX pin configuration when device is in sleep ('Off') */
                 {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
-                        .function = HW_GPIO_FUNC_UART3_RX,
+                        .mode = HW_GPIO_MODE_INPUT,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -163,12 +123,12 @@ const ad_uart_io_conf_t uart3_io_conf = {
                 {
                         .mode = HW_GPIO_MODE_OUTPUT,
                         .function = HW_GPIO_FUNC_UART3_TX,
-                        .high = true,
+                        .high = false,
                 },
                 /* TX pin configuration when device is in sleep ('Off') */
                 {
-                        .mode = HW_GPIO_MODE_OUTPUT,
-                        .function = HW_GPIO_FUNC_UART3_TX,
+                        .mode = HW_GPIO_MODE_INPUT,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -183,12 +143,12 @@ const ad_uart_io_conf_t uart3_io_conf = {
                 {
                         .mode = HW_GPIO_MODE_OUTPUT,
                         .function = HW_GPIO_FUNC_UART3_RTSN,
-                        .high = true,
+                        .high = false,
                 },
                 /* RSTN pin configuration when device is in sleep ('Off') */
                 {
                         .mode = HW_GPIO_MODE_OUTPUT,
-                        .function = HW_GPIO_FUNC_UART3_RTSN,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -201,14 +161,14 @@ const ad_uart_io_conf_t uart3_io_conf = {
                 .pin = HW_GPIO_PIN_7,
                 /* CSTN pin configuration when device is active ('On') */
                 {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
+                        .mode = HW_GPIO_MODE_INPUT,
                         .function = HW_GPIO_FUNC_UART3_CTSN,
-                        .high = true,
+                        .high = false,
                 },
                 /* CSTN pin configuration when device is in sleep ('Off') */
                 {
-                        .mode = HW_GPIO_MODE_INPUT_PULLUP,
-                        .function = HW_GPIO_FUNC_UART3_CTSN,
+                        .mode = HW_GPIO_MODE_INPUT,
+                        .function = HW_GPIO_FUNC_GPIO,
                         .high = true,
                 },
         },
@@ -218,7 +178,7 @@ const ad_uart_io_conf_t uart3_io_conf = {
 
 const ad_uart_driver_conf_t uart3_uart_driver_conf = {
         {
-                .baud_rate = HW_UART_BAUDRATE_115200,   /* Select the baud rate */
+                .baud_rate = HW_UART_BAUDRATE_1000000,   /* Select the baud rate */
                 .data = HW_UART_DATABITS_8,             /* Select the data bits  */
                 .parity = HW_UART_PARITY_NONE,          /* select the Parity    */
                 .stop = HW_UART_STOPBITS_1,             /* Select the number of Stop Bits */

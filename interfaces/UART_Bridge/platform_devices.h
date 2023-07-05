@@ -36,9 +36,9 @@ const ad_gpadc_controller_conf_t BATTERY_LEVEL;
 
 #if (dg_configUART_ADAPTER == 1)
 #include "ad_uart.h"
-const ad_uart_controller_conf_t uart1_uart_conf;
-const ad_uart_controller_conf_t uart2_uart_conf;
-const ad_uart_controller_conf_t uart3_uart_conf;
+
+extern const ad_uart_controller_conf_t uart2_uart_conf;
+extern const ad_uart_controller_conf_t uart3_uart_conf;
 #endif
 
 #ifdef __cplusplus

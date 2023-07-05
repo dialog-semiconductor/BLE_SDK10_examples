@@ -27,16 +27,6 @@
 #include "platform_devices.h"
 #include "ad_uart.h"
 
-#define UART2_NOTIF_BYTE_SENT               ( 1 << 0 )
-#define UART2_NOTIF_BYTE_NOT_SENT           ( 1 << 1 )
-#define UART2_NOTIF_BYTE_RECEIVED           ( 1 << 2 )
-#define UART2_NOTIF_BYTE_NOT_RECEIVED       ( 1 << 3 )
-
-__RETAINED OS_QUEUE uart2_Q;    /* Q used to pass the data between the two UART2 tasks */
-__RETAINED OS_MUTEX uart2_Mtx;  /* Mutex used to protect the open of the UART from more than one tasks */
-
-__RETAINED ad_uart_handle_t uart2_h; /* The Uart2 Handler is global because it is used by more than one tasks */
-
 #if dg_configUSE_WDOG
 __RETAINED_RW int8_t idle_task_wdog_id = -1;
 #endif
@@ -63,7 +53,6 @@ static void prvSetupHardware( void );
 static void system_init( void *pvParameters )
 {
         OS_TASK uart_test_task_h = NULL;
-        OS_BASE_TYPE ret;
 
 #if defined CONFIG_RETARGET
         extern void retarget_init(void);
@@ -96,7 +85,7 @@ static void system_init( void *pvParameters )
         pm_set_wakeup_mode(true);
 
         /* Set the desired sleep mode. */
-        pm_sleep_mode_set(pm_mode_active);
+        pm_sleep_mode_set(pm_mode_extended_sleep);
 
         /* Set the desired wakeup mode. */
         pm_set_sys_wakeup_mode(pm_sys_wakeup_mode_fast);
@@ -106,25 +95,6 @@ static void system_init( void *pvParameters )
         ASSERT_ERROR(uart2_h != NULL);                                          /* Check if the UART2 opened OK */
         uart3_h = ad_uart_open(&uart3_uart_conf);                               /* Open the UART with the desired configuration    */
         ASSERT_ERROR(uart3_h != NULL);                                          /* Check if the UART3 opened OK */
-
-        /* UART1 echo task without flow control */
-        OS_TASK_CREATE( "U2 Rx RTS/CTS",                                /* The text name assigned to the task, for
-                                                                           debug only; not used by the kernel. */
-                        prv_Uart2_Rx_Task,                              /* The function that implements the task. */
-                        NULL,                                           /* The parameter passed to the task. */
-                        configMINIMAL_STACK_SIZE * OS_STACK_WORD_SIZE,  /* The number of bytes to allocate to the
-                                                                           stack of the task. */
-                        OS_TASK_PRIORITY_NORMAL,                        /* The priority assigned to the task. */
-                        uart_test_task_h );                             /* The task handle */
-        OS_ASSERT(uart_test_task_h);                                    /* Check that the task created OK */
-
-        ret = OS_MUTEX_CREATE(uart2_Mtx);                               /* Create the MUTEX to be used for
-                                                                         * protected opening of UART2 */
-        OS_ASSERT(ret == OS_MUTEX_CREATE_SUCCESS);                      /* Check that mutex created OK */
-
-        OS_QUEUE_CREATE(uart2_Q, sizeof(char), 100);                    /* Create the uart2_Q */
-        OS_ASSERT(uart2_Q);                                             /* Check that Q created OK */
-
 
         /* UART2 RX task with RTS/CTS flow control*/
         OS_TASK_CREATE( "U2 Rx RTS/CTS",                                /* The text name assigned to the task, for
@@ -196,7 +166,7 @@ int main( void )
  */
 static void prv_Uart2_Rx_Task( void *pvParameters )
 {
-        char c=0;
+        char c = 0;
         uint32_t bytes;
 
         do {
@@ -204,7 +174,7 @@ static void prv_Uart2_Rx_Task( void *pvParameters )
                 if (bytes > 0) {                                                /* if there is a successful read...                */
                         ad_uart_write(uart3_h, &c, bytes);                      /*       then write back the char to UART (echo)   */
                 }
-        } while( true );                                                        /* Exit the task if received ESC character (ASCII=27) */
+        } while( c != 27 );                                                        /* Exit the task if received ESC character (ASCII=27) */
 
         while (ad_uart_close(uart2_h, false) == AD_UART_ERROR_CONTROLLER_BUSY); /* Wait until the UART has finished all the transactions
                                                                                  * before exiting. */
@@ -219,7 +189,7 @@ static void prv_Uart2_Rx_Task( void *pvParameters )
  */
 static void prv_Uart3_Rx_Task( void *pvParameters )
 {
-        char c=0;
+        char c = 0;
         uint32_t bytes;
 
         do {
@@ -227,7 +197,7 @@ static void prv_Uart3_Rx_Task( void *pvParameters )
                 if (bytes > 0) {                                                /* if there is a successful read...                */
                         ad_uart_write(uart2_h, &c, bytes);                      /*       then write back the char to UART (echo)   */
                 }
-        } while( true );                                                        /* Exit the task if received ESC character (ASCII=27) */
+        } while( c != 27 );                                                        /* Exit the task if received ESC character (ASCII=27) */
 
         while (ad_uart_close(uart3_h, false) == AD_UART_ERROR_CONTROLLER_BUSY); /* Wait until the UART has finished all the transactions
                                                                                  * before exiting. */
@@ -236,9 +206,6 @@ static void prv_Uart3_Rx_Task( void *pvParameters )
                                                                                  * FreeRTOS a task to exit without being deleted from
                                                                                  * the OS's queues */
 }
-
-
-
 
 /**
  * @brief Initialize the peripherals domain after power-up.
@@ -260,6 +227,9 @@ static void prvSetupHardware( void )
 {
         /* Init hardware */
         pm_system_init(periph_init);
+
+        ad_uart_io_config(uart2_uart_conf.id, uart2_uart_conf.io, AD_IO_CONF_OFF);
+        ad_uart_io_config(uart3_uart_conf.id, uart3_uart_conf.io, AD_IO_CONF_OFF);
 }
 
 /**
