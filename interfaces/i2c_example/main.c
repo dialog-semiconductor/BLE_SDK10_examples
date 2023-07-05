@@ -141,9 +141,9 @@ static void prvSetupHardware( void )
         /* Init hardware */
         pm_system_init(periph_init);
         ad_i2c_io_config(((ad_i2c_controller_conf_t *)I2C_MASTER_DEVICE)->id,
-                         ((ad_i2c_controller_conf_t *)I2C_MASTER_DEVICE)->io, AD_IO_CONF_ON);
+                         ((ad_i2c_controller_conf_t *)I2C_MASTER_DEVICE)->io, AD_IO_CONF_OFF);
         ad_i2c_io_config(((ad_i2c_controller_conf_t *)I2C_SLAVE_DEVICE)->id,
-                         ((ad_i2c_controller_conf_t *)I2C_SLAVE_DEVICE)->io, AD_IO_CONF_ON);
+                         ((ad_i2c_controller_conf_t *)I2C_SLAVE_DEVICE)->io, AD_IO_CONF_OFF);
 }
 
 /**

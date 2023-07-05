@@ -1,6 +1,6 @@
 # Mapping System Clocks To GPIO
 
-This sample code demonstrates mapping system clocks to GPIO, typically for debugging purposes. The clocks that can be exported are XTAL32K, RC32K, RCX, XTAL32M, RC32M as well as DIVN. The DA1469x family of devices supports two mapping modes. That is, the manual mode, where any supported clock and be mapped to any valid GPIO and the auto mode, where each of the supported clocks is mapped to a dedicated port. The demonstration example defines default clock settings that map XTAL32K to P1.11. These default values are defined in `export_clocks.h` as depicted below. Any of these configuration macros can be re-defined in the `config/custom_config_xxx.h` configuration file.
+This sample code demonstrates mapping system clocks to GPIO, typically for debugging purposes. The clocks that can be exported are XTAL32K, RC32K, RCX, XTAL32M, RC32M as well as DIVN. The DA1469x family of devices supports two mapping modes. That is, the manual mode, where any supported clock and be mapped to any valid GPIO and the auto mode, where each of the supported clocks is mapped to a dedicated port. The demonstration example defines default clock settings that map XTAL32K to P1.10. These default values are defined in `export_clocks.h` as depicted below. Any of these configuration macros can be re-defined in the `config/custom_config_xxx.h` configuration file.
 
 ```
 #ifndef CLOCK_MODE_DEFAULT
@@ -16,7 +16,7 @@ This sample code demonstrates mapping system clocks to GPIO, typically for debug
 #endif
 
 #ifndef CLOCK_PIN_DEFAULT
-#define CLOCK_PIN_DEFAULT      HW_GPIO_PIN_11
+#define CLOCK_PIN_DEFAULT      HW_GPIO_PIN_10
 #endif
 
 #ifndef CLOCK_STATUS_DEFAULT

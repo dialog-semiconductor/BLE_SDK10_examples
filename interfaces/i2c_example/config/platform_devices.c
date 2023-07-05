@@ -27,13 +27,13 @@
 const ad_i2c_io_conf_t i2c_master_io = {
         .scl = {
                 .port = I2C_PORT, .pin = I2C_MASTER_SCL_PIN,
-                .on =  { HW_GPIO_MODE_OUTPUT_PUSH_PULL, HW_GPIO_FUNC_I2C_SCL, false },
-                .off = { HW_GPIO_MODE_INPUT,             HW_GPIO_FUNC_GPIO,    true  }
+                .on =  { HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_I2C_SCL, false },
+                .off = { HW_GPIO_MODE_INPUT,  HW_GPIO_FUNC_GPIO,    false }
         },
         .sda = {
                 .port = I2C_PORT, .pin = I2C_MASTER_SDA_PIN,
-                .on =  { HW_GPIO_MODE_OUTPUT_PUSH_PULL, HW_GPIO_FUNC_I2C_SDA, false },
-                .off = { HW_GPIO_MODE_INPUT,             HW_GPIO_FUNC_GPIO,    true  }
+                .on =  { HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_I2C_SDA, false },
+                .off = { HW_GPIO_MODE_INPUT,  HW_GPIO_FUNC_GPIO,    false }
         },
         .voltage_level = I2C_GPIO_LEVEL
 };
@@ -41,14 +41,14 @@ const ad_i2c_io_conf_t i2c_master_io = {
 const ad_i2c_io_conf_t i2c_slave_io = {
         .scl = {
                 .port = I2C_PORT, .pin = I2C_SLAVE_SCL_PIN,
-                .on =  { HW_GPIO_MODE_OUTPUT_PUSH_PULL, HW_GPIO_FUNC_I2C2_SCL, false },
-                .off = { HW_GPIO_MODE_INPUT,             HW_GPIO_FUNC_GPIO,    true  }
+                .on =  { HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_I2C2_SCL, false },
+                .off = { HW_GPIO_MODE_INPUT,  HW_GPIO_FUNC_GPIO,     false }
         },
         .sda = {
                 .port = I2C_PORT, .pin = I2C_SLAVE_SDA_PIN,
-                .on =  { HW_GPIO_MODE_OUTPUT_PUSH_PULL, HW_GPIO_FUNC_I2C2_SDA, false },
-                .off = { HW_GPIO_MODE_INPUT,             HW_GPIO_FUNC_GPIO,    true  }
-        },
+                .on =  { HW_GPIO_MODE_OUTPUT, HW_GPIO_FUNC_I2C2_SDA, false },
+                .off = { HW_GPIO_MODE_INPUT,  HW_GPIO_FUNC_GPIO,     false }
+        }, 
         .voltage_level = I2C_GPIO_LEVEL
 };
 

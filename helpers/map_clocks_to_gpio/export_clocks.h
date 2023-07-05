@@ -28,7 +28,7 @@
 #endif
 
 #ifndef CLOCK_PIN_DEFAULT
-#define CLOCK_PIN_DEFAULT      HW_GPIO_PIN_11
+#define CLOCK_PIN_DEFAULT      HW_GPIO_PIN_10
 #endif
 
 #ifndef CLOCK_STATUS_DEFAULT

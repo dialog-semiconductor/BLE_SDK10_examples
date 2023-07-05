@@ -17,10 +17,10 @@
 
 
 #define I2C1_SCL_PORT                   ( HW_GPIO_PORT_0 )
-#define I2C1_SCL_PIN                    ( HW_GPIO_PIN_30 )
+#define I2C1_SCL_PIN                    ( HW_GPIO_PIN_28 )
 
 #define I2C1_SDA_PORT                   ( HW_GPIO_PORT_0 )
-#define I2C1_SDA_PIN                    ( HW_GPIO_PIN_31 )
+#define I2C1_SDA_PIN                    ( HW_GPIO_PIN_29 )
 
 
 /* The address in which the external I2C device listens to */
