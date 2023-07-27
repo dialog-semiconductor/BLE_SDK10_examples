@@ -1,0 +1,70 @@
+{
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "cmake . -Bbuild && cd build && make -j 8",
+            "options": {
+                "cwd": "${workspaceRoot}/project",
+            },
+            "group": "build"
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "rm -r build",
+            "options": {
+                "cwd": "${workspaceRoot}/project",
+            },
+            "group": "build"
+        },
+        {
+            "label": "Erase QSPI SWD",
+            "type": "shell",
+            "command": "python3 ./erase_qspi.py --jlink --jlink_path /opt/SEGGER/JLink",
+            "options": {
+                "cwd": "${workspaceRoot}/BSP/utilities/python_scripts/qspi",
+            },
+            "group": "build"
+        },
+        {
+            "label": "Erase QSPI Serial",
+            "type": "shell",
+            "command": "python3 ./erase_qspi.py --serial",
+            "options": {
+                "cwd": "${workspaceRoot}/BSP/utilities/python_scripts/qspi",
+            },
+            "group": "none"
+        },
+        {
+            "label": "Program QSPI config",
+            "type": "shell",
+            "command": "python3 ./program_qspi_config.py",
+            "options": {
+                "cwd": "${workspaceRoot}/BSP/utilities/python_scripts/qspi",
+            },
+            "group": "none"
+        },
+        {
+            "label": "Program QSPI SWD",
+            "type": "shell",
+            "command": "python3 ./program_qspi.py --jlink --jlink_path /opt/SEGGER/JLink --prod_header ${workspaceRoot}/project/build/pxp_reporter.bin",
+            "options": {
+                "cwd": "${workspaceRoot}/BSP/utilities/python_scripts/qspi",
+            },
+            "group": "build"
+        },
+        {
+            "label": "Program QSPI Serial",
+            "type": "shell",
+            "command": "python3 ./program_qspi.py --serial --prod_header ${workspaceRoot}/project/build/pxp_reporter.bin",
+            "options": {
+                "cwd": "${workspaceRoot}/BSP/utilities/python_scripts/qspi",
+            },
+            "group": "none"
+        }
+    ],
+    "version": "2.0.0"
+}
+
+// Питонскрипты звать из их папки

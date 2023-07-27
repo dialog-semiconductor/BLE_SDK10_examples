@@ -1,0 +1,29 @@
+name: C/C++ CI
+
+
+on: push
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: install build dependences
+        run: |
+          sudo apt-get -y install make cmake gcc-arm-none-eabi
+      - name: Build
+        run: | 
+          cd project && cmake . -Bbuild && cd build && make -j 8
+      - name: Publish
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            build/pxp_reporter.bin
+            build/pxp_reporter.hex
+          body_path: CHANGELOG.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
