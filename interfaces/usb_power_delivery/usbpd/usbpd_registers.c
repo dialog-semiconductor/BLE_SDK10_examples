@@ -1,6 +1,6 @@
 /**
   **************************************************************************************************
-  * @file    STUSB1602_Registers_if.c
+  * @file    usbpd_registers.c
   * @author  System Lab - Sensing & Connectivity Application Team
   * @brief   This file provides a set of functions needed to manage the STUSB1602 Driver.
   **************************************************************************************************
@@ -35,42 +35,9 @@
   **************************************************************************************************
   */
 
-/* Includes ------------------------------------------------------------------*/
-#include "User_BSP.h"
-#include "STUSB1602_Peripherals_if.h"
- /** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
-
- /** @addtogroup USBPD_DEVICE
-  * @{
-  */
-
- /** @addtogroup STUSB1602_LIBRARY
-  * @{
-  */
-
-/* Private typedef -----------------------------------------------------------*/
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-
-/* Imported function prototypes ----------------------------------------------*/
-/* Functions -----------------------------------------------------------------*/
-
-/************************************************************************************************************
-  * @brief  STUSB1602 Checks registers from 0x0B to 0x10
-  * @param
-  * @retval 
- ************************************************************************************************************/ 
-/************************************************************************************************************
-   * @brief  STUSB1602 Checks ALERT_STATUS_REG (0x0B -- RC)
-  * @param
-  * @retval 
- ************************************************************************************************************/ 
+#include "usbpd_def.h"
+#include "usbpd_registers.h"
+#include "usbpd_peripherals.h"
 
 /**
   * @brief  Check registers from 0x0B and 0x0C
@@ -87,33 +54,6 @@ STUSB1602_ALERT_STATUS_RegTypeDef STUSB1602_Alert_Raise_Get(uint8_t Addr)
     Value.d8 = Data[0] & ~Data[1] ;
     return Value;
 }
-
- /** @defgroup DEVICE_REGISTERS STUSB1602 device registers
-   * @{
-   */
-
-/* REG_0x0B_ALERT_STATUS ******************************************************/
-
- /** @addtogroup REG_0x0B_ALERT_STATUS
-   * @brief  STUSB1602 Checks ALERT_STATUS_REG (0x0B -- RC)
-   * @{
-   */
-
-
-
-
-/**
- * @}
- */
-
-
-/* REG_0x0C_ALERT_STATUS_MASK ******************************************************/
-
- /** @addtogroup REG_0x0C_ALERT_STATUS_MASK
-   * @brief  STUSB1602 Checks ALERT_STATUS_MASK_REG (0x0C -- R/W)
-   * @{
-   */
-
 
 
 /**
@@ -205,11 +145,6 @@ STUSB1602_StatusTypeDef STUSB1602_HW_Fault_Alrt_Int_Mask_Set(uint8_t Addr, HW_Fa
     return status;
 }
 
-/**
- * @}
- */
-
-
 
 /* REG_0x0D_CC_DETECTION_STATUS_TRANS *****************************************/
 
@@ -238,11 +173,11 @@ void HW_IF_STUSB1602_Interrupt_CC_Detection(uint8_t PortNum, FunctionalState sta
 {
   if (status == ENABLE)
   {
-    STUSB1602_CC_Detect_Alrt_Int_Mask_Set(STUSB1602_I2C_Add(PortNum), CC_Detect_Int_UNMASKED);
+    STUSB1602_CC_Detect_Alrt_Int_Mask_Set(PortNum, CC_Detect_Int_UNMASKED);
   }
   else
   {
-    STUSB1602_CC_Detect_Alrt_Int_Mask_Set(STUSB1602_I2C_Add(PortNum), CC_Detect_Int_MASKED);
+    STUSB1602_CC_Detect_Alrt_Int_Mask_Set(PortNum, CC_Detect_Int_MASKED);
   }
 }
 
@@ -256,11 +191,11 @@ void HW_IF_STUSB1602_Interrupt_Monitoring(uint8_t PortNum, FunctionalState statu
 {
   if (status == ENABLE)
   {
-    STUSB1602_Monitoring_Status_Alrt_Int_Mask_Set(STUSB1602_I2C_Add(PortNum), Monitor_Status_Int_UNMASKED);
+    STUSB1602_Monitoring_Status_Alrt_Int_Mask_Set(PortNum, Monitor_Status_Int_UNMASKED);
   }
   else
   {
-    STUSB1602_Monitoring_Status_Alrt_Int_Mask_Set(STUSB1602_I2C_Add(PortNum), Monitor_Status_Int_MASKED);
+    STUSB1602_Monitoring_Status_Alrt_Int_Mask_Set(PortNum, Monitor_Status_Int_MASKED);
   }
 }
 
@@ -305,21 +240,6 @@ Data_Role_TypeDef STUSB1602_Data_Role_Get(uint8_t Addr)
 }
 
 
-
-
-/**
- * @}
- */
-
-
-/* REG_0x0F_MONITORING_STATUS_TRANS *******************************************/
-
- /** @addtogroup REG_0x0F_MONITORING_STATUS_TRANS
-   * @brief STUSB1602 Checks MONITORING_STATUS_TRANS REG (0x0F -- RC)
-   * @{
-   */
-
-
 /**
   * @brief STUSB1602 checks the entire Monitoring_Status_Trans_Reg (bit0-7 0x0F -- RC)
   * @param Addr I2C address of port controller device 
@@ -336,18 +256,6 @@ STUSB1602_MONITORING_STATUS_TRANS_RegTypeDef STUSB1602_Monitoring_Status_Trans_R
 
 
 /**
- * @}
- */
-
-
-/* REG_0x10_MONITORING_STATUS REG *********************************************/
-
- /** @addtogroup REG_0x10_MONITORING_STATUS
-  * @brief  STUSB1602 Checks MONITORING_STATUS REG (0x10 -- RO)
-   * @{
-   */
-
-/**
   * @brief STUSB1602 Read Monitory status reg
   * @param Addr I2C address of port controller device  
   * @retval STUSB1602_MONITORING_STATUS_RegTypeDef
@@ -360,18 +268,6 @@ STUSB1602_MONITORING_STATUS_RegTypeDef STUSB1602_Monitoring_Status_Reg_Get(uint8
 
     return (reg);
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x11_CC_CONNECTION_STATUS REG ******************************************/
-
- /** @addtogroup REG_0x11_CC_CONNECTION_STATUS
-  * @brief  STUSB1602 Checks CC_CONNECTION_STATUS REG (0x11 -- RO)
-   * @{
-   */
 
 
  /**
@@ -418,18 +314,6 @@ TypeC_FSM_State_TypeDef STUSB1602_TypeC_FSM_State_Get(uint8_t Addr)
     return (TypeC_FSM_State_TypeDef)(reg.b.TYPEC_FSM_STATE);
 }
 
-/**
- * @}
- */
-
-
-/* REG_0x12_HW_FAULT_STATUS_TRANS REG ******************************************/
-
- /** @addtogroup REG_0x12_HW_FAULT_STATUS_TRANS
-  * @brief  STUSB1602 Checks HW_FAULT_STATUS_TRANS REG (0x12 -- RC)
-   * @{
-   */
-
 
 /**
   * @brief STUSB1602 checks the entire HW_FAULT_STATUS_TRANS reg (bit7 0x12 -- RC)
@@ -445,107 +329,95 @@ STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef STUSB1602_Hard_Fault_Trans_Status_Get
     return (reg);
 }  
 
-/* the 5 following function are not used yet so commented in the code */
-///**
-//  * @brief STUSB1602 checks the THERMAL_FAULT (bit7 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval     Thermal_Fault_TypeDef
-//  */
-//Thermal_Fault_TypeDef STUSB1602_Thermal_Fault_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (Thermal_Fault_TypeDef)(reg.b.THERMAL_FAULT);
-//}
-//
-//
-///**
-//  * @brief STUSB1602 checks the VPU Over Voltage Protection Fault Transition (bit5 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval VPU_OVP_Fault_Trans_TypeDef
-//  */
-//VPU_OVP_Fault_Trans_TypeDef STUSB1602_VPU_OVP_Fault_Trans_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (VPU_OVP_Fault_Trans_TypeDef)(reg.b.VPU_OVP_FAULT_TRANS);
-//}
-//
-//
-///**
-//  * @brief STUSB1602 checks the VPU Presence Transition (bit4 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval     VPU_Presence_Trans_TypeDef
-//  */
-//VPU_Presence_Trans_TypeDef STUSB1602_VPU_Presence_Trans_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (VPU_Presence_Trans_TypeDef)(reg.b.VPU_PRESENCE_TRANS);
-//}
-//
-//
-///**
-//  * @brief STUSB1602 checks the VCONN power switch RVP Fault Transition (bit2 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval     VCONN_SW_RVP_Fault_Trans_TypeDef
-//  */
-//VCONN_SW_RVP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_RVP_Fault_Trans_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (VCONN_SW_RVP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_TRANS);
-//}
-//
-//
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault Transition (bit1 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval     VCONN_SW_OCP_Fault_Trans_TypeDef
-//  */
-//VCONN_SW_OCP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_OCP_Fault_Trans_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (VCONN_SW_OCP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_TRANS);
-//}
-//
-//
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault Transition (bit0 0x12 -- RC)
-//  * @param Addr Address of the used port
-//  * @retval     VCONN_SW_OVP_Fault_Trans_TypeDef
-//  */
-//VCONN_SW_OVP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_OVP_Fault_Trans_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
-//
-//    return (VCONN_SW_OVP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_TRANS);
-//}
-//
+#if 0
 /**
- * @}
- */
+  * @brief STUSB1602 checks the THERMAL_FAULT (bit7 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval     Thermal_Fault_TypeDef
+  */
+Thermal_Fault_TypeDef STUSB1602_Thermal_Fault_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (Thermal_Fault_TypeDef)(reg.b.THERMAL_FAULT);
+}
 
 
-/* REG_0x13_HW_FAULT_STATUS REG ***********************************************/
+/**
+  * @brief STUSB1602 checks the VPU Over Voltage Protection Fault Transition (bit5 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval VPU_OVP_Fault_Trans_TypeDef
+  */
+VPU_OVP_Fault_Trans_TypeDef STUSB1602_VPU_OVP_Fault_Trans_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
 
- /** @addtogroup REG_0x13_HW_FAULT_STATUS
-  * @brief  STUSB1602 Checks HW_FAULT_STATUS REG (0x13 -- RO)
-   * @{
-   */
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (VPU_OVP_Fault_Trans_TypeDef)(reg.b.VPU_OVP_FAULT_TRANS);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VPU Presence Transition (bit4 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval     VPU_Presence_Trans_TypeDef
+  */
+VPU_Presence_Trans_TypeDef STUSB1602_VPU_Presence_Trans_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (VPU_Presence_Trans_TypeDef)(reg.b.VPU_PRESENCE_TRANS);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch RVP Fault Transition (bit2 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval     VCONN_SW_RVP_Fault_Trans_TypeDef
+  */
+VCONN_SW_RVP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_RVP_Fault_Trans_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (VCONN_SW_RVP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_TRANS);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault Transition (bit1 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval     VCONN_SW_OCP_Fault_Trans_TypeDef
+  */
+VCONN_SW_OCP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_OCP_Fault_Trans_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (VCONN_SW_OCP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_TRANS);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault Transition (bit0 0x12 -- RC)
+  * @param Addr Address of the used port
+  * @retval     VCONN_SW_OVP_Fault_Trans_TypeDef
+  */
+VCONN_SW_OVP_Fault_Trans_TypeDef STUSB1602_VCONN_SW_OVP_Fault_Trans_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_TRANS_REG, 1);
+
+    return (VCONN_SW_OVP_Fault_Trans_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_TRANS);
+}
 
 
 /**
@@ -553,160 +425,134 @@ STUSB1602_HW_FAULT_STATUS_TRANS_RegTypeDef STUSB1602_Hard_Fault_Trans_Status_Get
   * @param Addr I2C address of port controller device
   * @retval VPU_OVP_Fault_TypeDef
   */     
-//VPU_OVP_Fault_TypeDef STUSB1602_VPU_OVP_Fault_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//
-//    return (VPU_OVP_Fault_TypeDef)(reg.b.VPU_OVP_FAULT);
-//}
+VPU_OVP_Fault_TypeDef STUSB1602_VPU_OVP_Fault_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
 
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
 
-///**
-//  * @brief STUSB1602 checks the VPU Presence (bit6 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VPU_Presence_TypeDef
-//  */     
-//VPU_Presence_TypeDef STUSB1602_VPU_Presence_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//
-//    return (VPU_Presence_TypeDef)(reg.b.VPU_PRESENCE);
-//}
+    return (VPU_OVP_Fault_TypeDef)(reg.b.VPU_OVP_FAULT);
+}
 
-   
-///**
-//  * @brief STUSB1602 checks the VCONN power switch RVP Fault on CC1 (bit5 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_RVP_Fault_CC1_TypeDef
-//  */     
-//VCONN_SW_RVP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_RVP_Fault_CC1_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//    
-//    return (VCONN_SW_RVP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_CC1);
-//}    
-
-
-///**
-//  * @brief STUSB1602 checks the VCONN power switch RVP Fault on CC2 (bit4 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_RVP_Fault_CC2_TypeDef
-//  */     
-//VCONN_SW_RVP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_RVP_Fault_CC2_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//        
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//    
-//    return (VCONN_SW_RVP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_CC2);
-//}  
-
-
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault on CC1 (bit3 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_OCP_Fault_CC1_TypeDef
-//  */     
-//VCONN_SW_OCP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_OCP_Fault_CC1_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//    
-//    return (VCONN_SW_OCP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_CC1);
-//}  
-
-
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault on CC2 (bit2 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_OCP_Fault_CC2_TypeDef
-//  */     
-//VCONN_SW_OCP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_OCP_Fault_CC2_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//
-//    return (VCONN_SW_OCP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_CC2);
-//} 
-
-
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault on CC1 (bit1 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_OVP_Fault_CC1_TypeDef
-//  */     
-//VCONN_SW_OVP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_OVP_Fault_CC1_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//
-//    return (VCONN_SW_OVP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_CC1);
-//}
-//
-
-
-///**
-//  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault on CC2 (bit0 0x13 -- RO)
-//  * @param Addr I2C address of port controller device
-//  * @retval VCONN_SW_OVP_Fault_CC2_TypeDef
-//  */     
-//VCONN_SW_OVP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_OVP_Fault_CC2_Get(uint8_t Addr)
-//{
-//    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1); 
-//
-//    return (VCONN_SW_OVP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_CC2);
-//}
 
 /**
- * @}
- */
+  * @brief STUSB1602 checks the VPU Presence (bit6 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VPU_Presence_TypeDef
+  */
+VPU_Presence_TypeDef STUSB1602_VPU_Presence_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
 
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
 
-/* REG_0x17_PHY_STATUS REG ****************************************************/
+    return (VPU_Presence_TypeDef)(reg.b.VPU_PRESENCE);
+}
 
- /** @addtogroup REG_0x17_PHY_STATUS the read status of this bit is too slow 
-  * @brief  STUSB1602 Checks the PHY status REG (0x17 -- RC)
-   * @{
-   */
-
-
-///**
-//  * @brief STUSB1602 checks the Bus Idle Status on CC (bit3 0x17 -- RC)
-//  * @param Addr I2C address of port controller device
-//  * @retval Bus_Idle_TypeDef
-//  */   
-//Bus_Idle_TypeDef STUSB1602_Bus_Idle_Status_Get(uint8_t Addr)
-//{
-//    PHY_STATUS_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_PHY_STATUS_REG, 1); 
-//
-//    return (Bus_Idle_TypeDef)(reg.b.BUS_IDLE);
-//}
 
 /**
- * @}
- */
+  * @brief STUSB1602 checks the VCONN power switch RVP Fault on CC1 (bit5 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_RVP_Fault_CC1_TypeDef
+  */
+VCONN_SW_RVP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_RVP_Fault_CC1_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
+
+    return (VCONN_SW_RVP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_CC1);
+}
 
 
-/* REG_0x18_CC_CAPABILITY_CTRL REG ********************************************/
+/**
+  * @brief STUSB1602 checks the VCONN power switch RVP Fault on CC2 (bit4 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_RVP_Fault_CC2_TypeDef
+  */
+VCONN_SW_RVP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_RVP_Fault_CC2_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
 
- /** @addtogroup REG_0x18_CC_CAPABILITY_CTRL
-  * @brief  STUSB1602 Checks CC_CAPABILITY_CTRL REG (0x18 -- R/W)
-   * @{
-   */
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
 
+    return (VCONN_SW_RVP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_RVP_FAULT_CC2);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault on CC1 (bit3 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_OCP_Fault_CC1_TypeDef
+  */
+VCONN_SW_OCP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_OCP_Fault_CC1_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
+
+    return (VCONN_SW_OCP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_CC1);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Current Protection Fault on CC2 (bit2 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_OCP_Fault_CC2_TypeDef
+  */
+VCONN_SW_OCP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_OCP_Fault_CC2_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
+
+    return (VCONN_SW_OCP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_OCP_FAULT_CC2);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault on CC1 (bit1 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_OVP_Fault_CC1_TypeDef
+  */
+VCONN_SW_OVP_Fault_CC1_TypeDef STUSB1602_VCONN_SW_OVP_Fault_CC1_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
+
+    return (VCONN_SW_OVP_Fault_CC1_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_CC1);
+}
+
+
+/**
+  * @brief STUSB1602 checks the VCONN power switch Over Voltage Protection Fault on CC2 (bit0 0x13 -- RO)
+  * @param Addr I2C address of port controller device
+  * @retval VCONN_SW_OVP_Fault_CC2_TypeDef
+  */
+VCONN_SW_OVP_Fault_CC2_TypeDef STUSB1602_VCONN_SW_OVP_Fault_CC2_Get(uint8_t Addr)
+{
+    STUSB1602_HW_FAULT_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_HW_FAULT_STATUS_REG, 1);
+
+    return (VCONN_SW_OVP_Fault_CC2_TypeDef)(reg.b.VCONN_SW_OVP_FAULT_CC2);
+}
+
+/**
+  * @brief STUSB1602 checks the Bus Idle Status on CC (bit3 0x17 -- RC)
+  * @param Addr I2C address of port controller device
+  * @retval Bus_Idle_TypeDef
+  */
+Bus_Idle_TypeDef STUSB1602_Bus_Idle_Status_Get(uint8_t Addr)
+{
+    PHY_STATUS_RegTypeDef reg;
+
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_PHY_STATUS_REG, 1);
+
+    return (Bus_Idle_TypeDef)(reg.b.BUS_IDLE);
+}
+#endif
 
 /**
   * @brief STUSB1602 checks the CURRENT_ADVERTISED status on CC (bit7-6 0x18 -- R/W)
@@ -742,21 +588,21 @@ STUSB1602_StatusTypeDef STUSB1602_Current_Advertised_Set(uint8_t Addr, Current_C
     return status;
 }
 
+#if 0
+/**
+  * @brief STUSB1602 checks the SINK DISCONNECT MODE (bit5 0x18 -- R/W)
+  * @param Addr I2C address of port controller device
+  * @retval SNK_Disconnect_Mode_TypeDef
+  */
+SNK_Disconnect_Mode_TypeDef STUSB1602_SNK_Disconnect_Mode_Status_Get(uint8_t Addr)
+{
+    STUSB1602_CC_CAPABILITY_CTRL_RegTypeDef reg;
 
-///**
-//  * @brief STUSB1602 checks the SINK DISCONNECT MODE (bit5 0x18 -- R/W)
-//  * @param Addr I2C address of port controller device
-//  * @retval SNK_Disconnect_Mode_TypeDef
-//  */   
-//SNK_Disconnect_Mode_TypeDef STUSB1602_SNK_Disconnect_Mode_Status_Get(uint8_t Addr)
-//{
-//    STUSB1602_CC_CAPABILITY_CTRL_RegTypeDef reg;
-//
-//    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_CC_CAPABILITY_CTRL_REG, 1); 
-//
-//    return (SNK_Disconnect_Mode_TypeDef)(reg.b.SNK_DISCONNECT_MODE);
-//}
+    STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_CC_CAPABILITY_CTRL_REG, 1);
 
+    return (SNK_Disconnect_Mode_TypeDef)(reg.b.SNK_DISCONNECT_MODE);
+}
+#endif
 
 /**
   * @brief STUSB1602 sets the the SINK DISCONNECT MODE (bit5 0x18 -- R/W)
@@ -952,18 +798,6 @@ STUSB1602_StatusTypeDef STUSB1602_VCONN_Supply_Status_Set(uint8_t Addr, VCONN_Su
     return status;
 }
 
-/**
- * @}
- */
-
-
-/* REG_0x1E_CC_VCONN_SWITCH_CTRL REG ******************************************/
-
- /** @addtogroup REG_0x1E_CC_VCONN_SWITCH_CTRL
-  * @brief  STUSB1602 Checks CC_VCONN_SWITCH_CTRL REG (0x1E -- R/W)
-   * @{
-   */
-
 
 /**
   * @brief STUSB1602 checks the VCONN switch Current Limitation on CC (bit3-0 0x1E -- R/W)
@@ -999,18 +833,6 @@ STUSB1602_StatusTypeDef STUSB1602_VCONN_Switch_Current_Limit_Set(uint8_t Addr, V
     return status;
 }
 
-/**
- * @}
- */
-
-
-/* REG_0x1F_CC_MODE_CTRL REG **************************************************/
-
- /** @addtogroup REG_0x1F_CC_MODE_CTRL
-  * @brief  STUSB1602 Checks CC_MODE_CTRL REG (0x1F -- R/W)
-   * @{
-   */
-
 
 /**
   * @brief STUSB1602 checks the TYPEC_CTRL (bit7-4 0x1F -- R/W)
@@ -1044,18 +866,6 @@ STUSB1602_StatusTypeDef STUSB1602_Type_C_Control_Set(uint8_t Addr, Type_C_CTRL_T
 
     return status;
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x20_VCONN_MONITORING_CTRL REG *****************************************/
-
- /** @addtogroup REG_0x20_VCONN_MONITORING_CTRL
-  * @brief  STUSB1602 Checks VCONN_MONITORING_CTRL REG (0x20 -- R/W)
-   * @{
-   */
 
 
 /**
@@ -1128,19 +938,6 @@ STUSB1602_StatusTypeDef STUSB1602_VCONN_UVLO_Thresh_Status_Set(uint8_t Addr, VCO
 }
 
 /**
- * @}
- */
-
-
-/* REG_0x21_VBUS_SELECT REG ***************************************************/
-
- /** @addtogroup REG_0x21_VBUS_SELECT
-   * @brief  STUSB1602 Checks VBUS_SELECT REG (0x21 -- R/W)
-   * @{
-   */
-
-
-/**
   * @brief STUSB1602 checks the VBUS_SELECT (bit7:0 0x21 -- R/W)
   * @param Addr I2C address of port controller device
   * @retval uint16_t 
@@ -1173,18 +970,6 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_Select_Status_Set(uint8_t Addr, uint16_t 
              
     return status;
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x22_VBUS_RANGE_MONITORING_CTRL REG ************************************/
-
- /** @addtogroup REG_0x22_VBUS_RANGE_MONITORING_CTRL
-   * @brief  STUSB1602 Checks VBUS_RANGE_MONITORING_CTRL REG (0x22 -- R/W)
-   * @{
-   */
 
 
 /**
@@ -1224,6 +1009,8 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_VShift_Set(uint8_t Addr, uint8_t HSet, ui
         
     return status;
 }
+
+
 /**
   * @brief STUSB1602 Sets the VBUS_VShift_High (bit7:4 0x22 -- R/W)
   * @param Addr I2C address of port controller device
@@ -1282,18 +1069,6 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_VShift_Low_Set(uint8_t Addr, int8_t Set)
     return status;
 }
 
-/**
- * @}
- */
-
-
-/* REG_0x23_RESET_CTRL REG ****************************************************/
-
- /** @addtogroup REG_0x23_RESET_CTRL
-  * @brief  STUSB1602 Checks RESET_CTRL REG (0x23 -- R/W)
-   * @{
-   */
-
 
 /**
   * @brief STUSB1602 checks the SW RESET (bit0 0x23 -- R/W)
@@ -1328,18 +1103,6 @@ STUSB1602_StatusTypeDef STUSB1602_SW_RESET_Set(uint8_t Addr, SW_RESET_TypeDef Rs
              
     return status;
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x24_CC_POWERED_ACCESSORY_CTRL REG *************************************/
-
- /** @addtogroup REG_0x24_CC_POWERED_ACCESSORY_CTRL
-  * @brief  STUSB1602 Checks CC_POWERED_ACCESSORY_CTRL REG (0x24 -- R/W)
-   * @{
-   */
 
 
 /**
@@ -1411,18 +1174,6 @@ STUSB1602_StatusTypeDef STUSB1602_Pwr_Acc_Detect_Set(uint8_t Addr, Pwr_Acc_Detec
    return status;
 }
 
-/**
- * @}
- */
-
-
-/* REG_0x25_VBUS_DISCHARGE_TIME_CTRL REG **************************************/
-
- /** @addtogroup REG_0x25_VBUS_DISCHARGE_TIME_CTRL
-   * @brief  STUSB1602 Checks VBUS_DISCHARGE_TIME_CTRL REG (0x25 -- R/W)
-   * @{
-   */
-
 
 /**
   * @brief STUSB1602 checks the VBUS_DISCHARGE_TIME_TO_0V (bit7:4 0x25 -- R/W)
@@ -1440,6 +1191,7 @@ uint16_t STUSB1602_VBUS_Discharge_Time_to_0V_Get(uint8_t Addr)
     
     return tim;
 }
+
 
 /**
   * @brief STUSB1602 sets the VBUS_DISCHARGE_TIME_TO_0V (bit7:4 0x25 -- R/W)
@@ -1498,33 +1250,22 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_Discharge_Time_to_PDO_Set(uint8_t Addr, u
    return status;
 }
 
-/**
- * @}
- */
 
-
-/* REG_0x26_VBUS_DISCHARGE_CTRL REG *******************************************/
-
- /** @addtogroup REG_0x26_VBUS_DISCHARGE_CTRL
-   * @brief  STUSB1602 Checks VBUS_DISCHARGE_CTRL REG (0x26 -- R/W)
-   * @{
-   */
-
-
+#if 0
 /**
   * @brief STUSB1602 checks the VBUS_DISCHARGE_CTRL State (EN or DIS) (bit7 0x26 -- R/W)
   * @param Addr I2C address of port controller device
   * @retval VBUS_Discharge_State_TypeDef 
-//  */   
-//VBUS_Discharge_State_TypeDef STUSB1602_VBUS_Discharge_State_Get(uint8_t Addr)
-//{    
-//   STUSB1602_VBUS_DISCHARGE_CTRL_RegTypeDef reg;
-//   
-//   STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_VBUS_DISCHARGE_CTRL_REG, 1); 
-//    
-//   return (VBUS_Discharge_State_TypeDef)(reg.b.VBUS_DISCHARGE_EN);   
-//}
+  */
+VBUS_Discharge_State_TypeDef STUSB1602_VBUS_Discharge_State_Get(uint8_t Addr)
+{
+   STUSB1602_VBUS_DISCHARGE_CTRL_RegTypeDef reg;
 
+   STUSB1602_ReadReg(&reg.d8, Addr, STUSB1602_VBUS_DISCHARGE_CTRL_REG, 1);
+
+   return (VBUS_Discharge_State_TypeDef)(reg.b.VBUS_DISCHARGE_EN);
+}
+#endif
 
 /**
   * @brief STUSB1602 sets the VBUS_DISCHARGE_CTRL State (EN or DIS) (bit7 0x26 -- R/W)
@@ -1544,18 +1285,6 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_Discharge_State_Set(uint8_t Addr, VBUS_Di
    
    return status;   
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x27_VBUS_ENABLE_STATUS REG ********************************************/
-
- /** @addtogroup REG_0x27_VBUS_ENABLE_STATUS
-   * @brief  STUSB1602 Checks VBUS_ENABLE_STATUS REG (0x27 -- RO)
-   * @{
-   */
 
 
 /**
@@ -1586,18 +1315,6 @@ VBUS_SRC_State_TypeDef STUSB1602_VBUS_SRC_State_Get(uint8_t Addr)
     
    return (VBUS_SRC_State_TypeDef)(reg.b.VBUS_SOURCE_EN);   
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x28_POWER_MODE REG ****************************************************/
-
- /** @addtogroup REG_0x28_POWER_MODE
-   * @brief  STUSB1602 Checks the POWER_MODE REG (0x28 -- R/W)
-   * @{
-   */
 
 
 /**
@@ -1633,18 +1350,6 @@ STUSB1602_StatusTypeDef STUSB1602_Power_Mode_Set(uint8_t Addr, Power_Mode_TypeDe
              
     return status;
 }
-
-/**
- * @}
- */
-
-
-/* REG_0x2E_VBUS_MONITORING_CTRL REG ******************************************/
-
- /** @addtogroup REG_0x2E_VBUS_MONITORING_CTRL
-   * @brief  STUSB1602 Checks VBUS_MONITORING_CTRL REG (0x2E -- R/W)
-   * @{
-   */
 
 
 /**
@@ -1772,6 +1477,8 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_Range_State_Set(uint8_t Addr, VBUS_Range_
      
    return status;  
 }
+
+
 /**
   * @brief STUSB1602 sets the VBUS_presence_State (EN or DIS) (bit7 0x2E -- R/W)
   * @param Addr I2C address of port controller device
@@ -1790,6 +1497,7 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_Presence_State_Set(uint8_t Addr, VBUS_Pre
      
    return status;  
 }
+
 
 /**
 * @brief STUSB1602 sets the VBUS_VSAFE0V_Threshold (EN or DIS) (bit2:1 0x2E -- R/W)
@@ -1811,7 +1519,6 @@ STUSB1602_StatusTypeDef STUSB1602_VBUS_VSAFE0V_Threshold_Set(uint8_t Addr, VBUS_
 }
 
 
-
 /**
   * @brief STUSB1602 sets the VDD_UVLO_Threshold State (EN or DIS) (bit0 0x2E -- R/W)
   * @param Addr I2C address of port controller device
@@ -1830,38 +1537,6 @@ STUSB1602_StatusTypeDef STUSB1602_VDD_UVLO_Threshold_Set(uint8_t Addr, VDD_UVLO_
      
    return status;  
 }
-
-/**
- * @}
- */
-
-
-/* Functions that request waiting --------------------------------------------*/
-
-
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-
-/**
- * @}
- */
-
-
-/**
- * @}
- */
-
-
-/**
- * @}
- */
 
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

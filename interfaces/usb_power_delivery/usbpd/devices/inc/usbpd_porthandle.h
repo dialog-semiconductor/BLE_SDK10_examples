@@ -42,21 +42,13 @@
   *
   ******************************************************************************
   */
-/*#warning "Porthandle header sof"*/
 #ifndef __USBPD_PORTHANDLE_H_
 #define __USBPD_PORTHANDLE_H_
-/*#warning "Porthandle header sof 2"*/
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "User_BSP.h"  
-#include "STUSB1602_Registers_if.h"
-#include "STUSB1602_Peripherals_if.h"
-  
-  
-  
+#include "usbpd_registers.h"
+#include "usbpd_peripherals.h"
+
 /** @addtogroup STM32_USBPD_LIBRARY
   * @{
   */
@@ -82,7 +74,8 @@ extern "C" {
 #define __RX_DATA_LEN (USBPD_MAX_RX_BUFFER_SIZE)      /* header + 28 bytes */ /* this length is defined in usbpd_def.h*/  
 
 #define MAX_DATA_LEN (uint16_t)((((uint16_t ) __RX_DATA_LEN * 10 ) /8 )+ SOP_AND_HEADER_SIZE + CRC_ENCODED + 1)
-#define   TXRX_BUFFER_SIZE     (MAX_DATA_LEN + TX_PREAMBLE_SIZE )  /*!< Amount of bytes constituting the packet 349 bytes for unchunck 54 for chunck*/ 
+//#define   TXRX_BUFFER_SIZE     (MAX_DATA_LEN + TX_PREAMBLE_SIZE )  /*!< Amount of bytes constituting the packet 349 bytes for unchunck 54 for chunck*/
+#define   TXRX_BUFFER_SIZE	512
 /**
   * @brief Default current limit of the power switches supplying VCONN on the CC pins
   */
@@ -126,7 +119,7 @@ typedef struct
   */
 typedef enum
 {
-  USBPD_PHY_RX_STATUS_NONE=0,                   /*!< Unknown Status                   */
+  USBPD_PHY_RX_STATUS_INIT=0,                   /*!< Status Init                      */
   USBPD_PHY_RX_STATUS_OK=1,                     /*!< Status OK                        */
   USBPD_PHY_RX_STATUS_SOP_DETECTING=2,          /*!< Detecting SOP                    */
   USBPD_PHY_RX_STATUS_DATA=3,                   /*!< Decoding Data                    */
@@ -136,7 +129,8 @@ typedef enum
   USBPD_PHY_RX_STATUS_ERROR_INVALID_SOP=7,      /*!< Error: Invalid SOP detected      */
   USBPD_PHY_RX_STATUS_ERROR_INVALID_SYMBOL=8,   /*!< Error: Invalid symbol found      */
   USBPD_PHY_RX_STATUS_ERROR_EOP_NOT_FOUND=9,    /*!< Error: No EOP found              */
-  USBPD_PHY_RX_STATUS_ERROR_CRC_FAILED=10,       /*!< Error: CRC failed                */
+  USBPD_PHY_RX_STATUS_ERROR_CRC_FAILED=10,      /*!< Error: CRC failed                */
+  USBPD_PHY_RX_STATUS_INVALID=11,
 }
 USBPD_PHY_RX_Status_TypeDef;
 
@@ -229,24 +223,24 @@ typedef enum
 typedef struct
 {
   uint8_t                     Instance;        /*!< USBPD_PORT number                              */
-  uint8_t                     *pTxRxBuffPtr;     /*!< Pointer to Tx Buffer                           */
+  uint8_t                     *pRxBuffPtr;     /*!< Pointer to Rx Buffer                           */
+  uint8_t                     *pTxBuffPtr;     /*!< Pointer to Tx Buffer                           */
   CCxPin_TypeDef              CCx;             /*!< CC pin used for communication                  */
-  FlagStatus                  CCxChange;       /*!< CC event change                                */
-  HAL_LockTypeDef             Lock;            /*!< Locking object                                 */
+  uint8_t                     CCxChange;       /*!< CC event change                                */
   HAL_USBPD_PORT_StateTypeDef State;           /*!< Communication state                            */
-  __IO uint32_t               ErrorCode;       /*!< Error code                                     */
+  uint32_t                    ErrorCode;       /*!< Error code                                     */
   USBPD_PortPowerRole_TypeDef role;            /*!< The Role of the port Provider or Consumer      */
   uint32_t                    BIST_index;      /*!< Index for monitoring BIST Msg bits             */
   FunctionalState             VConn;           /*!< VConn status flag                              */
   USBPD_PortDataRole_TypeDef  DataRole;        /*!< Data role of the port                          */
   uint8_t                     TxSpareBits;     /*!< TxSpareBits                                    */
   UnwrapData_TypeDef          unwrapdata;      /*!< Fields used for decoding                       */
-  SPI_HandleTypeDef           hspi;            /*!< SPI Handle parameters                          */
-  DMA_HandleTypeDef           hdmatx;          /*!< Tx DMA Handle parameters                       */
-#ifdef RX_DMACH
-  DMA_HandleTypeDef           hdmarx;          /*!< Rx DMA Handle parameters                       */
-#endif  
-  I2C_HandleTypeDef  *         hi2c;            /*!< I2C Handle pointer                            */
+//  SPI_HandleTypeDef           hspi;            /*!< SPI Handle parameters                          */
+//  DMA_HandleTypeDef           hdmatx;          /*!< Tx DMA Handle parameters                       */
+//#ifdef RX_DMACH
+//  DMA_HandleTypeDef           hdmarx;          /*!< Rx DMA Handle parameters                       */
+//#endif
+//  I2C_HandleTypeDef  *         hi2c;            /*!< I2C Handle pointer                            */
   USBPD_HW_IF_Callbacks       cbs;             /*!< Port callbacks, see @ref USBPD_HW_IF_Callbacks */
   uint8_t                     AlertEventCount; /*!< Alert event counter                            */
   uint8_t                     Error_Recovery_Flag; /*!< Error recovery on going flag               */
@@ -295,49 +289,7 @@ typedef struct
   FunctionalState                             PowerAccessoryTransition; /*!< It enables or disables powered accessory transition from Powered.Accessory state to Try.SNK */
 }USBPD_Init_TypeDef;
 
-/**
-  * @}
-  */
-
-/* Exported define -----------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-
-/** @defgroup USBPD_DEVICE_PORTHANDLE_Exported_Macros USBPD DEVICE PORTHANDLE Exported Macros
-  *   @note @param __PORT__ identifies the Port number
-  * @{
-  */
-
-
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/* Exported functions --------------------------------------------------------*/
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
-/*#warning "Porthandle header eof 2"*/
 #endif /* __USBPD_PORTHANDLE_H_ */
-/*#warning "Porthandle header eof"*/
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

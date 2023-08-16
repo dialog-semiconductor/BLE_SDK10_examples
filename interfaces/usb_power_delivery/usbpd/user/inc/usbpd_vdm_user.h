@@ -50,9 +50,6 @@
  extern "C" {
 #endif 
 
-/* Includes ------------------------------------------------------------------*/
-
-/* Exported typedef ----------------------------------------------------------*/
 typedef struct
 {
   uint32_t VDM_XID_SOP                      :32; /*!< A decimal number assigned by USB-IF before certification */
@@ -70,6 +67,8 @@ typedef struct
   uint32_t Reserved3                        :10; /*!< Reserved bits */
 #endif /* USBPD_REV30_SUPPORT */
 } USBPD_VDM_SettingsTypeDef;
+
+#ifdef _SVDM
 /*
  * DisplayPort Status VDO
  */
@@ -125,22 +124,16 @@ typedef struct {
   uint8_t   FlagAllSVIDReceived;  /*!< Flag to indicate that all SVIDs have been received */
 }USBPD_SVIDPortPartnerInfo_TypeDef;
 
-/* Exported define -----------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
-#if defined(_VDM ) || defined(_VCONN_SUPPORT)
+#endif
+
+#if defined(_SVDM) || defined(_UVDM) || defined(_VCONN_SUPPORT)
 USBPD_StatusTypeDef USBPD_VDM_UserInit(uint8_t PortNum);
+#endif
+
+#if defined(_SVDM )
 void                USBPD_VDM_UserReset(uint8_t PortNum);
 void                USBPD_VDM_FillDPStatus(uint8_t PortNum, USBPD_DPStatus_TypeDef *dp_status);
 void                USBPD_VDM_FillDPConfig(uint8_t PortNum, USBPD_DPConfig_TypeDef *pDP_Config);
-#endif  /*defined( VDM ) || defined( VCONN_SUPPORT)*/
-
-#ifdef __cplusplus
-}
 #endif
 
 #endif /* __USBPD_VDM_USER_H_ */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

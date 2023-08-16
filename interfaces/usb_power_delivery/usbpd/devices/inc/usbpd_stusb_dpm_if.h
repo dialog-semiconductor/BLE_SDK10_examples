@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    usbpd_Stusb_Dpm_if.h
+  * @file    usbpd_stusb_dpm_if.h
   * @author  AMG Application Team
   * @brief   This file contains the headers of usbpd_Stusb_Dpm_if.h.
   ******************************************************************************
@@ -42,23 +42,26 @@
   *
   ******************************************************************************
   */
-#include "usbpd_phy_hw_if.h"
+#include "usbpd_def.h"
 #include "usbpd_porthandle.h"
 
-#define TIMER_VCONNSTABLE 40u;
-#define TIMER_DELAY_PE 15u;
-#define TIMER_DELAY_ATTEMC 25u; 
+#define TIMER_VCONNSTABLE	40
+#define TIMER_DELAY_PE		15
+#define TIMER_DELAY_ATTEMC	25
+#define TIMER_DELAY_ERRORREC	100
+
+/**
+  * @brief Mode how to access functions containing a list of actions
+  */
+typedef enum
+{
+  ACKNOWLEDGE = 0,
+  REQUEST = 1
+} USBPD_HRPRS_Mode_TypeDef;
 
 /* Port management functions */
 void HW_IF_Port_SetInitialRole(uint8_t PortNum,USBPD_PortPowerRole_TypeDef role);
 void HW_IF_Port_Set_CC(uint8_t PortNum, CCxPin_TypeDef cc);
-
-/* IOs management functions */
-void HW_IF_RESET_Assert(uint8_t PortNum);
-void HW_IF_RESET_Deassert(uint8_t PortNum);
-void HW_IF_STUSB16xx_Reset(uint8_t PortNum);
-
-
 
 USBPD_StatusTypeDef USBPD_HW_IF_PortHwInit(uint8_t PortNum, USBPD_HW_IF_Callbacks cbs, USBPD_PortPowerRole_TypeDef role);
 USBPD_StatusTypeDef USBPD_HW_IF_PRS_Assert_Rd(uint8_t PortNum, USBPD_PortPowerRole_TypeDef CurrentRole);
@@ -83,3 +86,8 @@ USBPD_StatusTypeDef USBPD_HW_IF_CheckVconnPresence(uint8_t PortNum, uint32_t Tim
 
 STUSB1602_StatusTypeDef USBPD_Type_C_Command(uint8_t PortNum,Type_C_CTRL_TypeDef Ctrl );
 
+// from usbpd_phy_hw_if.h
+USBPD_StatusTypeDef STUSB16xx_HW_IF_DataRoleSwap(uint8_t PortNum);
+USBPD_StatusTypeDef STUSB16xx_HW_IF_Set_VBus_Monitoring(uint8_t PortNum, uint16_t VBus, uint8_t Hset, uint8_t Lset);
+uint8_t USBPD_16xx_IsResistor_SinkTxOk(uint8_t PortNum);
+void STUSB16xx_HW_IF_Alert_Check(uint8_t PortNum);

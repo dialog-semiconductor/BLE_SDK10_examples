@@ -20,35 +20,11 @@
 #ifndef __USBPD_PW_IF_H_
 #define __USBPD_PW_IF_H_
 
-#ifdef __cplusplus
- extern "C" {
-#endif
-
-/* Includes ------------------------------------------------------------------*/
 #include "usbpd_def.h"
 
-/** @addtogroup STM32_USBPD_USER
-  * @{
-  */
-
-/** @addtogroup USBPD_USER
-  * @{
-  */
-
-/** @addtogroup USBPD_USER_PWR_IF
-  * @{
-  */
-
-/* Exported typedef ----------------------------------------------------------*/
-/* Exported define -----------------------------------------------------------*/
 #define BSP_PWR_INVALID_VALUE           0xFFFFFFFFu   /* Invalid value set during issue with voltage setting */
 #define BSP_PWR_TIMEOUT_PDO             250u          /* Timeout for PDO to PDO or PDO to APDO at 250ms */
 
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/** @defgroup USBPD_USER_PWR_IF_Exported_Macros USBPD PWR IF Exported Macros
-  * @{
-  */
 
 /* Macros used to convert values into PDO representation */
 #define PWR_V_20MV(_V_)        ((uint16_t)(( (_V_) * 1000) / 20))   /* From Volt to 20mV multiples      */
@@ -70,21 +46,23 @@
 #define USBPD_PWR_IF_DISABLE_DISCHARGE_PATH(__PORT__) HW_IF_PWR_DisableDischPath(__PORT__)
 
 /**
-  * @}
-  */
-
-/* Exported variables --------------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
-/** @defgroup USBPD_USER_PWR_IF_Exported_Functions USBPD PWR IF Exported Functions
-  * @{
-  */
-
-/**
   * @brief  Initialize structures and variables related to power board profiles
   *         used by Sink and Source, for all available ports.
   * @retval USBPD status
   */
 USBPD_StatusTypeDef USBPD_PWR_IF_Init(void);
+
+/**
+* @brief  Update PDO values
+* @retval USBPD status
+*/
+USBPD_StatusTypeDef USBPD_PWR_IF_Update_PDO_Values(uint8_t PortNum, uint8_t NrOfPDO, uint32_t PDO_Mv, uint32_t PDO_Ma);
+
+/**
+* @brief  Update PDO count
+* @retval USBPD status
+*/
+USBPD_StatusTypeDef USBPD_PWR_IF_Update_PDO_Count(uint8_t PortNum, uint8_t NumberOfPDO);
 
 /**
   * @brief  Sets the required power profile
@@ -94,62 +72,6 @@ USBPD_StatusTypeDef USBPD_PWR_IF_Init(void);
   * @retval USBPD status
   */
 USBPD_StatusTypeDef USBPD_PWR_IF_SetProfile(uint8_t PortNum, uint8_t Profile, uint8_t PreviousPowerProfile);
-
-/**
-  * @brief  Resets the Power Board
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_PowerResetGlobal(void);
-
-/**
-  * @brief  Resets the Power on a specified port
-  * @param  PortNum Port number
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_PowerReset(uint8_t PortNum);
-
-/**
-  * @brief  Checks if the power on a specified port is ready
-  * @param  PortNum Port number
-  * @param  Vsafe   Vsafe status based on @ref USBPD_VSAFE_StatusTypeDef
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_SupplyReady(uint8_t PortNum, USBPD_VSAFE_StatusTypeDef Vsafe);
-
-/**
-  * @brief  Initialize the power on a specified port
-  * @param  PortNum Port number
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_InitPower(uint8_t PortNum);
-
-/**
-  * @brief  Enable VBUS power on a specified port
-  * @param  PortNum Port number
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_VBUSEnable(uint8_t PortNum);
-
-/**
-  * @brief  Disable VBUS power on a specified port
-  * @param  PortNum Port number
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_VBUSDisable(uint8_t PortNum);
-
-/**
-  * @brief  Disbale the SNK to stop current consumption 
-  * @param  PortNum Port number
-  * @retval USBPD status
-  */
-USBPD_StatusTypeDef USBPD_PWR_IF_SNKDisable(uint8_t PortNum);
-
-/**
-  * @brief  Checks if the power on a specified port is enabled
-  * @param  PortNum Port number
-  * @retval ENABLE or DISABLE
-  */
-USBPD_FunctionalState USBPD_PWR_IF_VBUSIsEnabled(uint8_t PortNum);
 
 /**
   * @brief  Reads the voltage and the current on a specified port
@@ -208,25 +130,6 @@ USBPD_StatusTypeDef USBPD_PWR_IF_SearchRequestedPDO(uint8_t PortNum, uint32_t Rd
   * @retval USBPD Status
   */
 USBPD_StatusTypeDef USBPD_PWR_IF_CheckUpdateSNKPower(uint8_t PortNum);
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __USBPD_PW_IF_H_ */
 

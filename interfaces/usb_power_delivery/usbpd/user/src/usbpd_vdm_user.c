@@ -44,8 +44,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#if defined(_VDM) || defined(_VCONN_SUPPORT)
 #include "usbpd_core.h"
+#if defined(_SVDM) || defined(_UVDM) || defined(_VCONN_SUPPORT)
 #include "usbpd_vdm_user.h"
 #include "usbpd_dpm_user.h"
 #include "usbpd_dpm_conf.h"
@@ -61,7 +61,7 @@ extern uint8_t hUSBDBOSDesc[USB_SIZ_BOS_DESC];
 #endif /* CLASS_BB */
 
 /* Private define ------------------------------------------------------------*/
-#if defined(_VDM)
+#if defined(_SVDM)
 #define SVDM_DP_STATUS SVDM_SPECIFIC_1
 #define SVDM_DP_CONFIG SVDM_SPECIFIC_2
 #ifdef SOURCING_DEVICE
@@ -112,27 +112,6 @@ typedef enum {
   CABLE_TO_RECEPTACLE  = 1, /*0b1*/
 } USBPD_CableToPR;
 
-/** 
-  * @}
-  */
-#endif /* _VDM */
-#if defined(USBPDCORE_SNK_CAPA_EXT)
-#define VDM_CABLE_INFO      USBPD_CORE_SNK_EXTENDED_CAPA + 1U
-#else
-#define VDM_CABLE_INFO      USBPD_CORE_UNSTRUCTURED_VDM + 1U
-#endif /* USBPDCORE_SNK_CAPA_EXT */
-/* USER CODE END Private_define */
-
-/* Private typedef -----------------------------------------------------------*/
-/* GNU Compiler */
-#if defined   (__GNUC__)
-/* ARM Compiler */
-#elif defined   (__CC_ARM)
-#pragma anon_unions
-/* IAR Compiler */
-#elif defined (__ICCARM__)
-#endif
-#if defined(_VDM)
 /*
  * DisplayPort modes capabilities
  */
@@ -160,7 +139,8 @@ typedef struct {
   uint32_t  NumSVIDs;
   uint16_t  SVIDs[MAX_SVID_USER];
 }USBPD_SVIDUSerInfo_TypeDef;
-#endif /* _VDM */
+
+#endif /* _SVDM */
 
 /* Private macro -------------------------------------------------------------*/
 
@@ -174,7 +154,7 @@ typedef struct {
 /* Private function prototypes -----------------------------------------------*/
 /* List of callbacks for VDM layer */
 
-#if defined(_VDM)
+#if defined(_SVDM)
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverIdentity(uint8_t PortNum, USBPD_DiscoveryIdentity_TypeDef *pIdentity);
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverSVIDs(uint8_t PortNum, uint16_t **p_SVID_Info, uint8_t *nb);
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverModes(uint8_t PortNum, uint16_t SVID, uint32_t **p_ModeInfo, uint8_t *nbMode);
@@ -183,9 +163,8 @@ static USBPD_StatusTypeDef USBPD_VDM_ModeExit(uint8_t PortNum, uint16_t SVID, ui
 static void                USBPD_VDM_SendAttention(uint8_t PortNum, uint8_t *NbData, uint32_t *VDO);
 static void                USBPD_VDM_ReceiveAttention(uint8_t PortNum, uint8_t NbData, uint32_t VDO);
 static USBPD_StatusTypeDef USBPD_VDM_ReceiveSpecific(uint8_t PortNum, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *NbData, uint32_t *VDO);
-#endif /* _VDM */
-#if defined(_VDM) || defined(_VCONN_SUPPORT)
-static void                USBPD_VDM_UserCallback(uint8_t PortNum/*, MUX_TypeCMuxIdTypeDef TypeCMuxId, MUX_HPDStateTypeDef   HPDState*/);
+#endif /* _SVDM */
+#if defined(_SVDM) || defined(_VCONN_SUPPORT)
 static void                USBPD_VDM_InformIdentity(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef status, USBPD_DiscoveryIdentity_TypeDef *pIdentity);
 static void                USBPD_VDM_InformSVID(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, USBPD_SVIDInfo_TypeDef *pListSVID);
 static void                USBPD_VDM_InformMode(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, USBPD_ModeInfo_TypeDef *pModesInfo);
@@ -193,10 +172,15 @@ static void                USBPD_VDM_InformModeEnter(uint8_t PortNum, USBPD_SOPT
 static void                USBPD_VDM_InformModeExit(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, uint16_t SVID, uint32_t ModeIndex);
 static void                USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *NbData, uint32_t *VDO);
 static void                USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *NbData, uint32_t *VDO);
-#endif /* VDM || VCONN_SUPPORT */
+#endif /* SVDM || VCONN_SUPPORT */
+#if defined(_UVDM)
+static void USBPD_VDM_SendUVDM(uint8_t PortNum, USBPD_UVDMHeader_TypeDef *pUVDM_Header, uint8_t *pNbData, uint32_t *pVDO);
+static USBPD_StatusTypeDef USBPD_VDM_ReceiveUVDM(uint8_t PortNum, USBPD_UVDMHeader_TypeDef UVDM_Header, uint8_t *pNbData, uint32_t *pVDO);
+#endif
+
 /* Private variables ---------------------------------------------------------*/
 
-#ifdef _VDM
+#if defined(_SVDM)
 USBPD_VDM_SettingsTypeDef       DPM_VDM_Settings[USBPD_PORT_COUNT]=
 {
   {
@@ -210,11 +194,7 @@ USBPD_VDM_SettingsTypeDef       DPM_VDM_Settings[USBPD_PORT_COUNT]=
 #endif
     .VDM_bcdDevice_SOP          = 0xAAAAu,        /*!< A unique number assigned by the Vendor ID holder containing identity information relevant to the release version of the product. */
     .VDM_USBHostSupport         = USB_NOTCAPABLE, /*!< Indicates whether the UUT is capable of enumerating USB Host */
-#if  defined(USBPD_USBDATA)
-    .VDM_USBDeviceSupport       = USB_CAPABLE, /*!< Indicates whether the UUT is capable of enumerating USB Devices */
-#else
     .VDM_USBDeviceSupport       = USB_NOTCAPABLE, /*!< Indicates whether the UUT is capable of enumerating USB Devices */
-#endif
   #if defined(_CLASS_BB)
     .VDM_ProductTypeUFPorCP     = PRODUCT_TYPE_AMA,
   #elif defined (_CLASS_HID)|| defined (_CLASS_CDC)
@@ -248,12 +228,13 @@ USBPD_VDM_SettingsTypeDef       DPM_VDM_Settings[USBPD_PORT_COUNT]=
 #endif /* USBPD_PORT_COUNT >= 2 */
   }
 };
-#endif /* _VDM */
+#endif /* _SVDM || _UVDM */
+
+#if defined(_SVDM) || defined(_UVDM) || defined(_VCONN_SUPPORT)
 
 const USBPD_VDM_Callbacks vdmCallbacks =
 {
-#if defined(_VDM) || defined(_VCONN_SUPPORT)
-#if defined(_VDM)
+#if defined(_SVDM)
   USBPD_VDM_DiscoverIdentity,
   USBPD_VDM_DiscoverSVIDs,
   USBPD_VDM_DiscoverModes,
@@ -265,48 +246,56 @@ const USBPD_VDM_Callbacks vdmCallbacks =
   NULL,
   NULL,
   NULL,
-#endif /* _VDM */
+#endif
+#if defined(_SVDM) || defined(_VCONN_SUPPORT)
   USBPD_VDM_InformIdentity,
   USBPD_VDM_InformSVID,
   USBPD_VDM_InformMode,
   USBPD_VDM_InformModeEnter,
   USBPD_VDM_InformModeExit,
-#if defined(_VDM)
+#else
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+#endif
+#if defined(_SVDM)
   USBPD_VDM_SendAttention,
   USBPD_VDM_ReceiveAttention,
 #else
   NULL,
   NULL,
-#endif /* _VDM */
+#endif
+#if defined(_SVDM) || defined(_VCONN_SUPPORT)
   USBPD_VDM_SendSpecific,
-#if defined(_VDM)
+#else
+  NULL,
+#endif
+#if defined(_SVDM)
   USBPD_VDM_ReceiveSpecific,
 #else
   NULL,
-#endif /* _VDM */
+#endif
+#if defined(_SVDM) || defined(_VCONN_SUPPORT)
   USBPD_VDM_InformSpecific,
 #else
   NULL,
+#endif
+#if defined(_UVDM)
+  USBPD_VDM_SendUVDM,
+  USBPD_VDM_ReceiveUVDM,
+#else
   NULL,
   NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-#endif /* _VDM || _VCONN_SUPPORT */
+#endif
 };
 
+#endif /* _SVDM || _UVDM || _VCONN_SUPPORT */
+
+#if defined(_SVDM)
 extern USBPD_ParamsTypeDef DPM_Params[USBPD_PORT_COUNT];
 
-#if defined(_VDM)
 uint8_t VDM_Mode_On[USBPD_PORT_COUNT];
 
 USBPD_IDHeaderVDO_TypeDef IDHeaderVDO[USBPD_PORT_COUNT];
@@ -392,12 +381,11 @@ USBPD_DPStatus_TypeDef sDP_Status[USBPD_PORT_COUNT] =
 #endif /*USBPD_PORT_COUNT == 2*/
 };
 
-#endif /* _VDM */
-/* USER CODE END Private_variables */
+#endif /* _SVDM */
 
 /* Private functions ---------------------------------------------------------*/
 
-#if defined(_VDM)
+#if defined(_SVDM)
 /**
   * @brief  VDM Discovery identity callback
   * @note   Function is called to get Discovery identity information linked to the device and answer
@@ -408,7 +396,7 @@ USBPD_DPStatus_TypeDef sDP_Status[USBPD_PORT_COUNT] =
   */
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverIdentity(uint8_t PortNum, USBPD_DiscoveryIdentity_TypeDef *pIdentity)
 {
-  
+  printf("usbpd (%d): USBPD_VDM_DiscoverIdentity\r\n", PortNum);
   /* Fill header VDO to describe the product 
     * in DRD case, 'UFP' VDOs needs to be followed by 'DFP one'
     * AMA has single VDO - UFP has 2 VDOs - VPD has single VDO 
@@ -463,7 +451,9 @@ static USBPD_StatusTypeDef USBPD_VDM_DiscoverIdentity(uint8_t PortNum, USBPD_Dis
   sIdentity[PortNum].ProductVDO.b.USBProductId  = DPM_VDM_Settings[PortNum].VDM_PID_SOP;
   sIdentity[PortNum].ProductVDO.b.bcdDevice     = DPM_VDM_Settings[PortNum].VDM_bcdDevice_SOP;
 
+#if defined(USBPDCORE_VCONN_SUPPORT)
   sIdentity[PortNum].CableVDO_Presence    = 0;
+#endif
   sIdentity[PortNum].AMA_VDO_Presence     = 0;
   sIdentity[PortNum].UFP_VDO_Presence     = 0;
   sIdentity[PortNum].DFP_VDO_Presence     = 0;
@@ -620,6 +610,8 @@ static USBPD_StatusTypeDef USBPD_VDM_DiscoverIdentity(uint8_t PortNum, USBPD_Dis
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverSVIDs(uint8_t PortNum, uint16_t **p_SVID_Info, uint8_t *pNbSVID)
 {
   USBPD_StatusTypeDef _status = USBPD_NAK;
+  printf("usbpd (%d): USBPD_VDM_DiscoverSVIDs\r\n", PortNum);
+
   if (MODAL_OPERATION_SUPPORTED == DPM_VDM_Settings[PortNum].VDM_ModalOperation )
   {
     *pNbSVID = SVIDInfo[PortNum].NumSVIDs;
@@ -642,6 +634,7 @@ static USBPD_StatusTypeDef USBPD_VDM_DiscoverSVIDs(uint8_t PortNum, uint16_t **p
 static USBPD_StatusTypeDef USBPD_VDM_DiscoverModes(uint8_t PortNum, uint16_t SVID, uint32_t **p_ModeTab, uint8_t *NumberOfMode)
 {
   USBPD_StatusTypeDef _status = USBPD_NAK;
+  printf("usbpd (%d): USBPD_VDM_DiscoverModes\r\n", PortNum);
   
   if (MODAL_OPERATION_SUPPORTED == DPM_VDM_Settings[PortNum].VDM_ModalOperation )
   {
@@ -660,6 +653,7 @@ static USBPD_StatusTypeDef USBPD_VDM_DiscoverModes(uint8_t PortNum, uint16_t SVI
   }
   return _status;
 }
+
 /**
   * @brief  VDM Mode enter callback
   * @note   Function is called to check if device can enter in the mode received for the selected SVID in the
@@ -672,6 +666,8 @@ static USBPD_StatusTypeDef USBPD_VDM_DiscoverModes(uint8_t PortNum, uint16_t SVI
 static USBPD_StatusTypeDef USBPD_VDM_ModeEnter(uint8_t PortNum, uint16_t SVID, uint32_t ModeIndex)
 {
   USBPD_StatusTypeDef status = USBPD_NAK;
+  printf("usbpd (%d): USBPD_VDM_ModeEnter\r\n", PortNum);
+
 #ifdef _CLASS_BB
   USBD_BosDescTypedef *pUSBBosDesc = (USBD_BosDescTypedef *)hUSBDBOSDesc;
   if(VDM_Mode_On[PortNum] != 0) return status;
@@ -712,6 +708,7 @@ static USBPD_StatusTypeDef USBPD_VDM_ModeEnter(uint8_t PortNum, uint16_t SVID, u
 static USBPD_StatusTypeDef USBPD_VDM_ModeExit(uint8_t PortNum, uint16_t SVID, uint32_t ModeIndex)
 {
   USBPD_StatusTypeDef status = USBPD_NAK;
+  printf("usbpd (%d): USBPD_VDM_ModeExit\r\n", PortNum);
 
   if(VDM_Mode_On[PortNum] == 0) return status; 
   
@@ -741,6 +738,7 @@ static USBPD_StatusTypeDef USBPD_VDM_ModeExit(uint8_t PortNum, uint16_t SVID, ui
   */
 static void USBPD_VDM_SendAttention(uint8_t PortNum, uint8_t *pNbData, uint32_t *pVDO)
 {
+  printf("usbpd (%d): USBPD_VDM_SendAttention\r\n", PortNum);
   if (USBPD_PORTDATAROLE_DFP == DPM_Params[PortNum].PE_DataRole)
   {
     USBPD_DPStatus_TypeDef dp_status = {0};
@@ -767,6 +765,7 @@ static void USBPD_VDM_SendAttention(uint8_t PortNum, uint8_t *pNbData, uint32_t 
   */
 static void USBPD_VDM_ReceiveAttention(uint8_t PortNum, uint8_t NbData, uint32_t VDO)
 {
+  printf("usbpd (%d): USBPD_VDM_ReceiveAttention\r\n", PortNum);
   if (USBPD_PORTDATAROLE_DFP == DPM_Params[PortNum].PE_DataRole)
   {
     if (NbData == 1)
@@ -801,7 +800,6 @@ static void USBPD_VDM_ReceiveAttention(uint8_t PortNum, uint8_t NbData, uint32_t
       }
     }
   }
-/* USER CODE END USBPD_VDM_ReceiveAttention */
 }
 
 /**
@@ -816,8 +814,9 @@ static void USBPD_VDM_ReceiveAttention(uint8_t PortNum, uint8_t NbData, uint32_t
   */
 static USBPD_StatusTypeDef USBPD_VDM_ReceiveSpecific(uint8_t PortNum, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *pNbData, uint32_t *pVDO)
 {
-/* USER CODE BEGIN USBPD_VDM_ReceiveSpecific */
   USBPD_StatusTypeDef status = USBPD_ACK;
+  printf("usbpd (%d): USBPD_VDM_ReceiveSpecific\r\n", PortNum);
+
   if (USBPD_PORTDATAROLE_DFP == DPM_Params[PortNum].PE_DataRole)
   {
     /* Data role is DFP */
@@ -880,7 +879,7 @@ static USBPD_StatusTypeDef USBPD_VDM_ReceiveSpecific(uint8_t PortNum, USBPD_VDM_
         VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_ReceiveSpecific(DP_CONFIG)");
                 USBPD_DPConfig_TypeDef vdo;
         vdo.d32 = pVDO[0];
- /* Only Port0 can be DP in this example */       
+        /* Only Port0 can be DP in this example */
         if (USBPD_PORT_0 == PortNum)
         {
           switch(vdo.d.UFP_U_Pin)
@@ -932,12 +931,11 @@ static USBPD_StatusTypeDef USBPD_VDM_ReceiveSpecific(uint8_t PortNum, USBPD_VDM_
     }
   }
   return status;
-/* USER CODE END USBPD_VDM_ReceiveSpecific */
 }
 
-#endif /* _VDM */
+#endif /* _SVDM */
 
-#if defined(_VDM) || defined(_VCONN_SUPPORT)
+#if defined(_SVDM) || defined(_VCONN_SUPPORT)
 /**
   * @brief  Inform identity callback
   * @note   Function is called to save Identity information received in Discovery identity from port partner
@@ -950,6 +948,7 @@ static USBPD_StatusTypeDef USBPD_VDM_ReceiveSpecific(uint8_t PortNum, USBPD_VDM_
 */
 static void USBPD_VDM_InformIdentity(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, USBPD_DiscoveryIdentity_TypeDef *pIdentity)
 {
+  printf("usbpd (%d): USBPD_VDM_InformIdentity: %lu\r\n", PortNum, CommandStatus);
   switch(CommandStatus)
   {
   case SVDM_RESPONDER_ACK :
@@ -962,24 +961,23 @@ static void USBPD_VDM_InformIdentity(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
     }
     else
 #endif /* _VCONN_SUPPORT */ 
-#if defined(_VDM)
+#if defined(_SVDM)
     {
       uint8_t*  disco_ident;
       disco_ident = (uint8_t*)&DPM_Ports[PortNum].VDM_DiscoIdentify;
       memcpy(disco_ident, (uint8_t*)pIdentity, sizeof(USBPD_DiscoveryIdentity_TypeDef));
 
+      /* Alternate mode presence */
+      if (pIdentity->AMA_VDO_Presence == 1)
       {
-        /* Alternate mode presence */
-        if (pIdentity->AMA_VDO_Presence == 1)
-        {
-          /* Request to get SVID */
-          USBPD_PE_SVDM_RequestSVID(PortNum, USBPD_SOPTYPE_SOP);
-        }
+        /* Request to get SVID */
+        USBPD_PE_SVDM_RequestSVID(PortNum, USBPD_SOPTYPE_SOP);
       }
+
       memset(&DPM_Ports[PortNum].VDM_SVIDPortPartner, 0, sizeof(USBPD_SVIDPortPartnerInfo_TypeDef));
       Remote_CurrentSVID[PortNum]                   = 0;
     }
-#endif /* _VDM */
+#endif /* _SVDM */
     break;
   case SVDM_RESPONDER_NAK :
     /* Nothing to do */
@@ -1019,8 +1017,8 @@ static void USBPD_VDM_InformIdentity(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
   */
 static void USBPD_VDM_InformSVID(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, USBPD_SVIDInfo_TypeDef *pListSVID)
 {
-/* USER CODE BEGIN USBPD_VDM_InformSVID */
-#if defined(_VDM)
+  printf("usbpd (%d): USBPD_VDM_InformSVID\r\n", PortNum);
+#if defined(_SVDM)
   uint32_t index = 0;
 
   /* Manage only reception of SVID coming from SOP (SVID on cable to be implemented) */
@@ -1066,9 +1064,8 @@ static void USBPD_VDM_InformSVID(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType,
   default :
     break;
   }
-}
-#endif /* _VDM */
-/* USER CODE END USBPD_VDM_InformSVID */
+  }
+#endif /* _SVDM */
 }
 
 /**
@@ -1083,7 +1080,8 @@ static void USBPD_VDM_InformSVID(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType,
   */
 static void USBPD_VDM_InformMode(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, USBPD_ModeInfo_TypeDef *pModesInfo)
 {
-#if defined(_VDM)
+  printf("usbpd (%d): USBPD_VDM_InformMode: %lu\r\n", PortNum, CommandStatus);
+#if defined(_SVDM)
   switch(CommandStatus)
   {
   case SVDM_RESPONDER_ACK :
@@ -1126,7 +1124,7 @@ static void USBPD_VDM_InformMode(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType,
   default :
     break;
   }
-#endif /* _VDM */
+#endif /* _SVDM */
 }
 
 /**
@@ -1142,7 +1140,8 @@ static void USBPD_VDM_InformMode(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType,
   */
 static void USBPD_VDM_InformModeEnter(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, uint16_t SVID, uint32_t ModeIndex)
 {
-#if defined(_VDM)
+  printf("usbpd (%d): USBPD_VDM_InformModeEnter: %lu\r\n", PortNum, CommandStatus);
+#if defined(_SVDM)
   switch(CommandStatus)
   {
   case SVDM_RESPONDER_ACK :
@@ -1164,7 +1163,7 @@ static void USBPD_VDM_InformModeEnter(uint8_t PortNum, USBPD_SOPType_TypeDef SOP
   default :
     break;
   }
-#endif /* _VDM */
+#endif /* _SVDM */
 }
 
 /**
@@ -1176,8 +1175,8 @@ static void USBPD_VDM_InformModeEnter(uint8_t PortNum, USBPD_SOPType_TypeDef SOP
   */
 static void USBPD_VDM_InformModeExit(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_CommandType_Typedef CommandStatus, uint16_t SVID, uint32_t ModeIndex)
 {
-/* USER CODE BEGIN USBPD_VDM_InformModeExit */
-#if defined(_VDM)
+  printf("usbpd (%d): USBPD_VDM_InformModeExit: %lu\r\n", PortNum, CommandStatus);
+#if defined(_SVDM)
   /* Manage only reception of exit Mode coming from SOP (Enter Mode on cable to be implemented) */
   switch(CommandStatus)
   {
@@ -1198,10 +1197,10 @@ static void USBPD_VDM_InformModeExit(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
   default :
     break;
   }
-  
- 
-#endif /* _VDM */
+#endif /* _SVDM */
 }
+
+#if defined(_SVDM)
 
 /**
   * @brief  VDM Fill DP Status 
@@ -1211,8 +1210,6 @@ static void USBPD_VDM_InformModeExit(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
   */
 void USBPD_VDM_FillDPStatus(uint8_t PortNum, USBPD_DPStatus_TypeDef *pDP_Status)
 {
-#if defined(_VDM)
-#endif /* _VDM */
 }
 
 /**
@@ -1223,10 +1220,10 @@ void USBPD_VDM_FillDPStatus(uint8_t PortNum, USBPD_DPStatus_TypeDef *pDP_Status)
   */
 void USBPD_VDM_FillDPConfig(uint8_t PortNum, USBPD_DPConfig_TypeDef *pDP_Config)
 {
-#if defined(_VDM)
-#endif /* _VDM */
+
 }
 
+#endif /* _SVDM */
 
 /**
   * @brief  VDM Send Specific message callback
@@ -1241,7 +1238,8 @@ void USBPD_VDM_FillDPConfig(uint8_t PortNum, USBPD_DPConfig_TypeDef *pDP_Config)
   */
 static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *pNbData, uint32_t *pVDO)
 {
-/* USER CODE BEGIN USBPD_VDM_SendSpecific */
+  printf("usbpd (%d): USBPD_VDM_SendSpecific: %lu\r\n", PortNum, VDMCommand);
+
 #if defined(_VCONN_SUPPORT)
   /* Manage Specific message sent to EMC cable */
   if (USBPD_SOPTYPE_SOP != SOPType)
@@ -1251,7 +1249,7 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
   else
   {
 #endif /* _VCONN_SUPPORT */
-#if defined(_VDM)
+#if defined(_SVDM)
     /* Manage Specific message sent to port partner */
   if (USBPD_PORTDATAROLE_DFP == DPM_Params[PortNum].PE_DataRole)
   {
@@ -1259,7 +1257,6 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
     {
     case SVDM_DP_STATUS :
       {
-        VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_SendSpecific(DP_STATUS)");
         USBPD_DPStatus_TypeDef dp_status = {0};
         dp_status.d.ConnectStatus = MODE_DP_STATUS_CONNECT_DFP_D;
 
@@ -1272,7 +1269,6 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
         USBPD_DPModeTypeDef dp_mode;
         dp_mode.d32 = (DPM_Ports[PortNum].VDM_ModesPortPartner.Modes[0]);
 
-        VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_SendSpecific(DP_CONFIG)");
         if (DP_PIN_ASSIGNMENT_C == (dp_mode.d.DFP_D_Pin & DP_PIN_ASSIGNMENT_C))
         {
           USBPD_DPConfig_TypeDef vdo_config = {0};
@@ -1295,7 +1291,6 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
     {
     case SVDM_DP_STATUS :
       {
-        VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_SendSpecific(DP_STATUS)");
         sDP_Status[PortNum].d.ConnectStatus = MODE_DP_STATUS_CONNECT_UFP_D;
 
         *pVDO = sDP_Status[PortNum].d32;
@@ -1303,7 +1298,6 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
       }
       break;
     case SVDM_DP_CONFIG :
-      VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_SendSpecific(DP_CONFIG)");
       *pVDO = 0;
       *pNbData = 0;
       break;
@@ -1312,7 +1306,7 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
       break;
     }
   }
-#endif /* _VDM */
+#endif /* _SVDM */
 #if defined(_VCONN_SUPPORT)
   }
 #endif /* _VCONN_SUPPORT */
@@ -1332,7 +1326,8 @@ static void USBPD_VDM_SendSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPTyp
   */
 static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *pNbData, uint32_t *pVDO)
 {
-/* USER CODE BEGIN USBPD_VDM_InformSpecific */
+  printf("usbpd (%d): USBPD_VDM_InformSpecific: %lu\r\n", PortNum, VDMCommand);
+
 #if defined(_VCONN_SUPPORT)
   /* Manage Specific message received by EMC cable */
   if (USBPD_SOPTYPE_SOP != SOPType)
@@ -1342,7 +1337,7 @@ static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
   else
   {
 #endif /* _VCONN_SUPPORT */
-#if defined(_VDM)
+#if defined(_SVDM)
     /* Manage Specific message received by port partner */
   if (USBPD_PORTDATAROLE_DFP == DPM_Params[PortNum].PE_DataRole)
   {
@@ -1352,7 +1347,7 @@ static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
       {
         USBPD_DPStatus_TypeDef vdo_received;
         vdo_received.d32 = pVDO[0];
-        VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_InformSpecific(DP_STATUS)");
+
         /* SEND SVDM_DP_CONFIG only if Port is connected */
         if (MODE_DP_STATUS_CONNECT_NO != vdo_received.d.ConnectStatus)
         {
@@ -1361,13 +1356,11 @@ static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
      }
       break;
     case SVDM_DP_CONFIG :
-      VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_InformSpecific(DP_CONFIG)");
         /* Handle DP configuration information sending : to be completed */
-     
-      /* When DP connector is used, HDP needs to be properly set according to PD message */
+        /* When DP connector is used, HDP needs to be properly set according to PD message */
           __NOP();
-          
-      /* Mux needs to be toggled according to CC orientation*/
+
+        /* Mux needs to be toggled according to CC orientation*/
         if (CC1 == DPM_Params[PortNum].ActiveCCIs)
           {
             /* toggle external USB3 switch to CC1 raw line */
@@ -1395,7 +1388,6 @@ static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
 
         vdo_received.d32 = pVDO[0];
 
-        VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_InformSpecific(DP_STATUS)");
         if (vdo_received.d.ConnectStatus != MODE_DP_STATUS_CONNECT_NO)
         {
           sDP_Status[PortNum].d.ConnectStatus = MODE_DP_STATUS_CONNECT_UFP_D;
@@ -1407,141 +1399,94 @@ static void USBPD_VDM_InformSpecific(uint8_t PortNum, USBPD_SOPType_TypeDef SOPT
         }
       }
       break;
+
     case SVDM_DP_CONFIG :
-      VDM_USER_DEBUG_TRACE(PortNum, "USBPD_VDM_InformSpecific(DP_CONFIG)");
       break;
 
     default :
       break;
     }
   }
-#endif /* _VDM */
+#endif /* _SVDM */
 #if defined(_VCONN_SUPPORT)
   }
 #endif /* VCONN_SUPPORT */
-/* USER CODE END USBPD_VDM_InformSpecific */
 }
-/* _VDM || VCONN_SUPPORT */
-#endif 
 
+#endif /* _SVDM || VCONN_SUPPORT */
 
-#if defined _VDM
+#if defined(_UVDM)
 /**
-  * @brief  Initialize HPD Alert pin
+  * @brief  VDM Send Unstructured message callback
   * @param  PortNum    current port number
-  * @retval USBPD status
+  * @param  pUVDM_Header  Pointer on UVDM header based on @ref USBPD_UVDMHeader_TypeDef
+  * @param  pNbData       Pointer of number of VDO to send
+  * @param  pVDO          Pointer of VDO to send
+  * @retval None
   */
-static USBPD_StatusTypeDef HPD_Init(uint8_t PortNum)
+static void USBPD_VDM_SendUVDM(uint8_t PortNum, USBPD_UVDMHeader_TypeDef *pUVDM_Header, uint8_t *pNbData, uint32_t *pVDO)
 {
-  /* check the status of USB3 orientation + USB3 vs DP muxes*/
-  /* example:
-  MUX_HPDStateTypeDef hpd_state;
-  if (MUX_OK != BSP_MUX_Init(TYPE_C_MUX_2))
-  {
-    return USBPD_ERROR;
-  }
+  // header
+  pUVDM_Header->b.VID = USBPD_VID;
+  pUVDM_Header->b.VDMType = VDM_UNSTRUCTUREDVDM_TYPE;
+  pUVDM_Header->b.VendorUse = 0;
 
-  if (MUX_OK != BSP_MUX_Init(TYPE_C_MUX_1))
-  {
-    return USBPD_ERROR;
-  }
-*/
-
-  /* in DP to TypeC application, BSP including muxes and GPIO settings/status needs to be defined */
-  /* Register HPD callback function in case of DP connector to trig an event */
-  /*  */
-  /* example 
-  if (BSP_MUX_RegisterHPDCallbackFunc(TYPE_C_MUX_2, USBPD_VDM_UserCallback) != MUX_OK)
-  {
-    return USBPD_ERROR;
-  }
-  */
-
-  /* in DP to TypeC application, BSP including muxes and GPIO settings/status needs to be defined */
-  /* get HPD state from DP connector */
-  /*  */
-  /* example 
-  if (MUX_OK != BSP_MUX_GetHPDState(TYPE_C_MUX_2, &hpd_state))
-  {
-    return USBPD_ERROR;
-  }
-  */
-  
-  /*if DP already connected, update state accordingly */
-  /* example
-  if (HPD_STATE_HIGH == hpd_state)
-  {
-    sDP_Status[PortNum].d.HPDState = 1;
-    sDP_Status[PortNum].d.Enable = 1;
-  }
-  else
-  {
-    sDP_Status[PortNum].d.HPDState = 0;
-    sDP_Status[PortNum].d.Enable = 0;
-  }
-  */
-  return USBPD_OK;
+  // data
+  *pNbData = 0;
 }
 
-/* VDM_UserCallback is example of callback to be used in case of DP application*/
-static void USBPD_VDM_UserCallback(uint8_t PortNum/*,MUX_TypeCMuxIdTypeDef TypeCMuxId, MUX_HPDStateTypeDef   HPDState*/ )
+/**
+  * @brief  Unstructured VDM  message callback to inform user of reception of UVDM message
+  * @param  PortNum    current port number
+  * @param  UVDM_Header UVDM header based on @ref USBPD_UVDMHeader_TypeDef
+  * @param  pNbData    Pointer of number of received VDO
+  * @param  pVDO       Pointer of received VDO
+  * @retval USBPD Status
+  */
+static USBPD_StatusTypeDef USBPD_VDM_ReceiveUVDM(uint8_t PortNum, USBPD_UVDMHeader_TypeDef UVDM_Header, uint8_t *pNbData, uint32_t *pVDO)
 {
-  /* update DP_status according to HPDState*/
-  /* example
-  if (HPD_STATE_HIGH == HPDState)
+  USBPD_StatusTypeDef _status = USBPD_OK;
+  printf("usbpd (%d): USBPD_VDM_ReceiveUVDM\r\n", PortNum);
+
+  if ((UVDM_Header.b.VID == USBPD_VID) && (UVDM_Header.b.VDMType == VDM_UNSTRUCTUREDVDM_TYPE) && (UVDM_Header.b.VendorUse == 0))
   {
-    sDP_Status[USBPD_PORT_0].d.HPDState = 1;
-    sDP_Status[USBPD_PORT_0].d.Enable = 1;
+    _status = USBPD_OK;
   }
   else
   {
-    sDP_Status[USBPD_PORT_0].d.HPDState = 0;
-    sDP_Status[USBPD_PORT_0].d.Enable = 1;
+    _status = USBPD_ERROR;
   }
- */
-
-  /* Send attention message only if USBPD_PORT_0 is connected for example*/
-  if (USBPD_POWER_EXPLICITCONTRACT == DPM_Params[USBPD_PORT_0].PE_Power)
-  {
-    USBPD_PE_SVDM_RequestAttention(USBPD_PORT_0, USBPD_SOPTYPE_SOP, DISPLAY_PORT_SVID);
-  }
+  return _status;
 }
 #endif
-/* Exported functions ---------------------------------------------------------*/
+
 /**
   * @brief  VDM Initialization function
   * @param  PortNum     Index of current used port
   * @retval status
   */
 
-#if defined(_VDM ) || defined(_VCONN_SUPPORT)
+#if defined(_SVDM ) || defined(_UVDM ) || defined(_VCONN_SUPPORT)
 USBPD_StatusTypeDef USBPD_VDM_UserInit(uint8_t PortNum)
 {
-#if defined(_VDM)
+#if defined(_SVDM)
   uint32_t index = 0;
   
-
-   /* Initialize SVID supported by consumer */
+  /* Initialize SVID supported by consumer */
   SVIDInfo[PortNum].NumSVIDs = MAX_SVID_USER;
   
   for (index = 0; index < MAX_SVID_USER; index++)
   {
     SVIDInfo[PortNum].SVIDs[index] = DISPLAY_PORT_SVID + index;
   }
- /* _VDM */ 
 #endif 
 
   USBPD_PE_InitVDM_Callback(PortNum, (USBPD_VDM_Callbacks *)&vdmCallbacks);
-#if defined(_VDM)
-  if (USBPD_PORT_0 == PortNum)
-    return HPD_Init(PortNum);
-  else
-#endif
-   return USBPD_OK;
+  return USBPD_OK;
 }
-/* VCONN_SUPPORT */
 #endif
-#if defined(_VDM)
+
+#if defined(_SVDM)
 /**
   * @brief  VDM Reset function
   * @param  PortNum     Index of current used port
@@ -1550,11 +1495,10 @@ USBPD_StatusTypeDef USBPD_VDM_UserInit(uint8_t PortNum)
 void USBPD_VDM_UserReset(uint8_t PortNum)
 {
   /* Reset Port Partner variables*/
-  Remote_CurrentSVID[PortNum]       = 0;
-   VDM_Mode_On[PortNum] = 0;
+  Remote_CurrentSVID[PortNum] = 0;
+  VDM_Mode_On[PortNum] = 0;
 }
-
-#endif /*defined(_VDM ) */
+#endif
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

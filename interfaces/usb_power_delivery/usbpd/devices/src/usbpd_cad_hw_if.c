@@ -44,48 +44,23 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "User_BSP.h"
 
+#include "usbpd_def.h"
+#include "usbpd_porthandle.h"
 #include "usbpd_cad_hw_if.h"
 #include "usbpd_dpm_conf.h"
-void CAD_Set_default_ResistorRp(uint8_t PortNum, CAD_RP_Source_Current_Adv_Typedef RpValue);
-
-/** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
-
-/** @addtogroup USBPD_DEVICE
-  * @{
-  */
-
-/** @addtogroup USBPD_DEVICE_CAD_HW_IF
-  * @{
-  */
-
-/* Private typedef -----------------------------------------------------------*/
-extern  USBPD_StatusTypeDef USBPD_HW_IF_ErrorRecovery(uint8_t PortNum);
+#include "usbpd_stusb_dpm_if.h"
 
 
-/* Private define ------------------------------------------------------------*/
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
 /* Handle for the ports inside @ref USBPD_DEVICE_HW_IF */
 extern STUSB16xx_PORT_HandleTypeDef Ports[];
 
 /**
   * @brief handle to manage the detection state machine 
   */
-CAD_HW_HandleTypeDef CAD_HW_Handles[USBPD_PORT_COUNT];
+CAD_HW_HandleTypeDef USBPD_CAD_HW_Handles[USBPD_PORT_COUNT];
 
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-/** @defgroup USBPD_DEVICE_CAD_HW_IF_Exported_Functions USBPD DEVICE CAD HW IF Exported Functions
-  * @{
-  */
 
-/**
-  * @}
-  */
 /** Function to set TypeC Rp resistor depending on customer application requirement **/
 /** RpValue is defined in dpm_conf.h: CAD_DefaultResistor **/
     
@@ -94,13 +69,13 @@ void CAD_Set_default_ResistorRp(uint8_t PortNum, CAD_RP_Source_Current_Adv_Typed
   switch (RpValue)
   {  
   case vRp_Default:
-     STUSB1602_Current_Advertised_Set(STUSB1602_I2C_Add(PortNum), USB_C_Current_Default); /* USB_C_Current_default */
+     STUSB1602_Current_Advertised_Set(PortNum, USB_C_Current_Default); /* USB_C_Current_default */
      break;
   case vRp_1_5A:
-     STUSB1602_Current_Advertised_Set(STUSB1602_I2C_Add(PortNum), USB_C_Current_1_5_A); /* USB_C_Current_1.5A */
+     STUSB1602_Current_Advertised_Set(PortNum, USB_C_Current_1_5_A); /* USB_C_Current_1.5A */
      break;
   case vRp_3_0A: 
-    STUSB1602_Current_Advertised_Set(STUSB1602_I2C_Add(PortNum), USB_C_Current_3_0_A); /* USB_C_Current_3.0A */
+    STUSB1602_Current_Advertised_Set(PortNum, USB_C_Current_3_0_A); /* USB_C_Current_3.0A */
     break;
   }
 }
@@ -123,7 +98,7 @@ uint32_t CAD_Set_ResistorRp(uint8_t PortNum, CAD_RP_Source_Current_Adv_Typedef R
   */
 void CAD_Init(uint8_t PortNum, USBPD_SettingsTypeDef *Settings, USBPD_ParamsTypeDef *Params,  void (*WakeUp)(void))
 {
-  CAD_HW_HandleTypeDef *_handle = &CAD_HW_Handles[PortNum];
+  CAD_HW_HandleTypeDef *_handle = &USBPD_CAD_HW_Handles[PortNum];
   
   /* store the settings and parameters */
   _handle->params = Params;
@@ -132,7 +107,7 @@ void CAD_Init(uint8_t PortNum, USBPD_SettingsTypeDef *Settings, USBPD_ParamsType
   _handle->cc = CCNONE;
   _handle->SNK_Source_Current_Adv = vRd_Undefined;
   Ports[PortNum].USBPD_CAD_WakeUp = WakeUp;
-  CAD_Set_default_ResistorRp(PortNum,DPM_Settings[PortNum].CAD_DefaultResistor);
+  CAD_Set_default_ResistorRp(PortNum, DPM_Settings[PortNum].CAD_DefaultResistor);
 }
 
 
@@ -148,22 +123,6 @@ void CAD_Enter_ErrorRecovery(uint8_t PortNum)
      wakeup CAD task */
   USBPD_HW_IF_ErrorRecovery(PortNum);
 }
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/** 
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

@@ -19,37 +19,11 @@
 #ifndef __USBPD_CORE_H_
 #define __USBPD_CORE_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Includes ------------------------------------------------------------------*/
 #include "usbpd_def.h"
 #if defined(USBPDCORE_TCPM_SUPPORT)
 #include "tcpc.h"
 #endif /* USBPDCORE_TCPM_SUPPORT */
 
-/** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
-
-/** @addtogroup USBPD_CORE
-  * @{
-  */
-
-/** @addtogroup USBPD_CORE_CAD
-  * @{
-  */
-
-/* Exported types ------------------------------------------------------------*/
-/** @defgroup USBPD_CORE_CAD_Exported_Types USBPD CORE CAD Exported Types
-  * @{
-  */
-
-/**
-  * @brief function return value @ref USBPD_CORE_CAD
-  * @{
-  */
 typedef enum
 {
   USBPD_CAD_OK,                   /*!< USBPD CAD Status OK                */
@@ -118,7 +92,7 @@ USBPD_CAD_StatusTypeDef USBPD_CAD_Init(uint8_t PortNum, const USBPD_CAD_Callback
   * @brief  function used to process type C state machine detection.
   * @retval time (in ms) after which the process must be executed
   */
-uint32_t                USBPD_CAD_Process(void);
+uint32_t USBPD_CAD_Process(void);
 
 /**
   * @brief  Enable or Disable CAD port.
@@ -126,28 +100,28 @@ uint32_t                USBPD_CAD_Process(void);
   * @param  State   The new state of the port @ref USBPD_CAD_activation
   * @retval None
   */
-void                    USBPD_CAD_PortEnable(uint8_t PortNum, USBPD_CAD_activation State);
+void USBPD_CAD_PortEnable(uint8_t PortNum, USBPD_CAD_activation State);
 
 /**
   * @brief  Set the resitor to present a SNK.
   * @param  PortNum Index of current used port
   * @retval None
   */
-void                    USBPD_CAD_AssertRd(uint8_t PortNum);
+void USBPD_CAD_AssertRd(uint8_t PortNum);
 
 /**
   * @brief  Set the resitor to present a SRC.
   * @param  PortNum Index of current used port
   * @retval None
   */
-void                    USBPD_CAD_AssertRp(uint8_t PortNum);
+void USBPD_CAD_AssertRp(uint8_t PortNum);
 
 /**
   * @brief  Force type C state machine to enter recovery state
   * @param  PortNum Index of current used port
   * @retval None
   */
-void                    USBPD_CAD_EnterErrorRecovery(uint8_t PortNum);
+void USBPD_CAD_EnterErrorRecovery(uint8_t PortNum);
 
 #if defined(USBPDCORE_DRP) || defined(USBPDCORE_SRC)
 /**
@@ -168,17 +142,6 @@ USBPD_CAD_StatusTypeDef USBPD_CAD_SetRpResistor(uint8_t PortNum, CAD_RP_Source_C
   */
 #endif /* USBPDCORE_DRP || USBPDCORE_SRC */
 
-/**
-  * @}
-  */
-
-/** @addtogroup USBPD_CORE_TRACE
-  * @{
-  */
-
-/** @defgroup USBPD_CORE_TRACE_Exported_Types USBPD CORE TRACE Exported Types
-  * @{
-  */
 typedef enum
 {
   USBPD_TRACE_FORMAT_TLV  = 0,
@@ -203,17 +166,6 @@ TRACE_EVENT;
 
 typedef void (*TRACE_ENTRY_POINT)(TRACE_EVENT type, uint8_t port, uint8_t sop, uint8_t *ptr, uint32_t size);
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup USBPD_CORE_PE
-  * @{
-  */
 /** @defgroup USBPD_CORE_PE_Private_Defines USBPD CORE PE Private Defines
   * @brief  These defines are used in the stack library. Just provided for information.
   *          Those timers values are not to be changed by user (changing values on user side, will not have any impacts on lib behavior).
@@ -281,7 +233,7 @@ typedef void (*TRACE_ENTRY_POINT)(TRACE_EVENT type, uint8_t port, uint8_t sop, u
   * */
 typedef struct
 {
-#if defined(USBPDCORE_SVDM) || defined(USBPDCORE_VCONN_SUPPORT)
+//#if defined(USBPDCORE_SVDM) || defined(USBPDCORE_VCONN_SUPPORT)
   /**
     * @brief  VDM Discovery identity callback
     * @note   Function is called to get Discovery identity information linked to the device and answer
@@ -459,8 +411,8 @@ typedef struct
     */
   void (*USBPD_VDM_InformSpecific)(uint8_t PortNum, USBPD_SOPType_TypeDef SOPType, USBPD_VDM_Command_Typedef VDMCommand, uint8_t *pNbData, uint32_t *pVDO);
 
-#endif /* USBPDCORE_SVDM || USBPDCORE_VCONN_SUPPORT */
-#if defined(USBPDCORE_UVDM)
+//#endif /* USBPDCORE_SVDM || USBPDCORE_VCONN_SUPPORT */
+//#if defined(USBPDCORE_UVDM)
   /**
     * @brief  VDM Send Unstructured message callback
     * @param  PortNum       current port number
@@ -480,7 +432,7 @@ typedef struct
     * @retval USBPD Status
     */
   USBPD_StatusTypeDef(*USBPD_VDM_ReceiveUVDM)(uint8_t PortNum, USBPD_UVDMHeader_TypeDef UVDM_Header, uint8_t *pNbData, uint32_t *pVDO);
-#endif /* USBPDCORE_UVDM */
+//#endif /* USBPDCORE_UVDM */
 } USBPD_VDM_Callbacks;
 
 /**
@@ -645,21 +597,6 @@ typedef struct
 } USBPD_PE_Callbacks;
 
 /**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/** @defgroup USBPD_CORE_PE_Exported_Functions USBPD CORE PE Exported Functions
-  * @{
-  */
-
-/** @defgroup USBPD_CORE_PE_Exported_Functions_Group1 USBPD CORE PE Exported Functions to DPM CORE
-  * @{
-  */
-/**
   * @brief  Initialize Policy Engine layer for a Port
   * @note   the value pSettings and pParams shall be presistante because the stack keep there memory location
   * @param  PortNum     Index of current used port
@@ -769,10 +706,6 @@ void                USBPD_PE_TimerCounter(uint8_t PortNum);
   * @retval None
   */
 void                USBPD_PE_TimerCounteUpdate(uint8_t PortNum, uint16_t Tick);
-
-/**
-  * @}
-  */
 
 #if defined(USBPDCORE_SVDM) || defined(USBPDCORE_UVDM) || defined(USBPDCORE_VCONN_SUPPORT)
 /** @defgroup USBPD_CORE_PE_Exported_Functions_Group2 USBPD CORE PE Exported Functions to VDM USER
@@ -950,47 +883,11 @@ USBPD_StatusTypeDef USBPD_PE_UVDM_RequestMessage(uint8_t PortNum, USBPD_SOPType_
 #endif /* USBPDCORE_UVDM */
 
 /**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup USBPD_CORE_PRL
-  * @{
-  */
-
-/** @defgroup USBPD_CORE_PRL_Exported_Functions USBPD CORE PRL Exported Functions
-  * @{
-  */
-
-/** @defgroup USBPD_CORE_PRL_Exported_Functions_Group1 USBPD CORE PRL Interface function for timer
-  * @{
-  */
-
-/**
   * @brief  Decrement The PRL Timers values
   * @param  PortNum port number value
   * @retval None
   */
 void USBPD_PRL_TimerCounter(uint8_t PortNum);
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 #if defined(USBPDCORE_TCPM_SUPPORT)
 /** @addtogroup USBPD_CORE_TCPM
@@ -1087,30 +984,7 @@ USBPD_StatusTypeDef  USBPD_TCPM_alert(uint32_t Event);
   */
 USBPD_StatusTypeDef   USBPD_TCPM_EnterErrorRecovery(uint32_t PortNum);
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 #endif /* USBPDCORE_TCPM_SUPPORT */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __USBPD_CORE_H_ */
 

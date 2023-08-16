@@ -19,32 +19,16 @@
 #ifndef __USBPD_DEF_H_
 #define __USBPD_DEF_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "cmsis_compiler.h"
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
+#include "usbpd.h"
+#include "usbpd_spi.h"
 
-/** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
-
-/** @addtogroup USBPD_CORE
-  * @{
-  */
-
-/** @addtogroup USBPD_CORE_DEF
-  * @{
-  */
-
-/* Exported macro ------------------------------------------------------------*/
-/** @defgroup USBPD_CORE_DEF_Exported_Macros USBPD CORE DEF Exported Macros
-  * @{
-  */
 /**
   * @brief  Compare two variables and return the smallest
   * @param  __VAR1__ First variable to be compared
@@ -107,138 +91,152 @@ extern "C" {
 #define USBPD_TRUE  1u
 #define USBPD_FALSE 0u
 
+#define USBPD_SET   1u
+#define USBPD_RESET 0u
+
 #define __DEBUG_PESTATEMACHINE
 
+/* Added options */
+//#define USBPD_VBUS_RANGING
+#define USBPD_IGNORE_HARDRESET_ALWAYS
+//#define USBPD_IGNORE_HARDRESET_WHEN_READY
+#define USBPD_IGNORE_RESET_WHEN_READY
+#define USBPD_DEAD_BATTERY_FIX
+#define USBPD_REATTACH_FIX
+#define USBPD_LINK_UPDATES
 
-/** @defgroup USBPD_CORE_DEF_Exported_Defines_Swiches USBPD Compilations switches
-  * @brief List of compilation switches which can be used to reduce size of the CORE library
-  * @{
-  */
-#if defined(USBPDCORE_LIB_NO_PD)
-#define USBPDCORE_NOPD
+/* Hardware spi */
+#define HW_IF_RX_Disable(x)
+#define USBPD_HW_IF_SendBuffer		usbpd_spi_tx_buffer
+#define USBPD_HW_IF_Send_BIST_Pattern	usbpd_spi_tx_bist
+#define PHY_HW_IF_TX_ABORT(x)
+
+/* Hardware gpio */
+#define HAL_GPIO_Get_Alert		usbpd_gpio_get_alert
+#define HAL_GPIO_Set_Txen		usbpd_gpio_set_txen
+#define HAL_GPIO_Reset			usbpd_gpio_reset
+
+/* Application callbacks */
+#define APPLI_GetVBUS			usbpd_get_vbus
+#define APPLI_SetVoltage		usbpd_set_voltage
+#define APPLI_Set_Current_Limit		usbpd_set_currentlimit
+#define APPLI_GetIvbus			usbpd_get_ivbus
+
+/* Debugging */
+#define _TRACE
+//#define _EXTRA_TRACE
+//#define _MSG_TRACE
+//#define _DEBUG_TRACE
+#define _PE_TRACE_CALLBACK
+#define USBPD_TRACE_Init()
+#define USBPD_TRACE_Add(t,p,s,x,z)	printf("usbpd (%d): %s\r\n", p, x);
+
+/* Library options */
+#ifdef BOARD_SINK_ONLY
+#define USBPD_PORT_COUNT	1
+#define USBPDCORE_SNK
+#define USBPDCORE_LIB_PD3_CONFIG_MINSNK
 #else
-/* Default Switch */
-#define USBPDCORE_GOTOMIN
-#define USBPDCORE_BIST
+#define USBPD_PORT_COUNT	2
+#define USBPDCORE_SNK
+#define USBPDCORE_SRC
+//#define USBPDCORE_DRP
+//#define USBPDCORE_LIB_PD3_FULL
+#define USBPDCORE_LIB_PD3_CONFIG_MINDRP
+#endif
+
+/* Basic options */
+#define USBPD_REV30_SUPPORT
+//#define USBPDCORE_GOTOMIN
+//#define USBPDCORE_BIST
 #define USBPDCORE_GETSNKCAP
 #define USBPDCORE_GETSRCCAP
 #define USBPDCORE_GIVESNKCAP
-#define USBPDCORE_ERROR_RECOVERY
+//#define USBPDCORE_ERROR_RECOVERY
+//#define USBPDCORE_VCONN_SUPPORT
 
-#if defined(USBPDCORE_LIB_PD3_FULL) || defined(USBPDCORE_LIB_PD3_CONFIG_1) || defined(USBPD_TCPM_LIB_PD3_FULL) || defined(USBPD_TCPM_LIB_PD3_CONFIG_1) \
-  || defined(USBPDCORE_LIB_PD3_CONFIG_MINSRC) || defined(USBPDCORE_LIB_PD3_CONFIG_MINSNK) || defined(USBPDCORE_LIB_PD3_CONFIG_MINDRP)
-
-/*
-   USBPDCORE_LIB_PD3_FULL
-   USBPDCORE_LIB_PD3_CONFIG_1  : NO VDM
-   USBPDCORE_LIB_PD3_CONFIG_MINSRC : ONLY SRC & VCONN and  NO option
-   USBPDCORE_LIB_PD3_CONFIG_MINSNK : ONLY SNK, and NO option
-   USBPDCORE_LIB_PD3_CONFIG_MINDRP : SRC + SNK + VCONN, and NO option
-   USBPD_TCPM_LIB_PD3_FULL     : PD3.0 TCPM FULL
-   USBPD_TCPM_LIB_PD3_CONFIG_1 : PD3.0 TCPM FULL without VDM
-*/
-#define USBPD_REV30_SUPPORT
-
-#if !defined(USBPDCORE_LIB_PD3_CONFIG_MINSNK)
-#define USBPDCORE_SRC
-#define USBPDCORE_VCONN_SUPPORT
+/* Advanced options */
+#ifdef USBPDCORE_LIB_PD3_FULL
+//#define USBPDCORE_SVDM
+//#define USBPDCORE_DATA_SWAP
+//#define USBPDCORE_UVDM
+//#define USBPDCORE_FASTROLESWAP
+//#define USBPDCORE_PPS
+//#define USBPDCORE_ALERT
+//#define USBPDCORE_SNK_CAPA_EXT
+//#define USBPDCORE_SRC_CAPA_EXT
+//#define USBPDCORE_STATUS
+//#define USBPDCORE_BATTERY
+//#define USBPDCORE_MANU_INFO
+//#define USBPDCORE_SECURITY_MSG
+//#define USBPDCORE_FWUPD
+//#define USBPDCORE_COUNTRY_MSG
+//#define USBPDCORE_PING_SUPPORT
+//#define USBPDCORE_TCPM_SUPPORT
 #endif
 
-#if !defined(USBPDCORE_LIB_PD3_CONFIG_MINSRC)
-#define USBPDCORE_SNK
-#define USBPDCORE_SNK_CAPA_EXT
-#endif
-
-#if defined(USBPDCORE_LIB_PD3_FULL) || defined(USBPD_TCPM_LIB_PD3_FULL)
-#define USBPDCORE_SVDM
-#endif /* USBPDCORE_LIB_PD3_FULL || USBPD_TCPM_LIB_PD3_FULL */
-
-#if defined(USBPDCORE_LIB_PD3_CONFIG_MINSNK)||defined(USBPDCORE_LIB_PD3_CONFIG_MINSRC)
-#else
-#define USBPDCORE_DRP
-#define USBPDCORE_DATA_SWAP
-#if !defined(USBPDCORE_LIB_PD3_CONFIG_MINDRP)
-#define USBPDCORE_UVDM
-#define USBPDCORE_FASTROLESWAP
-#define USBPDCORE_PPS
-#define USBPDCORE_ALERT
-#define USBPDCORE_SRC_CAPA_EXT
-#define USBPDCORE_STATUS
-#define USBPDCORE_BATTERY
-#define USBPDCORE_MANU_INFO
-#define USBPDCORE_SECURITY_MSG
-#define USBPDCORE_FWUPD
-#define USBPDCORE_COUNTRY_MSG
-#define USBPDCORE_PING_SUPPORT
-#endif /* !USBPDCORE_LIB_PD3_CONFIG_MINDRP */
-#endif /* USBPDCORE_LIB_PD3_CONFIG_MINSNK || USBPDCORE_LIB_PD3_CONFIG_MINSRC */
-
-#if defined(USBPD_TCPM_LIB_PD3_FULL) || defined(USBPD_TCPM_LIB_PD3_CONFIG_1)
-#define USBPDCORE_TCPM_SUPPORT
-#endif /* TCPM */
-
-#endif /* PD3.0 */
-
-/* List of compilation switches which can be used to reduce size of the CORE librairy */
-#if defined(USBPDCORE_LIB_PD2_FULL) || defined(USBPDCORE_LIB_PD2_CONFIG_1) || defined(USBPDCORE_LIB_PD2_CONFIG_MINSRC) || defined(USBPDCORE_LIB_PD2_CONFIG_MINSNK)  || defined(USBPD_TCPM_LIB_PD2_FULL) || defined(USBPD_TCPM_LIB_PD2_CONFIG_1) || defined(USBPD_TCPM_LIB_PD2_MINSRC) || defined(USBPD_TCPM_LIB_PD2_MINSNK)
-/*
-   USBPDCORE_LIB_PD2_FULL
-   USBPDCORE_LIB_PD2_CONFIG_1 : NO VDM
-   USBPDCORE_LIB_PD2_CONFIG_MINSRC : ONLY SRC & VCONN and  NO option
-   USBPDCORE_LIB_PD2_CONFIG_MINSNK : ONLY SNK, and NO option
-   USBPD_TCPM_LIB_PD2_FULL     : PD2.0 TCPM FULL
-   USBPD_TCPM_LIB_PD2_CONFIG_1 : PD2.0 TCPM FULL without VDM
-   USBPD_TCPM_LIB_PD2_MINSRC : PD2.0 TCPM Only SRC
-   USBPD_TCPM_LIB_PD2_MINSNK : PD2.0 TCPM Only SNK
-*/
+#ifdef USBPDCORE_LIB_PD2_FULL
 #define USBPD_REV20_SUPPORT
-
-#if !defined(USBPDCORE_LIB_PD2_CONFIG_MINSNK) && !defined(USBPD_TCPM_LIB_PD2_MINSNK)
-#define USBPDCORE_SRC
-#define USBPDCORE_VCONN_SUPPORT
+//#define USBPDCORE_VCONN_SUPPORT
+//#define USBPDCORE_DATA_SWAP
+//#define USBPDCORE_UVDM
+//#define USBPDCORE_SVDM
+//#define USBPDCORE_TCPM_SUPPORT
 #endif
 
-#if !defined(USBPDCORE_LIB_PD2_CONFIG_MINSRC) && !defined(USBPD_TCPM_LIB_PD2_MINSRC)
-#define USBPDCORE_SNK
-#endif
-
-#if defined(USBPDCORE_LIB_PD2_CONFIG_MINSRC) || defined(USBPDCORE_LIB_PD2_CONFIG_MINSNK) || defined(USBPD_TCPM_LIB_PD2_MINSRC) || defined(USBPD_TCPM_LIB_PD2_MINSNK)
-#else
-#define USBPDCORE_DRP
-#define USBPDCORE_DATA_SWAP
-#define USBPDCORE_UVDM
-#endif
-
-#if defined(USBPDCORE_LIB_PD2_FULL) || defined(USBPD_TCPM_LIB_PD2_FULL)
-#define USBPDCORE_SVDM
-#endif /* USBPDCORE_LIB_PD3_FULL || USBPD_TCPM_LIB_PD2_FULL */
-
-#if defined(USBPD_TCPM_LIB_PD2_FULL) || defined(USBPD_TCPM_LIB_PD2_CONFIG_1) || defined(USBPD_TCPM_LIB_PD2_MINSRC) || defined(USBPD_TCPM_LIB_PD2_MINSNK)
-#define USBPDCORE_TCPM_SUPPORT
-#endif /* TCPM */
-
-#endif /* PD2.0 */
-
-#if defined(USBPDCORE_LIB_PD3_CONFIG_2)
-#undef USBPDCORE_GOTOMIN
-#undef USBPDCORE_BIST
-#undef USBPDCORE_GETSNKCAP
-#undef USBPDCORE_GETSRCCAP
-#undef USBPDCORE_GIVESNKCAP
-#undef USBPDCORE_SNK_CAPA_EXT
-
-#define USBPDCORE_SNK
-#define USBPD_REV30_SUPPORT
-#define USBPDCORE_FWUPD
-#define USBPDCORE_UVDM
-#endif /* USBPDCORE_LIB_PD3_CONFIG_2 */
-
-/* No need to enable USBPDCORE_UNCHUNCKED_MODE if FW Update et Security messages are not supported by the configuration */
 #if defined(USBPDCORE_SECURITY_MSG) || defined(USBPDCORE_FWUPD)
 #define USBPDCORE_UNCHUNCKED_MODE
-#endif /* USBPDCORE_SECURITY_MSG || USBPDCORE_FWUPD */
+#endif
 
-#endif /* USBPDCORE_LIB_NO_PD */
+/* Project options */
+//#define _ADC_MONITORING
+
+/* Project options derived from library options */
+#ifdef USBPDCORE_SNK
+#define _SNK
+#endif
+#ifdef USBPDCORE_SRC
+#define _SRC
+#endif
+#ifdef USBPDCORE_DRP
+#define _DRP
+#endif
+#ifdef USBPDCORE_ERROR_RECOVERY
+#define _ERROR_RECOVERY
+#endif
+#ifdef USBPDCORE_VCONN_SUPPORT
+#define _VCONN_SUPPORT
+#endif
+#ifdef USBPDCORE_STATUS
+#define _STATUS 1
+#endif
+#ifdef USBPDCORE_SVDM
+#define _SVDM
+#endif
+#ifdef USBPDCORE_UVDM
+#define _UVDM
+#endif
+#ifdef USBPDCORE_ALERT
+#define _ALERT 1
+#endif
+#ifdef USBPDCORE_BATTERY
+#define _BATTERY 1
+#endif
+#ifdef USBPDCORE_MANU_INFO
+#define _MANU_INFO 1
+#endif
+#ifdef USBPDCORE_SNK_CAPA_EXT
+#define _SNK_CAPA_EXT 1
+#endif
+#ifdef USBPDCORE_SRC_CAPA_EXT
+#define _SRC_CAPA_EXT 1
+#endif
+#ifdef USBPDCORE_UNCHUNCKED_MODE
+#define _UNCHUNKED_SUPPORT
+#endif
+#if defined(_DRP) || defined(_SRC_CAPA_EXT) || defined(_CLASS_BB) || defined(_ALERT) || defined(_SVDM) || defined(_ADC_MONITORING)
+#define _USER_TIMERS
+#endif
 
 /* _LIB_ID definition */
 /*
@@ -635,8 +633,8 @@ extern "C" {
 /** @defgroup USBPD_SKEDB_LOADSTEP USB-PD Sink Capabilities Extended - Load Step field
   * @{
   */
-#define USBPD_SKEDB_LOADSTEP_150MA               (0u << 0u) /*!< 150mA/ìs Load Step (default) */
-#define USBPD_SKEDB_LOADSTEP_500MA               (1u << 0u) /*!< 500mA/ìs Load Step */
+#define USBPD_SKEDB_LOADSTEP_150MA               (0u << 0u) /*!< 150mA/ï¿½s Load Step (default) */
+#define USBPD_SKEDB_LOADSTEP_500MA               (1u << 0u) /*!< 500mA/ï¿½s Load Step */
 /**
   * @}
   */
@@ -1468,7 +1466,7 @@ typedef enum
 #define PRODUCT_TYPE_POWER_BRICK        3u /*!< Power Brick (DFP)                      */
 #endif /* USBPD_REV30_SUPPORT */
 
-/* ##### SOP’ (Cable Plug/VPD) #####*/
+/* ##### SOPï¿½ (Cable Plug/VPD) #####*/
 /* Product Type (Cable Plug): */
 #define PRODUCT_TYPE_PASSIVE_CABLE      3u /*!< Passive Cable (Cable Plug)             */
 #define PRODUCT_TYPE_ACTIVE_CABLE       4u /*!< Active Cable (Cable Plug)              */
@@ -1662,7 +1660,7 @@ typedef uint32_t USBPD_VDO_UFP_DeviceCapability;
   * @{
   */
 #define ALTERNATE_MODES_TBT3                  0u /*!< Supports [TBT3] Alternate Mode */
-#define ALTERNATE_MODES_RECONFIG_TYPEC_2P0    1u /*!< Supports Alternate Modes that reconfigure the signals on the [USB Type-C 2.0] connector – except for [TBT3]. */
+#define ALTERNATE_MODES_RECONFIG_TYPEC_2P0    1u /*!< Supports Alternate Modes that reconfigure the signals on the [USB Type-C 2.0] connector ï¿½ except for [TBT3]. */
 #define ALTERNATE_MODES_NO_RECONFIG_TYPEC_2P0 2u /*!< Supports Alternate Modes that do not reconfigure the signals on the [USB Type-C 2.0] connector */
 
 typedef uint32_t USBPD_VDO_UFP_AlternateModes;
@@ -2473,7 +2471,7 @@ uint32_t SVID :                             /*!< SVDM Header's SVID             
   * @}
   */
 
-#ifdef USBPDCORE_UVDM
+#if defined(USBPDCORE_SVDM) || defined(USBPDCORE_UVDM) || defined(USBPDCORE_VCONN_SUPPORT)
 /** @defgroup USBPD_UVDMHeaderStructure_definition USB UVDM Message header Structure definition
   * @brief USB UVDM Message header Structure definition
   * @{
@@ -2493,7 +2491,7 @@ typedef union
 /**
   * @}
   */
-#endif /* USBPDCORE_UVDM */
+#endif
 
 /** @defgroup USBPD_CableVdo_TypeDef USB PD VDM Passive Cable VDO
   * @brief USB PD Passive Cable VDO Structure definition
@@ -2629,7 +2627,7 @@ typedef union
   {
     USBPD_UsbSsSupport USB_HighestSpeed             : 3u;   /*!< USB Highest Speed Support           */
     USBPD_VDO_UFP_AlternateModes AlternateModes     : 3u;   /*!< Alternate Modes based */
-    uint32_t                                        : 16u;  /*!< B21…6 Reserved bit                                  */
+    uint32_t                                        : 16u;  /*!< B21ï¿½6 Reserved bit                                  */
     USBPD_ConnectorType_TypeDef ConnectorType       : 2u;   /*!< Connector Type */
     USBPD_VDO_UFP_DeviceCapability DeviceCapability : 4u;   /*!< Device Capability   */
     uint32_t                                        : 1u;   /*!< B28 Reserved bit                                  */
@@ -2651,10 +2649,10 @@ typedef union
   struct
   {
     uint32_t                      PortNumber        : 5u;   /*!< Unique port number to identify a specific port on a multi-port device  */
-    uint32_t                                        : 17u;  /*!< B21…5 Reserved bits                                                    */
+    uint32_t                                        : 17u;  /*!< B21ï¿½5 Reserved bits                                                    */
     USBPD_ConnectorType_TypeDef   ConnectorType     : 2u;   /*!< Connector Type                                                         */
     USBPD_VDO_DFP_HostCapability  HostCapability    : 3u;   /*!< Host Capability                                                        */
-    uint32_t                                        : 2u;   /*!< B28…27 Reserved bits                                                   */
+    uint32_t                                        : 2u;   /*!< B28ï¿½27 Reserved bits                                                   */
     USBPD_VDM_VDO_DFP_Version_TypeDef DFPVDOVersion : 3u;   /*!< Version Number of the VDO (should be set to Version1.1)                */
   }
   b;
@@ -2680,10 +2678,10 @@ typedef union
     uint32_t                  VBUS_Impedance      : 6u;  /*!< Charge Through Support bit = 1b: Vbus impedance through the VPD in 2 mOhm increments.
                                                               Values less than 10 mOhm are Reserved and Shall Not be used.
                                                               Charge Through Support bit = 0b: Reserved, Shall be set to zero   */
-    uint32_t                                      : 2u;  /*!< B14…13 Reserved bit                           */
+    uint32_t                                      : 2u;  /*!< B14ï¿½13 Reserved bit                           */
     USBPD_VDO_VPD_ChargeCurrent  ChargeThroughCurrent : 1u;  /*!< Charge Through Current Support            */
     USBPD_CableMaxVoltage     CableMaxVoltage     : 2u;  /*!< Cable maximun voltage                         */
-    uint32_t                                      : 4u;  /*!< B20…17 Reserved bit                           */
+    uint32_t                                      : 4u;  /*!< B20ï¿½17 Reserved bit                           */
     USBPD_VDM_VDO_VPD_Version_TypeDef VDO_Version : 3u;  /*!< Version number  of the VPD VDO                */
     uint32_t                  FWVersion      : 4u;  /*!< Cable FW version number (vendor defined)           */
     uint32_t                  HWVersion      : 4u;  /*!< Cable HW version number (vendor defined)           */
@@ -3147,11 +3145,6 @@ typedef union
 
 typedef struct
 {
-#if defined(USBPDCORE_LIB_NO_PD)
-  USBPD_PortPowerRole_TypeDef PE_DefaultRole: 1u; /*!< Default port role  based on @ref USBPD_PortPowerRole_TypeDef                    */
-  CAD_RP_Source_Current_Adv_Typedef CAD_DefaultResistor  : 2u; /*!< Default RP resistor based on @ref CAD_RP_Source_Current_Adv_Typedef */
-  uint8_t                                   : 5u; /*!< Reserved bits */
-#else
   USBPD_SupportedSOP_TypeDef PE_SupportedSOP; /*!<  Corresponds to the message managed by the stack and this should be set depending if you want discuss with the cable
                                                     So if VconnSupport is enabling this field must be set to
                                                       @ref USBPD_SUPPORTED_SOP_SOP | @ref USBPD_SUPPORTED_SOP_SOP1 | @ref USBPD_SUPPORTED_SOP_SOP2
@@ -3182,7 +3175,6 @@ typedef struct
 #else
   uint16_t reserved                         : 16u; /*!< Reserved bits */
 #endif /* USBPD_REV30_SUPPORT */
-#endif /*USBPDCORE_LIB_NO_PD*/
 } USBPD_SettingsTypeDef;
 
 /**
@@ -3232,33 +3224,6 @@ typedef struct
 #endif /* USBPDCORE_VCONN_SUPPORT */
 #endif /* USBPD_REV30_SUPPORT && USBPDCORE_UNCHUNCKED_MODE */
 } USBPD_ParamsTypeDef;
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/* Exported variables --------------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __USBPD_DEF_H_ */
 

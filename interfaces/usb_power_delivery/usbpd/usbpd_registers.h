@@ -1,6 +1,6 @@
 /**
   **************************************************************************************************
-  * @file    STUSB1602_Driver.h
+  * @file    usbpd_registers.h
   * @author  System Lab - Sensing & Connectivity Application Team
   * @brief   This file provides a set of structs and unions needed to manage the STUSB1602 Driver.
   **************************************************************************************************
@@ -34,48 +34,34 @@
   *
   **************************************************************************************************
   */
-/*#warning "Registers header sof"*/
+
 #ifndef __STUSB1602_REG_H_
 #define __STUSB1602_REG_H_
-/*#warning "Registers header sof 2"*/
-#ifdef __cplusplus
- extern "C" {
-#endif
 
-   
-/* Includes ------------------------------------------------------------------*/
+#include <stdint.h>
 
-/** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
 /**
  * @brief  STUSB1602 Status
   */
-#define STUSB1602_StatusTypeDef HAL_StatusTypeDef
-#define STUSB1602_OK HAL_OK
-#define STUSB1602_ERROR HAL_ERROR 
-#define STUSB1602_TIMEOUT HAL_TIMEOUT
-/** @addtogroup USBPD_DEVICE
- * @{
- */
+//#define STUSB1602_StatusTypeDef	HAL_StatusTypeDef
+//#define STUSB1602_OK			HAL_OK
+//#define STUSB1602_ERROR		HAL_ERROR
+//#define STUSB1602_TIMEOUT		HAL_TIMEOUT
 
-/** @addtogroup STUSB1602_LIBRARY
- * @{
- */
+typedef enum
+{
+	STUSB1602_OK = 0,
+	STUSB1602_ERROR,
+	STUSB1602_TIMEOUT,
+} STUSB1602_StatusTypeDef;
 
-/* Exported defines ----------------------------------------------------------*/
-/** @defgroup USBPD_DEVICE_STUSB1602_LIBRARY_Exported_Defines USBPD DEVICE STUSB1602 LIBRARY Exported defines
-* @{
-*/
-  
-/** @defgroup USBPD_DEVICE_STUSB1602_LIBRARY_I2C_Defines USBPD DEVICE STUSB1602 LIBRARY I2C defines
-* @{
-*/
+typedef enum
+{
+	DISABLE = 0,
+	ENABLE = !DISABLE
+} FunctionalState;
 
-/**
- * @}
- */
-  
+
 /** @defgroup USBPD_DEVICE_STUSB1602_LIBRARY_Masks_Defines USBPD DEVICE STUSB1602 LIBRARY Masks defines
 * @{
 */
@@ -113,14 +99,7 @@
 #define STUSB1602_MODE_CTRL_REG			        	0x28
 #define STUSB1602_VBUS_MONITORING_CTRL_REG			0x2E
 #define STUSB1602_DEVICE_CUT_REG		        	0x2F
-/**
- * @}
- */
 
-/**
- * @}
- */
-  
   
 /* Exported typedef ----------------------------------------------------------*/
 /** @defgroup USBPD_DEVICE_STUSB1602_LIBRARY_Exported_Types USBPD DEVICE STUSB1602 LIBRARY Exported types
@@ -1409,19 +1388,6 @@ typedef enum
   reserved_2                       = 3,              /*reserved */
 } NVM_OK_TypeDef;
 
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-/* Exported functions --------------------------------------------------------*/
-/** @defgroup USBPD_DEVICE_STUSB1602_LIBRARY_Exported_Prototypes USBPD DEVICE STUSB1602 LIBRARY Exported functions prototypes
-* @{
-*/
-
 
 /* 0x0B -> 0x0C */
 STUSB1602_ALERT_STATUS_RegTypeDef STUSB1602_Alert_Raise_Get(uint8_t Addr);
@@ -1557,28 +1523,7 @@ STUSB1602_StatusTypeDef STUSB1602_VDD_UVLO_Threshold_Set(uint8_t Addr, VDD_UVLO_
 DEVICE_CUT_TypeDef STUSB1602_DEVICE_CUT_Get(uint8_t Addr);
 NVM_OK_TypeDef STUSB1602_NVM_OK_Get(uint8_t Addr);
 
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-/**
- * @}
- */
-
-#ifdef __cplusplus
-}
-#endif
-/*#warning "Registers header eof 2"*/
 #endif /* __STUSB1602_DRIVER_H_ */
-/*#warning "Registers header eof"*/
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

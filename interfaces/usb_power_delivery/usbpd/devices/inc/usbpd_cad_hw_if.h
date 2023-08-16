@@ -46,28 +46,6 @@
 #ifndef __USBPD_CAD_HW_IF_H_
 #define __USBPD_CAD_HW_IF_H_
 
-#ifdef __cplusplus
- extern "C" {
-#endif 
-
-/* Includes ------------------------------------------------------------------*/
-
-/** @addtogroup STM32_USBPD_LIBRARY
-  * @{
-  */
-
-/** @addtogroup USBPD_DEVICE
-  * @{
-  */
-
-/** @addtogroup USBPD_DEVICE_CAD_HW_IF
-  * @{
-  */
-
-/* Exported types ------------------------------------------------------------*/
-/** @defgroup USBPD_CORE_CAD_Exported_Types USBPD CORE CAD Exported Types
-  * @{
-  */
 /**
   * @brief CAD State value @ref USBPD_DEVICE_CAD_HW_IF
   * @{
@@ -127,48 +105,12 @@ typedef struct
   CAD_SNK_Source_Current_Adv_Typedef SNK_Source_Current_Adv: 2;   /*!< Exposed resistance from source                           */
   uint32_t reserved: 18;                                          /*!< Reserved                                                 */
 } CAD_HW_HandleTypeDef;
-/** 
-  * @}
-  */ 
 
-/**
-  * @}
-  */
 
-/* Exported define -----------------------------------------------------------*/
- 
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported variables --------------------------------------------------------*/
-/* Exported functions --------------------------------------------------------*/
-
-/** @addtogroup USBPD_DEVICE_CAD_HW_IF_Exported_Functions_Prototypes USBPD DEVICE CAD HW IF Exported Functions Prototypes
-  * @{
-  */
-void      CAD_Init(uint8_t PortNum, USBPD_SettingsTypeDef *Settings, USBPD_ParamsTypeDef *Params, void (*PtrWakeUp)(void));
-uint32_t  CAD_StateMachine(uint8_t PortNum, USBPD_CAD_EVENT *Event, CCxPin_TypeDef *CCXX);
+void CAD_Init(uint8_t PortNum, USBPD_SettingsTypeDef *Settings, USBPD_ParamsTypeDef *Params, void (*PtrWakeUp)(void));
+uint32_t CAD_StateMachine(uint8_t PortNum, USBPD_CAD_EVENT *Event, CCxPin_TypeDef *CCXX);
 void CAD_Enter_ErrorRecovery(uint8_t PortNum);
 uint32_t CAD_Set_ResistorRp(uint8_t PortNum, CAD_RP_Source_Current_Adv_Typedef RpValue);
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __USBPD_CAD_HW_IF_H_ */
 
