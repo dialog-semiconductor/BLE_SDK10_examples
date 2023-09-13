@@ -637,8 +637,8 @@ void dsps_BLE_task(void *params)
 
         /* Scan response data containing name   */
         static const uint8_t scan_rsp[] = {
-                0x11, GAP_DATA_TYPE_LOCAL_NAME,
-                'R', 'e', 'n', 'e', 's', 'a','s', ' ', 'S', 'P', 'S', ' ', 'D', 'e', 'm', 'o'
+                0x10, GAP_DATA_TYPE_LOCAL_NAME,
+                'D', 'i', 'a', 'l', 'o', 'g', ' ', 'S', 'P', 'S', ' ', 'D', 'e', 'm', 'o'
         };
 
         /* register sps task to be monitored by watchdog */
@@ -656,7 +656,7 @@ void dsps_BLE_task(void *params)
         /**
          * Set device name
          */
-        ble_gap_device_name_set("Renesas SPS Demo", ATT_PERM_READ);
+        ble_gap_device_name_set("Dialog SPS Demo", ATT_PERM_READ);
 
         /**
          * Start Serial Port Service
